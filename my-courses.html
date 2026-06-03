@@ -75,10 +75,11 @@
     display: flex; align-items: center; gap: 10px;
     font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.15rem;
     color: var(--text); text-decoration: none; letter-spacing: -.5px;
-    padding: 22px 16px 20px; border-bottom: 1px solid var(--border);
-    overflow: visible; white-space: nowrap; flex-shrink: 0;
+    padding: 18px 16px 16px; border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
-  .logo-line { display: block; line-height: 1.15; white-space: nowrap; }
+  .logo-line { display: block; line-height: 1.2; }
+  .logo-line-force { margin-top: -1px; }
   .logo-icon {
     width: 32px; height: 32px; min-width: 32px;
     background: linear-gradient(135deg, var(--accent2), var(--accent));
@@ -91,8 +92,8 @@
   .sidebar-logo .tagline {
     font-family: 'DM Sans', sans-serif; font-weight: 300;
     font-size: .6rem; color: var(--muted); letter-spacing: .08em;
-    text-transform: uppercase; display: block; margin-top: 2px;
-    -webkit-text-fill-color: initial; white-space: nowrap;
+    text-transform: uppercase; display: block; margin-top: 3px;
+    -webkit-text-fill-color: initial;
   }
 
   .sidebar-nav { flex: 1; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; }
@@ -807,7 +808,8 @@
     <a href="index.html" class="sidebar-logo">
       <div class="logo-icon">DF</div>
       <div>
-        <span class="logo-line">Decentra<span>Force</span></span>
+        <span class="logo-line">Decentra</span>
+        <span class="logo-line logo-line-force"><span>Force</span></span>
         <span class="tagline">Your Web3 University</span>
       </div>
     </a>
