@@ -270,7 +270,7 @@
   }
   .course-header-meta span { display: flex; align-items: center; gap: 4px; }
 
-  .course-header-progress { margin-left: auto; min-width: 180px; flex-shrink: 0; }
+  .course-header-progress { margin-left: auto; min-width: clamp(0px, 180px, 40vw); flex-shrink: 1; }
   .ch-progress-label { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-bottom: 5px; }
   .ch-progress-track { height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; border: 1px solid var(--border2); }
   .ch-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)); box-shadow: 0 0 8px rgba(0,229,255,.3); transition: width 1.2s cubic-bezier(.16,1,.3,1); }
@@ -892,20 +892,39 @@
     .mob-module-toggle-bar { margin: 0 14px 12px; }
   }
   @media (max-width: 768px) {
-  /* 1. Stop iOS from auto-zooming on input focus */
+  /* ── Prevent iOS Safari auto-zoom on any input/select/textarea focus ── */
+  input,
   input[type="text"],
   input[type="email"],
   input[type="password"],
   input[type="number"],
   input[type="url"],
+  input[type="search"],
+  input[type="tel"],
   select,
   textarea {
     font-size: 16px !important;
   }
-  
-  /* 2. Stop double-tap to zoom on UI elements */
-  button, a, .tab-btn, .nav-btn, .control-btn, .nav-item {
+
+  /* ── Prevent double-tap zoom on interactive elements ── */
+  button, a, .tab-btn, .nav-btn, .control-btn, .nav-item,
+  .lesson-item, .acc-lecture-item, .mcq-option {
     touch-action: manipulation !important;
+  }
+
+  /* ── Prevent course-header-progress from overflowing on narrow screens ── */
+  .course-header-progress {
+    min-width: 0 !important;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  /* ── Video player: ensure it never exceeds viewport width ── */
+  .video-player-area {
+    max-width: 100vw;
+  }
+  .youtube-player-container {
+    max-width: 100%;
   }
 }
 </style>
