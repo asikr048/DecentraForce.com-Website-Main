@@ -182,6 +182,11 @@
       nav { padding: 0 16px; height: 60px; }
       .logo { font-size: 1.05rem; }
       .logo-icon { width: 30px; height: 30px; font-size: 0.72rem; }
+      .logo-text { display: none; }
+      .logo { gap: 0; flex-shrink: 0; }
+      .nav-right { gap: 8px; flex-shrink: 0; }
+      .avatar-btn { width: 34px; height: 34px; flex-shrink: 0; }
+      .avatar-wrapper { flex-shrink: 0; }
       .hero-left { gap: 12px; }
       .course-title { font-size: 1.2rem; line-height: 1.4; }
       .course-meta { gap: 10px; font-size: 0.8rem; }
@@ -198,7 +203,7 @@
   <nav>
     <a href="index.html" class="logo">
       <div class="logo-icon">DF</div>
-      Decentra<span>Force</span>
+      <span class="logo-text">Decentra<span style="color:var(--accent)">Force</span></span>
     </a>
     <a href="index.html#courses" class="btn-back">
       <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>

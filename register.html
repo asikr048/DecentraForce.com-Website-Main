@@ -273,6 +273,11 @@
     nav { padding: 0 16px; height: 60px; }
     .logo { font-size: 1.05rem; }
     .logo-icon { width: 30px; height: 30px; font-size: 0.72rem; }
+      .logo-text { display: none; }
+      .logo { gap: 0; flex-shrink: 0; }
+      .nav-right { gap: 8px; flex-shrink: 0; }
+      .avatar-btn { width: 34px; height: 34px; flex-shrink: 0; }
+      .avatar-wrapper { flex-shrink: 0; }
     .auth-container {
       margin: 90px 14px 30px;
       padding: 24px 18px;
@@ -296,7 +301,7 @@
   <nav>
     <a href="index.html" class="logo">
       <div class="logo-icon">DF</div>
-      Decentra<span>Force</span>
+      <span class="logo-text">Decentra<span style="color:var(--accent)">Force</span></span>
     </a>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>

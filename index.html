@@ -80,6 +80,7 @@
     background: rgba(5,10,24,.7);
     backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
+    overflow: visible;
   }
 
   .logo {
@@ -101,6 +102,7 @@
     box-shadow: 0 0 18px rgba(123,92,255,.5);
   }
   .logo span { color: var(--accent); }
+  .logo-text { color: var(--text); }
 
   .nav-links {
     display: flex; align-items: center; gap: 32px;
@@ -595,6 +597,15 @@
   }
   @media (max-width: 480px) {
     nav { padding: 0 16px; height: 60px; }
+    /* Hide logo text on small mobile, keep only DF icon */
+    .logo-text { display: none; }
+    .logo { gap: 0; flex-shrink: 0; }
+    .logo-icon { width: 34px; height: 34px; font-size: 0.78rem; flex-shrink: 0; }
+    /* Ensure nav-right doesn't overflow */
+    .nav-right { gap: 8px; flex-shrink: 0; }
+    /* Ensure avatar is always visible */
+    .avatar-btn { width: 34px; height: 34px; flex-shrink: 0; }
+    .avatar-wrapper { flex-shrink: 0; }
     .hero { padding: 90px 16px 50px; gap: 32px; }
     .hero h1 { font-size: clamp(1.6rem, 8vw, 2rem); margin-bottom: 16px; }
     .hero p { font-size: 0.9rem; margin-bottom: 24px; }
@@ -912,7 +923,7 @@
 <nav>
   <a href="#" class="logo">
     <div class="logo-icon">DF</div>
-    Decentra<span>Force</span>
+    <span class="logo-text">Decentra<span style="color:var(--accent)">Force</span></span>
   </a>
   <ul class="nav-links">
     <li><a href="my-courses.html" class="active">Home</a></li>
