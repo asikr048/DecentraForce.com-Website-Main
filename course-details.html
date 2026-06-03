@@ -52,7 +52,20 @@
     .tab-content.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    .desc-text { font-size: 1.05rem; color: #a4b5d6; line-height: 1.8; white-space: pre-wrap; }
+    /* === BEAUTIFUL DESCRIPTION STYLES === */
+    .desc-text { font-size: 0.95rem; color: #a4b5d6; line-height: 1.75; }
+    .desc-text p { margin-bottom: 14px; }
+    .desc-text p:last-child { margin-bottom: 0; }
+    .desc-section { margin-bottom: 24px; }
+    .desc-section-title { font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .desc-section-title::after { content: ''; flex: 1; height: 1px; background: rgba(0,229,255,0.12); }
+    .desc-section-body { font-size: 0.93rem; color: #a4b5d6; line-height: 1.75; }
+    .desc-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+    .desc-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.91rem; color: #b8c9e8; line-height: 1.5; }
+    .desc-list li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 7px; }
+    .desc-highlight { background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.12); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; font-size: 0.92rem; color: #c0d0ea; line-height: 1.7; }
+    .desc-highlight strong { color: var(--text); font-weight: 600; }
+    .desc-block { margin-bottom: 20px; font-size: 0.93rem; color: #a4b5d6; line-height: 1.8; }
     
     /* Modules/Curriculum Styling */
     .module-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
@@ -81,7 +94,7 @@
 
     /* === RIGHT COLUMN: STICKY PURCHASE CARD === */
     .sticky-card { position: sticky; top: 100px; background: var(--surface); border: 1px solid rgba(0,229,255,0.2); border-radius: 20px; overflow: hidden; box-shadow: 0 24px 50px rgba(0,0,0,0.5); margin-left: 10px; }
-    .card-thumbnail { width: 100%; height: 200px; background: linear-gradient(135deg, #111d3a, #0d1630); display: flex; align-items: center; justify-content: center; font-size: 4rem; position: relative; }
+    .card-thumbnail { width: 100%; height: 220px; background: linear-gradient(135deg, #111d3a, #0d1630); display: flex; align-items: center; justify-content: center; font-size: 4rem; position: relative; overflow: hidden; }
     .card-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
     .card-body { padding: 32px 24px; }
     .price-display { font-family: 'Syne', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
@@ -315,6 +328,11 @@
 <script>
   let activeCourse = null;
 
+  // Utility: HTML escape (defined at top level so renderDescription can call it)
+  function escHTML(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   // Tab Switching Logic
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -359,10 +377,64 @@
       badgesHTML += `<span class="c-badge category">${categoryTag}</span>`;
       document.getElementById('heroBadges').innerHTML = badgesHTML;
 
-      // 2. Populate Overview Description
-      document.getElementById('courseDescription').innerHTML = activeCourse.description 
-        ? activeCourse.description.replace(/\n/g, '<br><br>') 
-        : 'No description available for this course.';
+      // 2. Populate Overview Description — beautiful structured rendering
+      function renderDescription(raw) {
+        if (!raw || !raw.trim()) return '<p style="color:var(--muted)">No description available for this course.</p>';
+
+        // Split into non-empty lines
+        const lines = raw.split(/\r?\n/);
+        let html = '';
+        let listItems = [];
+
+        function flushList() {
+          if (listItems.length) {
+            html += `<ul class="desc-list">${listItems.map(li => `<li>${escHTML(li)}</li>`).join('')}</ul>`;
+            listItems = [];
+          }
+        }
+
+        let paragraphLines = [];
+        function flushParagraph() {
+          if (paragraphLines.length) {
+            const text = paragraphLines.join(' ').trim();
+            if (text) html += `<p class="desc-block">${text}</p>`;
+            paragraphLines = [];
+          }
+        }
+
+        lines.forEach(line => {
+          const trimmed = line.trim();
+          if (!trimmed) {
+            flushList();
+            flushParagraph();
+            return;
+          }
+          // Detect bullet/list line: starts with -, *, •, ✅, ✔, ▶, →, >
+          if (/^[-*•✅✔▶→>]\s+/.test(trimmed)) {
+            flushParagraph();
+            listItems.push(trimmed.replace(/^[-*•✅✔▶→>]\s+/, ''));
+            return;
+          }
+          // Detect heading-like line: ALL CAPS short, ends with :, or wrapped in ** or #
+          if (/^#{1,3}\s/.test(trimmed) || /^\*\*[^*]+\*\*$/.test(trimmed) || (/^[A-Z0-9 ]{4,40}:$/.test(trimmed))) {
+            flushList();
+            flushParagraph();
+            const heading = trimmed.replace(/^#+\s*/, '').replace(/^\*\*|\*\*$/g, '').replace(/:$/, '');
+            html += `<div class="desc-section-title">${escHTML(heading)}</div>`;
+            return;
+          }
+          // Normal text — accumulate into paragraph
+          flushList();
+          paragraphLines.push(escHTML(trimmed));
+        });
+
+        flushList();
+        flushParagraph();
+
+        return html || `<p class="desc-block">${escHTML(raw.trim())}</p>`;
+      }
+
+      document.getElementById('courseDescription').innerHTML = renderDescription(activeCourse.description);
 
       // 3. Populate Price & Thumbnail (Sticky Card)
       const priceVal = parseFloat(activeCourse.price) || 0;
@@ -374,7 +446,15 @@
       purchaseBtn.textContent = priceVal === 0 ? 'Enroll for Free' : 'Purchase Course';
 
       if (activeCourse.thumbnail_url && activeCourse.thumbnail_url.length > 10) {
-        document.getElementById('cardThumbnail').innerHTML = `<img src="${activeCourse.thumbnail_url}" alt="Course Thumbnail">`;
+        const thumbEl = document.getElementById('cardThumbnail');
+        thumbEl.innerHTML = `<img src="${activeCourse.thumbnail_url}" alt="Course Thumbnail" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.innerHTML='<span style=\\'z-index:2;position:relative;font-size:4rem\\'>🎓</span>'">`;
+        // Also use thumbnail as a subtle hero background
+        const heroEl = document.querySelector('.course-hero');
+        if (heroEl) {
+          heroEl.style.backgroundImage = `linear-gradient(135deg, rgba(5,10,24,0.97) 0%, rgba(8,15,34,0.92) 60%, rgba(8,15,34,0.85) 100%), url('${activeCourse.thumbnail_url}')`;
+          heroEl.style.backgroundSize = 'cover';
+          heroEl.style.backgroundPosition = 'center';
+        }
       }
 
       // 4. Parse Admin Panel Modules (Curriculum & Assignments)
@@ -439,10 +519,6 @@
         });
 
         return html;
-      }
-
-      function escHTML(str) {
-        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       }
 
       // Render Curriculum
