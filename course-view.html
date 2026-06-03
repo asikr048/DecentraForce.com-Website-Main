@@ -27,7 +27,7 @@
     --border: rgba(0, 229, 255, 0.12);
     --border2: rgba(255,255,255,0.06);
     --glow: rgba(0, 229, 255, 0.15);
-    --sidebar-w: 240px;
+    /* sidebar-w defined in collapsible sidebar section below */
   }
 
   html { scroll-behavior: smooth; }
@@ -55,33 +55,63 @@
 
   .app-shell { display: flex; min-height: 100vh; position: relative; z-index: 1; }
 
-  /* ─── SIDEBAR ─── */
+  /* ─── COLLAPSIBLE SIDEBAR ─── */
+  :root { --sidebar-w: 220px; --sidebar-collapsed-w: 60px; }
+
   .sidebar {
     width: var(--sidebar-w); flex-shrink: 0; background: var(--surface);
     border-right: 1px solid var(--border); display: flex; flex-direction: column;
     position: fixed; top: 0; left: 0; bottom: 0; z-index: 50;
+    transition: width 0.3s cubic-bezier(.4,0,.2,1);
   }
+  .sidebar.collapsed { width: var(--sidebar-collapsed-w); }
+
+  /* Collapsed: hide text labels, badges, section labels, footer text, course info */
+  .sidebar.collapsed .logo-text-block { max-width: 0; opacity: 0; overflow: hidden; }
+  .sidebar.collapsed .logo-icon { margin: 0 auto; }
+  .sidebar.collapsed .sidebar-logo { justify-content: center; padding: 18px 0 16px; gap: 0; }
+  .sidebar.collapsed .nav-item span:not(.nav-icon):not(.tab-badge) { display: none; }
+  .sidebar.collapsed .nav-item { justify-content: center; padding: 10px; }
+  .sidebar.collapsed .nav-icon { margin: 0; }
+  .sidebar.collapsed .nav-section-label { display: none; }
+  .sidebar.collapsed .nav-divider { margin: 6px 10px; }
+  .sidebar.collapsed .sidebar-course-info { display: none !important; }
+  .sidebar.collapsed .sidebar-footer { padding: 12px 8px; }
+  .sidebar.collapsed .back-btn { justify-content: center; padding: 10px; }
+  .sidebar.collapsed .back-btn span { display: none; }
+  .sidebar.collapsed .tab-badge { display: none !important; }
+
+  /* Main shifts with sidebar */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; transition: margin-left 0.3s cubic-bezier(.4,0,.2,1); }
+  .sidebar.collapsed ~ .main { margin-left: var(--sidebar-collapsed-w); }
+
+  /* Sidebar toggle button — lives inside topbar */
+  .sidebar-toggle-btn {
+    width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+    background: var(--surface2); border: 1px solid var(--border);
+    display: grid; place-items: center; cursor: pointer; color: var(--muted);
+    transition: all 0.2s; margin-right: 12px;
+  }
+  .sidebar-toggle-btn:hover { color: var(--accent); border-color: rgba(0,229,255,0.3); background: var(--surface); }
 
   .sidebar-logo {
     display: flex; align-items: center; gap: 10px;
-    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.15rem;
-    color: var(--text); text-decoration: none; letter-spacing: -.5px;
-    padding: 22px 22px 20px; border-bottom: 1px solid var(--border);
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    color: var(--text); text-decoration: none;
+    padding: 18px 16px 16px; border-bottom: 1px solid var(--border);
+    overflow: hidden;
   }
   .logo-icon {
-    width: 32px; height: 32px;
+    width: 32px; height: 32px; flex-shrink: 0;
     background: linear-gradient(135deg, var(--accent2), var(--accent));
     border-radius: 7px; display: grid; place-items: center;
     font-size: .72rem; font-weight: 900; color: #fff;
-    box-shadow: 0 0 16px rgba(123,92,255,.5); flex-shrink: 0;
+    box-shadow: 0 0 16px rgba(123,92,255,.5);
   }
-  .sidebar-logo span { color: var(--accent); }
-  .sidebar-logo .tagline {
-    font-family: 'DM Sans', sans-serif; font-weight: 300;
-    font-size: .6rem; color: var(--muted); letter-spacing: .08em;
-    text-transform: uppercase; display: block; margin-top: 2px;
-  }
-  .logo-line { display: block; line-height: 1.15; }
+  .logo-text-block { display: flex; flex-direction: column; line-height: 1.1; overflow: hidden; transition: opacity 0.25s, max-width 0.3s; max-width: 160px; }
+  .logo-line1 { font-size: 0.95rem; letter-spacing: -.02em; color: var(--text); }
+  .logo-line2 { font-size: 0.95rem; letter-spacing: -.02em; color: var(--accent); }
+  .logo-tagline { font-family: 'DM Sans', sans-serif; font-weight: 300; font-size: .55rem; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 3px; }
 
   .sidebar-nav { flex: 1; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
 
@@ -142,20 +172,20 @@
   .back-btn:hover { color: var(--text); border-color: var(--border); background: var(--surface2); }
 
   /* ─── MAIN ─── */
-  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  /* .main rule lives in collapsible sidebar section above */
 
   .topbar {
-    height: 66px; background: rgba(5,10,24,.88); backdrop-filter: blur(20px);
+    height: 60px; background: rgba(5,10,24,.92); backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;
-    padding: 0 32px; position: sticky; top: 0; z-index: 60;
+    padding: 0 24px; position: sticky; top: 0; z-index: 60; gap: 12px;
   }
 
-  .topbar-left { display: flex; align-items: center; gap: 10px; }
-  .topbar-breadcrumb { font-size: .85rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-  .topbar-breadcrumb a { color: var(--muted); text-decoration: none; transition: color .2s; }
+  .topbar-left { display: flex; align-items: center; gap: 0; min-width: 0; flex: 1; }
+  .topbar-breadcrumb { font-size: .82rem; color: var(--muted); display: flex; align-items: center; gap: 5px; min-width: 0; }
+  .topbar-breadcrumb a { color: var(--muted); text-decoration: none; transition: color .2s; white-space: nowrap; }
   .topbar-breadcrumb a:hover { color: var(--accent); }
-  .topbar-breadcrumb span { color: var(--text); font-weight: 500; }
-  .chevron { color: var(--muted); font-size: .8rem; }
+  .topbar-breadcrumb span.course-name-crumb { color: var(--text); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; display: block; }
+  .chevron { color: var(--muted); font-size: .8rem; flex-shrink: 0; }
 
   .topbar-right { display: flex; align-items: center; gap: 16px; }
   .student-id-badge {
@@ -203,50 +233,53 @@
   .course-header {
     background: linear-gradient(135deg, var(--surface), var(--surface2));
     border-bottom: 1px solid var(--border);
-    padding: 28px 36px 24px;
+    padding: 16px 32px 14px;
     position: relative; overflow: hidden;
     animation: fadeUp .5s cubic-bezier(.16,1,.3,1) both;
   }
   .course-header::before {
-    content: ''; position: absolute; top: -60px; right: -60px;
-    width: 280px; height: 280px;
-    background: radial-gradient(circle, rgba(123,92,255,.12), transparent 70%);
+    content: ''; position: absolute; top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(123,92,255,.1), transparent 70%);
     border-radius: 50%; pointer-events: none;
   }
-  .course-header-inner { position: relative; z-index: 1; }
+  .course-header-inner { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 
-  .course-status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .course-status-row { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .status-chip {
-    padding: 3px 12px; border-radius: 100px; font-size: .72rem; font-weight: 700;
-    text-transform: uppercase; letter-spacing: .06em;
+    padding: 3px 10px; border-radius: 100px; font-size: .68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em; white-space: nowrap;
   }
   .status-chip.ongoing { background: rgba(0,229,255,.12); color: var(--accent); border: 1px solid rgba(0,229,255,.2); }
   .status-chip.upcoming { background: rgba(123,92,255,.12); color: var(--accent2); border: 1px solid rgba(123,92,255,.2); }
   .status-chip.completed { background: rgba(0,229,153,.1); color: #00e599; border: 1px solid rgba(0,229,153,.2); }
   .status-chip.enrolled { background: rgba(0,229,153,.1); color: #00e599; border: 1px solid rgba(0,229,153,.2); }
 
+  .course-header-text { flex: 1; min-width: 0; }
   .course-header h1 {
-    font-family: 'Syne', sans-serif; font-weight: 800;
-    font-size: 1.6rem; letter-spacing: -.02em; line-height: 1.2;
-    margin-bottom: 8px; color: var(--text);
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 0.95rem; letter-spacing: -.01em; line-height: 1.3;
+    color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 700px;
   }
   .course-header-meta {
-    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
-    font-size: .85rem; color: var(--muted); margin-bottom: 18px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    font-size: .78rem; color: var(--muted); margin-top: 4px;
   }
-  .course-header-meta span { display: flex; align-items: center; gap: 5px; }
+  .course-header-meta span { display: flex; align-items: center; gap: 4px; }
 
-  .course-header-progress { max-width: 520px; }
-  .ch-progress-label { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); margin-bottom: 6px; }
-  .ch-progress-track { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; border: 1px solid var(--border2); }
-  .ch-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)); box-shadow: 0 0 10px rgba(0,229,255,.3); transition: width 1.2s cubic-bezier(.16,1,.3,1); }
+  .course-header-progress { margin-left: auto; min-width: 180px; flex-shrink: 0; }
+  .ch-progress-label { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-bottom: 5px; }
+  .ch-progress-track { height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; border: 1px solid var(--border2); }
+  .ch-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)); box-shadow: 0 0 8px rgba(0,229,255,.3); transition: width 1.2s cubic-bezier(.16,1,.3,1); }
 
   .tab-nav {
     display: flex; align-items: stretch; gap: 0;
     border-bottom: 1px solid var(--border);
     background: rgba(5,10,24,.6); backdrop-filter: blur(10px);
-    padding: 0 36px;
-    position: sticky; top: 66px; z-index: 40;
+    padding: 0 32px;
+    position: sticky; top: 60px; z-index: 40;
     overflow-x: auto;
   }
   .tab-nav::-webkit-scrollbar { display: none; }
@@ -464,17 +497,33 @@
   @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
   @media (max-width: 768px) {
-    :root { --sidebar-w: 0px; }
-    .sidebar { display: none; }
-    .main { margin-left: 0; }
-    .course-header { padding: 20px 20px 18px; }
-    .tab-nav { padding: 0 16px; }
-    .content-area { padding: 24px 20px 50px; }
+    :root { --sidebar-w: 220px; --sidebar-collapsed-w: 0px; }
+    .sidebar { transform: translateX(-100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1), width 0.3s; width: var(--sidebar-w) !important; }
+    .sidebar.mob-open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+    .sidebar.mob-open .logo-text-block { max-width: 160px; opacity: 1; }
+    .sidebar.mob-open .sidebar-logo { justify-content: flex-start; padding: 18px 16px 16px; gap: 10px; }
+    .sidebar.mob-open .nav-item { justify-content: flex-start; padding: 10px 14px; }
+    .sidebar.mob-open .nav-section-label { display: block; }
+    .main { margin-left: 0 !important; }
+    .sidebar.collapsed ~ .main { margin-left: 0 !important; }
+    /* Overlay backdrop */
+    .sidebar-backdrop { display: block; }
+    .course-header { padding: 12px 16px; }
+    .course-header-inner { gap: 10px; }
+    .course-header h1 { font-size: 0.85rem; max-width: 100%; }
+    .course-header-progress { min-width: 130px; }
+    .tab-nav { padding: 0 16px; top: 60px; }
+    .content-area { padding: 20px 16px 50px; }
     .stat-cards { grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .resources-grid { grid-template-columns: 1fr; }
-    .topbar { padding: 0 16px; }
+    .topbar { padding: 0 14px; height: 56px; }
     .student-id-badge { display: none; }
-    .course-header h1 { font-size: 1.25rem; }
+  }
+
+  /* Sidebar backdrop overlay on mobile */
+  .sidebar-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 49;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
   }
 
   /* ─── UNIFIED MODULE LAYOUT ─── */
@@ -825,8 +874,6 @@
     .mob-module-toggle-bar { margin: 0 14px 12px; }
   }
   @media (max-width: 768px) {
-  /* ... your existing mobile css ... */
-
   /* 1. Stop iOS from auto-zooming on input focus */
   input[type="text"],
   input[type="email"],
@@ -849,28 +896,20 @@
 
 <div class="blob blob-1"></div>
 <div class="blob blob-2"></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 
 <div class="app-shell">
 
-  <aside class="sidebar">
+  <aside class="sidebar collapsed" id="appSidebar">
     <a href="index.html" class="sidebar-logo">
       <div class="logo-icon">DF</div>
-      <div>
-        <span class="logo-line">Decentra<span>Force</span></span>
-        <span class="tagline">Your Web3 University</span>
+      <div class="logo-text-block">
+        <span class="logo-line1">Decentra</span>
+        <span class="logo-line2">Force</span>
+        <span class="logo-tagline">Your Web3 University</span>
       </div>
     </a>
 
-    <div style="padding: 14px 12px 0;">
-      <div class="sidebar-course-info" id="sidebarCourseInfo" style="display:none;">
-        <div class="course-thumb" id="sidebarThumb">🎓</div>
-        <div class="sidebar-course-title" id="sidebarCourseTitle">Loading...</div>
-        <div class="sidebar-progress-wrap">
-          <div class="progress-label"><span>Progress</span><span id="sidebarPct">0%</span></div>
-          <div class="progress-track"><div class="progress-fill" id="sidebarFill" style="width:0%"></div></div>
-        </div>
-      </div>
-    </div>
 
     <nav class="sidebar-nav">
       <div class="nav-section-label" style="margin-top:6px;">Navigate</div>
@@ -914,10 +953,13 @@
 
     <header class="topbar">
       <div class="topbar-left">
+        <button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Toggle sidebar">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
         <div class="topbar-breadcrumb">
           <a href="my-courses.html">My Courses</a>
           <span class="chevron">›</span>
-          <span id="topbarTitle">Loading...</span>
+          <span class="course-name-crumb" id="topbarTitle">Loading...</span>
         </div>
       </div>
       <div class="topbar-right">
@@ -960,16 +1002,18 @@
             <span class="status-chip enrolled" id="headerStatus">Enrolled</span>
             <span class="status-chip ongoing" id="courseStatusChip" style="display:none;"></span>
           </div>
-          <h1 id="headerTitle">Course Title</h1>
-          <div class="course-header-meta">
-            <span>🎓 <span id="headerInstructor">DecentraForce</span></span>
-            <span>📦 <span id="headerModules">0</span> Modules</span>
-            <span>🎥 <span id="headerLectures">0</span> Lectures</span>
-            <span>⚡ <span id="headerExercises">0</span> Exercises</span>
+          <div class="course-header-text">
+            <h1 id="headerTitle">Course Title</h1>
+            <div class="course-header-meta">
+              <span>🎓 <span id="headerInstructor">DecentraForce</span></span>
+              <span>📦 <span id="headerModules">0</span> Modules</span>
+              <span>🎥 <span id="headerLectures">0</span> Lectures</span>
+              <span>⚡ <span id="headerExercises">0</span> Exercises</span>
+            </div>
           </div>
-          <div class="course-header-progress" style="display:none;">
+          <div class="course-header-progress" id="headerProgressWrap" style="display:none;">
             <div class="ch-progress-label">
-              <span>Your Progress</span>
+              <span>Progress</span>
               <span id="headerPct" style="color:var(--accent);font-weight:700;">0%</span>
             </div>
             <div class="ch-progress-track">
@@ -1179,6 +1223,20 @@
 </div>
 
 <script>
+  // ── SIDEBAR TOGGLE ─────────────────────────────────────────────────────
+  function toggleSidebar() {
+    const sidebar = document.getElementById('appSidebar');
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      const isOpen = sidebar.classList.contains('mob-open');
+      sidebar.classList.toggle('mob-open', !isOpen);
+      document.getElementById('sidebarBackdrop').style.display = isOpen ? 'none' : 'block';
+    } else {
+      sidebar.classList.toggle('collapsed');
+    }
+  }
+  window.toggleSidebar = toggleSidebar;
+
   // ── STATE ──────────────────────────────────────────────────────────────
   let currentUser   = null;
   let activeCourse  = null;
@@ -1253,13 +1311,6 @@
       statusChip.textContent   = status.charAt(0).toUpperCase() + status.slice(1);
       statusChip.className     = `status-chip ${status}`;
       statusChip.style.display = '';
-    }
-
-    const sidebarInfo = document.getElementById('sidebarCourseInfo');
-    sidebarInfo.style.display = '';
-    document.getElementById('sidebarCourseTitle').textContent = activeCourse.title || 'Untitled';
-    if (activeCourse.thumbnail_url && activeCourse.thumbnail_url.length > 10) {
-      document.getElementById('sidebarThumb').innerHTML = `<img src="${activeCourse.thumbnail_url}" alt="thumbnail">`;
     }
 
     document.getElementById('pageLoader').style.display   = 'none';
@@ -1408,6 +1459,15 @@
     const pct = Math.round(((flatIdx + 1) / flatLectures.length) * 100);
     document.getElementById('sideModPct').textContent = `${pct}%`;
     document.getElementById('sideModFill').style.width = `${pct}%`;
+    // Compact header progress
+    const hPct = document.getElementById('headerPct');
+    const hFill = document.getElementById('headerFill');
+    const hWrap = document.getElementById('headerProgressWrap');
+    if (hPct && hFill && hWrap) {
+      hPct.textContent = `${pct}%`;
+      hFill.style.width = `${pct}%`;
+      hWrap.style.display = '';
+    }
 
     // Reset: remove has-started so big play button shows again for new video
     const ytContainer = document.getElementById('yt-container');
