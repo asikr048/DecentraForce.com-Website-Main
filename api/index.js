@@ -10,9 +10,13 @@ import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 
 // ─── CORS helper ──────────────────────────────────────────────────────────────
-function setCors(res) {
+function setCors(req, res) {
+  // Reflect the request origin so cookies are allowed with credentials=include.
+  // Wildcard (*) + credentials is rejected by all browsers.
+  const origin = req.headers.origin || '';
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers',
     'X-CSRF-Token,X-Requested-With,Accept,Accept-Version,Content-Length,Content-MD5,Content-Type,Date,X-Api-Version');
@@ -272,7 +276,7 @@ async function authLogin(req, res) {
   await query('UPDATE users SET session_token=$1,session_expires=$2 WHERE id=$3', [sessionToken, sessionExpires, user.id]);
 
   const isStaff = user.is_admin === true || user.role === 'manager' || user.role === 'task_manager';
-  res.setHeader('Set-Cookie', `session_token=${sessionToken}; HttpOnly; Path=/; Max-Age=${30*24*60*60}; SameSite=Strict`);
+  res.setHeader('Set-Cookie', `session_token=${sessionToken}; HttpOnly; Path=/; Max-Age=${30*24*60*60}; SameSite=Lax`);
   return res.status(200).json({
     success: true, message: 'Login successful',
     user: { id: user.id, username: user.username, email: user.email, createdAt: user.created_at, verified: user.verified, isAdmin: user.is_admin === true, role: user.role || 'user' },
@@ -285,7 +289,7 @@ async function authLogout(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   const match = (req.headers.cookie || '').match(/session_token=([^;]+)/);
   if (match) await query('UPDATE users SET session_token=NULL,session_expires=NULL WHERE session_token=$1', [match[1]]);
-  res.setHeader('Set-Cookie', 'session_token=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict');
+  res.setHeader('Set-Cookie', 'session_token=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax');
   return res.status(200).json({ success: true, message: 'Logout successful', loggedIn: false });
 }
 
@@ -1190,7 +1194,7 @@ async function adminReorder(req, res) {
 // MAIN DISPATCHER
 // ═══════════════════════════════════════════════════════════════════════════════
 export default async function handler(req, res) {
-  setCors(res);
+  setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const path = req.url.split('?')[0].replace(/\/$/, '');
