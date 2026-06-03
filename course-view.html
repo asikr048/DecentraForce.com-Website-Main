@@ -498,12 +498,28 @@
 
   @media (max-width: 768px) {
     :root { --sidebar-w: 220px; --sidebar-collapsed-w: 0px; }
-    .sidebar { transform: translateX(-100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1), width 0.3s; width: var(--sidebar-w) !important; }
+    /* On mobile, sidebar always slides in/out via transform — width stays fixed */
+    .sidebar { transform: translateX(-100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1); width: var(--sidebar-w) !important; }
+    /* Override all collapsed-class visual changes on mobile — transform controls visibility */
+    .sidebar.collapsed { width: var(--sidebar-w) !important; }
+    .sidebar.collapsed .logo-text-block { max-width: 160px; opacity: 1; overflow: visible; }
+    .sidebar.collapsed .logo-icon { margin: 0; }
+    .sidebar.collapsed .sidebar-logo { justify-content: flex-start; padding: 18px 16px 16px; gap: 10px; }
+    .sidebar.collapsed .nav-item span:not(.nav-icon):not(.tab-badge) { display: inline; }
+    .sidebar.collapsed .nav-item { justify-content: flex-start; padding: 10px 14px; }
+    .sidebar.collapsed .nav-section-label { display: block; }
+    .sidebar.collapsed .sidebar-course-info { display: flex !important; }
+    .sidebar.collapsed .sidebar-footer { padding: 16px 12px; }
+    .sidebar.collapsed .back-btn { justify-content: flex-start; padding: 10px 14px; }
+    .sidebar.collapsed .back-btn span { display: inline; }
+    .sidebar.collapsed .tab-badge { display: inline-flex !important; }
+    /* Slide in when mob-open */
     .sidebar.mob-open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
     .sidebar.mob-open .logo-text-block { max-width: 160px; opacity: 1; }
     .sidebar.mob-open .sidebar-logo { justify-content: flex-start; padding: 18px 16px 16px; gap: 10px; }
     .sidebar.mob-open .nav-item { justify-content: flex-start; padding: 10px 14px; }
     .sidebar.mob-open .nav-section-label { display: block; }
+    /* Main always full width on mobile */
     .main { margin-left: 0 !important; }
     .sidebar.collapsed ~ .main { margin-left: 0 !important; }
     /* Overlay backdrop */
@@ -1226,16 +1242,45 @@
   // ── SIDEBAR TOGGLE ─────────────────────────────────────────────────────
   function toggleSidebar() {
     const sidebar = document.getElementById('appSidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
     const isMobile = window.innerWidth <= 768;
     if (isMobile) {
       const isOpen = sidebar.classList.contains('mob-open');
       sidebar.classList.toggle('mob-open', !isOpen);
-      document.getElementById('sidebarBackdrop').style.display = isOpen ? 'none' : 'block';
+      backdrop.style.display = isOpen ? 'none' : 'block';
     } else {
-      sidebar.classList.toggle('collapsed');
+      const isCollapsed = sidebar.classList.toggle('collapsed');
+      // Persist desktop preference
+      try { localStorage.setItem('sidebarCollapsed', isCollapsed ? '1' : '0'); } catch(e) {}
     }
   }
   window.toggleSidebar = toggleSidebar;
+
+  // Restore desktop sidebar state on load
+  (function() {
+    if (window.innerWidth > 768) {
+      try {
+        const saved = localStorage.getItem('sidebarCollapsed');
+        const sidebar = document.getElementById('appSidebar');
+        if (saved === '0') {
+          sidebar.classList.remove('collapsed');
+        } else {
+          // Default: collapsed
+          sidebar.classList.add('collapsed');
+        }
+      } catch(e) {}
+    }
+  })();
+
+  // Ensure backdrop hides when resizing to desktop
+  window.addEventListener('resize', function() {
+    const sidebar = document.getElementById('appSidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (window.innerWidth > 768) {
+      sidebar.classList.remove('mob-open');
+      backdrop.style.display = 'none';
+    }
+  });
 
   // ── STATE ──────────────────────────────────────────────────────────────
   let currentUser   = null;
