@@ -63,6 +63,7 @@
     border-right: 1px solid var(--border); display: flex; flex-direction: column;
     position: fixed; top: 0; left: 0; bottom: 0; z-index: 50;
     transition: width 0.3s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
   }
   .sidebar.collapsed { width: var(--sidebar-collapsed-w); }
 
@@ -70,6 +71,7 @@
   .sidebar.collapsed .logo-text-block { max-width: 0; opacity: 0; overflow: hidden; }
   .sidebar.collapsed .logo-icon { margin: 0 auto; }
   .sidebar.collapsed .sidebar-logo { justify-content: center; padding: 18px 0 16px; gap: 0; }
+  .sidebar.collapsed .nav-label { display: none; }
   .sidebar.collapsed .nav-item span:not(.nav-icon):not(.tab-badge) { display: none; }
   .sidebar.collapsed .nav-item { justify-content: center; padding: 10px; }
   .sidebar.collapsed .nav-icon { margin: 0; }
@@ -78,7 +80,6 @@
   .sidebar.collapsed .sidebar-course-info { display: none !important; }
   .sidebar.collapsed .sidebar-footer { padding: 12px 8px; }
   .sidebar.collapsed .back-btn { justify-content: center; padding: 10px; }
-  .sidebar.collapsed .back-btn span { display: none; }
   .sidebar.collapsed .tab-badge { display: none !important; }
 
   /* Main shifts with sidebar */
@@ -506,6 +507,7 @@
     .sidebar.collapsed .logo-icon { margin: 0; }
     .sidebar.collapsed .sidebar-logo { justify-content: flex-start; padding: 18px 16px 16px; gap: 10px; }
     .sidebar.collapsed .nav-item span:not(.nav-icon):not(.tab-badge) { display: inline; }
+    .sidebar.collapsed .nav-label { display: inline; }
     .sidebar.collapsed .nav-item { justify-content: flex-start; padding: 10px 14px; }
     .sidebar.collapsed .nav-section-label { display: block; }
     .sidebar.collapsed .sidebar-course-info { display: flex !important; }
@@ -930,28 +932,28 @@
     <nav class="sidebar-nav">
       <div class="nav-section-label" style="margin-top:6px;">Navigate</div>
       <button class="nav-item active" id="sideNavModule" onclick="switchTab('module')">
-        <div class="nav-icon">📚</div> Module
+        <div class="nav-icon">📚</div> <span class="nav-label">Module</span>
       </button>
       <button class="nav-item" id="sideNavAssignment" onclick="switchTab('assignment')">
-        <div class="nav-icon">📝</div> Assignment
+        <div class="nav-icon">📝</div> <span class="nav-label">Assignment</span>
       </button>
       <button class="nav-item" id="sideNavResources" onclick="switchTab('resources')">
-        <div class="nav-icon">🔗</div> Resources
+        <div class="nav-icon">🔗</div> <span class="nav-label">Resources</span>
       </button>
       <button class="nav-item" id="sideNavLeaderboard" onclick="switchTab('leaderboard')">
-        <div class="nav-icon">🏆</div> Leader Board
+        <div class="nav-icon">🏆</div> <span class="nav-label">Leader Board</span>
       </button>
       <button class="nav-item" id="sideNavExam" onclick="switchTab('exam')">
-        <div class="nav-icon">🎯</div> Exam
+        <div class="nav-icon">🎯</div> <span class="nav-label">Exam</span>
         <span class="tab-badge" id="sideExamBadge" style="display:none;margin-left:auto;background:var(--accent3)">LIVE</span>
       </button>
       <button class="nav-item" id="sideNavAnnouncements" onclick="switchTab('announcements')">
-        <div class="nav-icon">📢</div> Announcements
+        <div class="nav-icon">📢</div> <span class="nav-label">Announcements</span>
         <span class="tab-badge" id="sideAnnounceBadge" style="display:none;margin-left:auto;"></span>
       </button>
       <div class="nav-divider"></div>
       <a href="my-courses.html" class="nav-item">
-        <div class="nav-icon">⊞</div> My Courses
+        <div class="nav-icon">⊞</div> <span class="nav-label">My Courses</span>
       </a>
     </nav>
 
@@ -960,7 +962,7 @@
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M9 11L5 7l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
-        Back to My Courses
+        <span class="nav-label">Back to My Courses</span>
       </a>
     </div>
   </aside>
