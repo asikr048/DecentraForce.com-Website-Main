@@ -11,8 +11,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 // ─── CORS helper ──────────────────────────────────────────────────────────────
 function setCors(req, res) {
-  // Reflect the request origin so cookies are allowed with credentials=include.
-  // Wildcard (*) + credentials is rejected by all browsers.
   const origin = req.headers.origin || '';
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', origin || '*');
@@ -41,7 +39,6 @@ async function requireAdmin(req, res) {
 async function requireManagerOrAbove(req, res) {
   const token = req.cookies?.session_token;
   if (!token) { res.status(401).json({ success: false, error: 'Unauthorized' }); return null; }
-  try { await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`); } catch {}
   const r = await query(
     `SELECT id, email, password_hash, role, is_admin FROM users WHERE session_token=$1 AND session_expires>NOW() AND (is_admin=TRUE OR role='manager')`,
     [token]
@@ -53,8 +50,6 @@ async function requireManagerOrAbove(req, res) {
 async function requireStaff(req, res) {
   const token = req.cookies?.session_token;
   if (!token) { res.status(401).json({ success: false, error: 'Unauthorized' }); return null; }
-  // Self-heal: ensure role column exists
-  try { await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`); } catch {}
   const r = await query(
     `SELECT id, email, password_hash, role, is_admin FROM users WHERE session_token=$1 AND session_expires>NOW() AND (is_admin=TRUE OR role IN ('manager','task_manager'))`,
     [token]
@@ -83,7 +78,6 @@ async function publicCourses(req, res) {
 async function verifyCoupon(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   const { code } = req.body || {};
-  await query(`CREATE TABLE IF NOT EXISTS coupons (id SERIAL PRIMARY KEY, code VARCHAR(50) UNIQUE, discount_percent INT, created_at TIMESTAMP DEFAULT NOW())`);
   const r = await query('SELECT discount_percent FROM coupons WHERE code=$1', [(code||'').toUpperCase().trim()]);
   if (r.rows.length) return res.status(200).json({ success: true, discount: r.rows[0].discount_percent });
   return res.status(400).json({ success: false, error: 'Invalid or expired coupon' });
@@ -114,17 +108,6 @@ async function createPurchase(req, res) {
   const courseResult = await query('SELECT id FROM courses WHERE id=$1', [course_id]);
   if (!courseResult.rows.length) return res.status(404).json({ success: false, error: 'Course not found' });
 
-  // Ensure purchases table exists
-  await query(`CREATE TABLE IF NOT EXISTS purchases (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
-    sender_number VARCHAR(50) NOT NULL,
-    transaction_id VARCHAR(100) NOT NULL,
-    payment_method VARCHAR(50) NOT NULL,
-    status VARCHAR(50) DEFAULT 'pending',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-  )`);
 
   // Insert purchase with pending status
   const result = await query(
@@ -152,17 +135,6 @@ async function userPurchases(req, res) {
   
   const user = userResult.rows[0];
   
-  // Ensure purchases table exists
-  await query(`CREATE TABLE IF NOT EXISTS purchases (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
-    sender_number VARCHAR(50) NOT NULL,
-    transaction_id VARCHAR(100) NOT NULL,
-    payment_method VARCHAR(50) NOT NULL,
-    status VARCHAR(50) DEFAULT 'pending',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-  )`);
 
   // Fetch purchases for this user, join with course details
   const r = await query(`
@@ -180,17 +152,6 @@ async function userPurchases(req, res) {
 async function adminPurchases(req, res) {
   const admin = await requireStaff(req, res); if (!admin) return;
 
-  // Ensure purchases table exists (self-healing — no need to visit /api/admin/init first)
-  await query(`CREATE TABLE IF NOT EXISTS purchases (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
-    sender_number VARCHAR(50) NOT NULL,
-    transaction_id VARCHAR(100) NOT NULL,
-    payment_method VARCHAR(50) NOT NULL,
-    status VARCHAR(50) DEFAULT 'pending',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-  )`);
 
   if (req.method === 'GET') {
     // Fetch purchases and join with course and user tables to get titles and names
@@ -276,7 +237,7 @@ async function authLogin(req, res) {
   await query('UPDATE users SET session_token=$1,session_expires=$2 WHERE id=$3', [sessionToken, sessionExpires, user.id]);
 
   const isStaff = user.is_admin === true || user.role === 'manager' || user.role === 'task_manager';
-  res.setHeader('Set-Cookie', `session_token=${sessionToken}; HttpOnly; Path=/; Max-Age=${30*24*60*60}; SameSite=Lax`);
+  res.setHeader('Set-Cookie', `session_token=${sessionToken}; HttpOnly; Path=/; Max-Age=${30*24*60*60}; SameSite=Strict`);
   return res.status(200).json({
     success: true, message: 'Login successful',
     user: { id: user.id, username: user.username, email: user.email, createdAt: user.created_at, verified: user.verified, isAdmin: user.is_admin === true, role: user.role || 'user' },
@@ -289,7 +250,7 @@ async function authLogout(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   const match = (req.headers.cookie || '').match(/session_token=([^;]+)/);
   if (match) await query('UPDATE users SET session_token=NULL,session_expires=NULL WHERE session_token=$1', [match[1]]);
-  res.setHeader('Set-Cookie', 'session_token=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax');
+  res.setHeader('Set-Cookie', 'session_token=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict');
   return res.status(200).json({ success: true, message: 'Logout successful', loggedIn: false });
 }
 
@@ -466,33 +427,25 @@ async function adminInit(req, res) {
 // ── ADMIN: GET/POST/PUT/DELETE /api/admin/courses ─────────────────────────────
 async function adminCourses(req, res) {
   // GET allowed for all staff; write operations (POST/PUT/DELETE) require manager or admin
+  // requireManagerOrAbove/requireStaff already return the authenticated user — reuse it directly.
+  let admin;
   if (req.method === 'GET') {
-    const staff = await requireStaff(req, res); if (!staff) return;
+    admin = await requireStaff(req, res); if (!admin) return;
   } else {
-    const mgr = await requireManagerOrAbove(req, res); if (!mgr) return;
+    admin = await requireManagerOrAbove(req, res); if (!admin) return;
   }
-  // Re-fetch actor for downstream use (id, etc.)
-  const token = req.cookies?.session_token;
-  const actorR = await query(`SELECT id,email,password_hash,role,is_admin FROM users WHERE session_token=$1 AND session_expires>NOW()`, [token]);
-  const admin = actorR.rows[0];
-
-  // Ensure purchases table exists
-  await query(`CREATE TABLE IF NOT EXISTS purchases (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
-    sender_number VARCHAR(50) NOT NULL,
-    transaction_id VARCHAR(100) NOT NULL,
-    payment_method VARCHAR(50) NOT NULL,
-    status VARCHAR(50) DEFAULT 'pending',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-  )`);
 
   if (req.method === 'GET') {
+    // Use left(thumbnail_url, 1) to cheaply detect base64 vs URL without transferring MB of data.
+    // Base64 data URIs start with 'data:'; real URLs start with 'http'. We truncate base64 at
+    // 500KB (enough for the admin preview) and return URLs as-is.
     const r = await query(`
       SELECT c.id,c.title,c.description,c.video_url,c.modules,c.is_active,c.created_at,
         c.price,c.whatsapp,c.status,c.sequence_order,
-        CASE WHEN length(c.thumbnail_url)>2000000 THEN '' ELSE c.thumbnail_url END AS thumbnail_url,
+        CASE
+          WHEN left(c.thumbnail_url,5)='data:' THEN left(c.thumbnail_url,500000)
+          ELSE c.thumbnail_url
+        END AS thumbnail_url,
         COUNT(uc.user_id)::int AS enrolled_count
       FROM courses c LEFT JOIN user_courses uc ON uc.course_id=c.id
       GROUP BY c.id ORDER BY COALESCE(c.sequence_order,9999),c.created_at DESC`);
@@ -1191,11 +1144,46 @@ async function adminReorder(req, res) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// ONE-TIME BOOT MIGRATION
+// Runs DDL (ALTER TABLE / CREATE TABLE IF NOT EXISTS) exactly once per cold start.
+// This prevents the same DDL from running on every request inside route handlers.
+// ═══════════════════════════════════════════════════════════════════════════════
+let _bootMigrationDone = false;
+async function runBootMigration() {
+  if (_bootMigrationDone) return;
+  _bootMigrationDone = true;
+  try {
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`);
+    await query(`CREATE TABLE IF NOT EXISTS purchases (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+      sender_number VARCHAR(50),
+      transaction_id VARCHAR(100),
+      payment_method VARCHAR(50),
+      status VARCHAR(50) DEFAULT 'pending',
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS coupons (
+      id SERIAL PRIMARY KEY, code VARCHAR(50) UNIQUE,
+      discount_percent INT, created_at TIMESTAMP DEFAULT NOW()
+    )`);
+  } catch (e) {
+    // Non-fatal — log and continue; tables likely already exist
+    console.warn('Boot migration warning:', e.message);
+    _bootMigrationDone = false; // allow retry on next request if it failed
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // MAIN DISPATCHER
 // ═══════════════════════════════════════════════════════════════════════════════
 export default async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Run one-time DDL migrations on first request (non-blocking for subsequent requests)
+  await runBootMigration();
 
   const path = req.url.split('?')[0].replace(/\/$/, '');
 

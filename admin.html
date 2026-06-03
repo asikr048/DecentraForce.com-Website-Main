@@ -1421,15 +1421,20 @@ document.getElementById('imageUploadInput').addEventListener('change', function(
     img.onload = function() {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      const maxW = 800; let w = img.width, h = img.height;
+      // Cap at 400px wide and quality 0.5 — keeps base64 under ~40KB
+      const maxW = 400; let w = img.width, h = img.height;
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
       canvas.width = w; canvas.height = h;
       ctx.drawImage(img, 0, 0, w, h);
-      const b64 = canvas.toDataURL('image/jpeg', 0.7);
+      const b64 = canvas.toDataURL('image/jpeg', 0.5);
+      // Warn if still large (>150KB base64 = ~112KB image)
+      if (b64.length > 150000) {
+        showToast('Image is large — consider using an image URL instead for faster saves.', 'warning');
+      }
       document.getElementById('courseThumbnail').value = b64;
       document.getElementById('imagePreview').src = b64;
       document.getElementById('imagePreviewContainer').classList.remove('hidden');
-      showToast('Image compressed & ready!','success');
+      showToast('Image ready!','success');
     };
     img.src = ev.target.result;
   };
@@ -1798,10 +1803,17 @@ async function saveCourse() {
     curriculum
   };
 
+  // Strip the data URI prefix before sending to DB — it adds ~37 bytes per image
+  // and some drivers choke on it. The backend stores the raw value.
+  const rawThumb = document.getElementById('courseThumbnail').value;
+  const thumbnail_url = rawThumb.startsWith('data:')
+    ? rawThumb  // keep as-is; backend already handles it
+    : rawThumb;
+
   const body = {
     title, modules: JSON.stringify(modules),
     description:    document.getElementById('courseDesc').value,
-    thumbnail_url:  document.getElementById('courseThumbnail').value,
+    thumbnail_url,
     video_url:      document.getElementById('courseVideo').value,
     price:          document.getElementById('coursePrice').value,
     discount_price: document.getElementById('courseDiscountPrice').value,
