@@ -244,7 +244,17 @@
       </div>
 
       <div class="tab-content active" id="tab-overview">
-        <div class="desc-text" id="courseDescription">
+        <!-- Short Description -->
+        <div id="shortDescWrapper" style="display:none; margin-bottom: 28px;">
+          <div class="desc-highlight" id="shortDescBox"></div>
+        </div>
+        <!-- Course Overview (from admin panel courseContent / modules.content) -->
+        <div id="courseOverviewWrapper" style="display:none; margin-bottom: 8px;">
+          <div class="desc-section-title">Course Overview</div>
+          <div id="courseOverviewContent"></div>
+        </div>
+        <!-- Fallback plain description -->
+        <div class="desc-text" id="courseDescription" style="display:none;">
           Fetching course details...
         </div>
       </div>
@@ -486,7 +496,7 @@
         return html || `<p class="desc-block">${escHTML(raw.trim())}</p>`;
       }
 
-      document.getElementById('courseDescription').innerHTML = renderDescription(activeCourse.description);
+
 
       // 3. Populate Price & Thumbnail (Sticky Card)
       const priceVal = parseFloat(activeCourse.price) || 0;
@@ -522,6 +532,35 @@
       try {
         parsedModules = typeof activeCourse.modules === 'string' ? JSON.parse(activeCourse.modules) : (activeCourse.modules || {});
       } catch(e) {}
+
+      // --- Short Description ---
+      const shortDesc = (activeCourse.description || '').trim();
+      if (shortDesc) {
+        const shortBox = document.getElementById('shortDescBox');
+        shortBox.innerHTML = /<[a-z][\s\S]*>/i.test(shortDesc)
+          ? shortDesc
+          : `<strong>${escHTML(shortDesc)}</strong>`;
+        document.getElementById('shortDescWrapper').style.display = 'block';
+      }
+
+      // --- Course Overview (modules.content) ---
+      const overviewRaw = (parsedModules.content || '').trim();
+      if (overviewRaw) {
+        const overviewEl = document.getElementById('courseOverviewContent');
+        overviewEl.classList.add('desc-text');
+        if (/<[a-z][\s\S]*>/i.test(overviewRaw)) {
+          overviewEl.innerHTML = overviewRaw;
+        } else {
+          overviewEl.innerHTML = renderDescription(overviewRaw);
+        }
+        document.getElementById('courseOverviewWrapper').style.display = 'block';
+      }
+
+      // Fallback: if neither field has content show a notice
+      if (!shortDesc && !overviewRaw) {
+        document.getElementById('courseDescription').style.display = 'block';
+        document.getElementById('courseDescription').innerHTML = '<p style="color:var(--muted)">No description available for this course.</p>';
+      }
 
       const currContainer = document.getElementById('curriculumContainer');
       const assignContainer = document.getElementById('assignmentsContainer');
