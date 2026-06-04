@@ -1155,6 +1155,7 @@ async function runBootMigration() {
   _bootMigrationDone = true;
   try {
     await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`);
+    await query(`ALTER TABLE courses ALTER COLUMN title TYPE TEXT`);
     await query(`CREATE TABLE IF NOT EXISTS purchases (
       id SERIAL PRIMARY KEY,
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
