@@ -681,7 +681,23 @@
 
       // --- Course Overview (modules.content first, then fall back to description) ---
       // Use the RAW modules.content — don't fall back to shortDesc (avoids duplication)
-      const overviewRaw = (parsedModules.content || '').trim();
+      // Strip CSS blob upfront before anything else runs.
+      // Handles the pattern: "@import ...; .class { ... } Actual text here."
+      // Works by finding the last closing brace } and taking everything after it.
+      function extractTextAfterCSS(str) {
+        if (!str) return str;
+        // If it contains @import or looks like a CSS blob, find end of last CSS block
+        if (/@import\s|\.[\w-]+\s*\{/.test(str)) {
+          const lastBrace = str.lastIndexOf('}');
+          if (lastBrace !== -1) {
+            const after = str.slice(lastBrace + 1).trim();
+            // If there's meaningful text after the last }, return it
+            if (after.length > 10) return after;
+          }
+        }
+        return str;
+      }
+      const overviewRaw = extractTextAfterCSS((parsedModules.content || '').trim());
       if (overviewRaw) {
         const overviewEl = document.getElementById('courseOverviewContent');
         overviewEl.classList.add('desc-text', 'overview-rich');
