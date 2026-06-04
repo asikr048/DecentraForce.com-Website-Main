@@ -692,6 +692,17 @@
         function sanitizeOverview(raw) {
           if (!raw || !raw.trim()) return '';
 
+          // If the content is a full HTML document or rich HTML fragment, render it directly.
+          // Detect: starts with <!DOCTYPE, <html, or contains block-level tags.
+          const isRichHTML = /^\s*<!DOCTYPE/i.test(raw) ||
+                             /^\s*<html/i.test(raw) ||
+                             /<(section|article|div|ul|ol|table|h[1-6]|p)\b/i.test(raw);
+          if (isRichHTML) {
+            // For full documents, extract only the <body> content so styles don't leak
+            const bodyMatch = raw.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+            return bodyMatch ? bodyMatch[1].trim() : raw.trim();
+          }
+
           // Step 1: Extract CSS class definitions BEFORE any stripping
           // so we can later convert class="x" → style="..." on span elements
           const classStyles = {};
@@ -718,7 +729,6 @@
             tmp.innerHTML = s;
             tmp.querySelectorAll('style').forEach(el => el.remove());
 
-            // Check if there are meaningful HTML content elements
             const hasStructuredHTML = tmp.querySelector('p,h1,h2,h3,h4,ul,ol,li,strong,em,a,br,table');
 
             let result = '';
@@ -751,7 +761,7 @@
 
         const sanitized = sanitizeOverview(overviewRaw);
 
-        if (sanitized && /<[a-z][\s\S]*>/i.test(sanitized)) {
+        if (sanitized && (/<[a-z][^>]*>/i.test(sanitized) || /^\s*<!DOCTYPE/i.test(overviewRaw) || /^\s*<html/i.test(overviewRaw))) {
           overviewEl.innerHTML = sanitized;
         } else if (sanitized) {
           overviewEl.innerHTML = renderDescription(sanitized);
