@@ -1830,7 +1830,7 @@ async function saveCourse() {
   });
 
   const modules = {
-    content:     document.getElementById('courseContent').value,
+    content:     stripStylesFromHTML(document.getElementById('courseContent').value),
     lectures:    document.getElementById('courseLectures').value||0,
     exercises:   document.getElementById('courseExercises').value||0,
     assignments: document.getElementById('courseAssignments').value||0,
@@ -1846,7 +1846,7 @@ async function saveCourse() {
 
   const body = {
     title, modules: JSON.stringify(modules),
-    description:    document.getElementById('courseDesc').value,
+    description:    stripStylesFromHTML(document.getElementById('courseDesc').value),
     thumbnail_url,
     video_url:      document.getElementById('courseVideo').value,
     price:          document.getElementById('coursePrice').value,
@@ -2561,6 +2561,20 @@ function plainTitle(str) {
   if(!str) return '';
   var s = String(str).replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, '').trim();
   return s || 'Untitled';
+}
+// Strips <style> tags and raw CSS blobs from description/content fields while
+// preserving safe HTML like <strong>, <em>, <span>, etc.
+function stripStylesFromHTML(str) {
+  if(!str) return '';
+  var s = String(str);
+  // Remove <style>...</style> blocks entirely
+  s = s.replace(/<style[\s\S]*?<\/style>/gi, '');
+  // Remove @import lines
+  s = s.replace(/@import\s[^\n;]*;?/gi, '');
+  // Remove CSS rule blocks like .className { ... }
+  var prev;
+  do { prev = s; s = s.replace(/\.[\w-]+\s*\{[^}]*\}/g, ''); } while(s !== prev);
+  return s.trim();
 }
 function esc(str) {
   if(!str) return '';
