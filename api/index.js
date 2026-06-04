@@ -295,25 +295,25 @@ async function authForgotPassword(req, res) {
   await query('DELETE FROM password_reset_tokens WHERE user_id=$1', [user.id]);
   await query('INSERT INTO password_reset_tokens (user_id,token,expires_at) VALUES ($1,$2,$3)', [user.id, pin, pinExpires]);
 
-  // Send via Resend
+  // Send via Brevo
   try {
-    const resendApiKey = process.env.RESEND_API_KEY;
-    if (!resendApiKey) {
-      console.error('Resend Error: RESEND_API_KEY env var is not set!');
+    const brevoApiKey = process.env.BREVO_API_KEY;
+    if (!brevoApiKey) {
+      console.error('Brevo Error: BREVO_API_KEY env var is not set!');
       return res.status(500).json({ success: false, error: 'Email service is not configured. Please contact support.' });
     }
 
-    const emailRes = await fetch('https://api.resend.com/emails', {
+    const emailRes = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${resendApiKey}`
+        'api-key': brevoApiKey
       },
       body: JSON.stringify({
-        from: 'DecentraForce <onboarding@resend.dev>',
-        to: [email],
+        sender: { name: 'DecentraForce', email: 'asikr048@gmail.com' },
+        to: [{ email: email }],
         subject: 'Your Password Reset PIN',
-        html: `
+        htmlContent: `
           <p>Hello <strong>${user.username}</strong>,</p>
           <p>You requested a password reset for <strong>DecentraForce</strong>.</p>
           <p>Your 6-digit reset PIN is: <strong style="font-size:24px;letter-spacing:4px">${pin}</strong></p>
@@ -326,19 +326,17 @@ async function authForgotPassword(req, res) {
 
     const responseData = await emailRes.json();
     if (!emailRes.ok) {
-      console.error('Resend Failed — HTTP', emailRes.status, ':', JSON.stringify(responseData));
-      // NOTE: On Resend's free tier, emails can only be sent to verified addresses.
-      // To send to any address, verify your sending domain in the Resend dashboard.
-      const resendError = responseData?.message || responseData?.error || 'Unknown email delivery error';
+      console.error('Brevo Failed — HTTP', emailRes.status, ':', JSON.stringify(responseData));
+      const brevoError = responseData?.message || responseData?.error || 'Unknown email delivery error';
       return res.status(500).json({ 
         success: false, 
         error: 'Failed to send reset email. Please try again later or contact support.'
       });
     } else {
-      console.log('Resend Success — Email ID:', responseData.id);
+      console.log('Brevo Success — Message ID:', responseData.messageId);
     }
   } catch(e) {
-    console.error('Network Error during Resend fetch:', e.message);
+    console.error('Network Error during Brevo fetch:', e.message);
     return res.status(500).json({ success: false, error: 'Network error sending email. Please try again.' });
   }
 
