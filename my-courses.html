@@ -1614,19 +1614,16 @@ function getCourseButton(course, type, isPending) {
 
   function getModuleCount(course) {
     try {
-      let modulesObj;
-      if (course.modules && typeof course.modules === 'string') {
-        modulesObj = JSON.parse(course.modules);
-      } else {
-        modulesObj = course.modules;
+      const modulesObj = typeof course.modules === 'string' ? JSON.parse(course.modules) : course.modules;
+      if (!modulesObj || typeof modulesObj !== 'object') return 0;
+      // Count actual lectures from the curriculum array
+      if (Array.isArray(modulesObj.curriculum) && modulesObj.curriculum.length > 0) {
+        return modulesObj.curriculum.reduce((sum, m) => sum + (Array.isArray(m.lectures) ? m.lectures.length : 0), 0);
       }
-      if (Array.isArray(modulesObj)) {
-        return modulesObj.length;
-      } else if (modulesObj && typeof modulesObj === 'object') {
-        // Count keys excluding metadata (same logic as index.html)
-        const exclude = ['category', 'level', 'assignments'];
-        return Object.keys(modulesObj).filter(k => !exclude.includes(k.toLowerCase())).length;
-      }
+      // Fall back to manually-entered lectures number if curriculum not built yet
+      if (modulesObj.lectures) return parseInt(modulesObj.lectures) || 0;
+      // Legacy: if modules itself is an array
+      if (Array.isArray(modulesObj)) return modulesObj.length;
     } catch (e) {}
     return 0;
   }

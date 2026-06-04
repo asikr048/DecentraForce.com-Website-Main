@@ -1502,13 +1502,14 @@ window.addEventListener('storage', (e) => {
           const modulesObj = typeof course.modules === 'string' ? JSON.parse(course.modules) : course.modules;
           if (modulesObj && modulesObj.category) categoryTag = modulesObj.category;
           if (modulesObj && modulesObj.level) levelTag = modulesObj.level;
-          // Calculate module count
-          if (Array.isArray(modulesObj)) {
+          // Count actual lectures from curriculum array
+          if (modulesObj && Array.isArray(modulesObj.curriculum) && modulesObj.curriculum.length > 0) {
+            moduleCount = modulesObj.curriculum.reduce((sum, m) => sum + (Array.isArray(m.lectures) ? m.lectures.length : 0), 0);
+          } else if (modulesObj && modulesObj.lectures) {
+            // Fall back to manually-entered lectures number
+            moduleCount = parseInt(modulesObj.lectures) || 0;
+          } else if (Array.isArray(modulesObj)) {
             moduleCount = modulesObj.length;
-          } else if (modulesObj && typeof modulesObj === 'object') {
-            // Count keys excluding metadata
-            const exclude = ['category', 'level', 'assignments'];
-            moduleCount = Object.keys(modulesObj).filter(k => !exclude.includes(k.toLowerCase())).length;
           }
         } catch(e) {}
 
