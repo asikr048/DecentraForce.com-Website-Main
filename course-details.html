@@ -361,6 +361,7 @@
     }
     .checkout-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(0,229,153,0.45); }
     .checkout-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    @keyframes pendingPop { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     .feedback-input { width: 100%; padding: 14px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: inherit; margin-bottom: 16px; outline: none; transition: border 0.3s; }
     .feedback-input:focus { border-color: var(--accent); }
     .modal-actions { display: flex; gap: 12px; margin-top: 10px; }
@@ -1118,6 +1119,11 @@
         }
       });
 
+      // 6. Check if user already purchased/enrolled — update button state
+      if (activeCourse.id) {
+        checkPurchaseStatus(activeCourse.id);
+      }
+
     } catch (err) {
       console.error(err);
       document.getElementById('heroTitle').textContent = 'Failed to load details.';
@@ -1125,11 +1131,18 @@
   });
 
   // === MODAL LOGIC (Exact match to requirements) ===
+  var _checkoutBodyHTML = null; // cached original body for restore
   function openCheckoutModal(course, price) {
+    const pg = document.getElementById('checkoutModal');
+    const body = pg.querySelector('.checkout-body');
+
+    // Restore original layout if it was replaced by success screen
+    if (_checkoutBodyHTML) { body.innerHTML = _checkoutBodyHTML; }
+    else { _checkoutBodyHTML = body.innerHTML; }
+
     // Populate course info
-    const titleEl = document.getElementById('modalCourseTitle');
     const plainT = (course.title || 'Course Enrollment').replace(/<[^>]+>/g,'').trim();
-    titleEl.textContent = plainT;
+    document.getElementById('modalCourseTitle').textContent = plainT;
     const shortDesc = course.description
       ? course.description.replace(/<[^>]+>/g,'').substring(0, 80) + '…'
       : 'Complete your payment to gain access.';
@@ -1143,8 +1156,16 @@
     document.getElementById('senderNumber').value = '';
     document.getElementById('transactionId').value = '';
 
+    // Re-attach submit listener (needed after innerHTML restore)
+    var confirmBtn = document.getElementById('modalConfirm');
+    if (confirmBtn) {
+      confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+      document.getElementById('modalConfirm').addEventListener('click', handlePaymentSubmit);
+    }
+    var cancelBtn = document.getElementById('modalCancel2');
+    if (cancelBtn) cancelBtn.addEventListener('click', closeCheckoutModal);
+
     // Slide in full page
-    const pg = document.getElementById('checkoutModal');
     pg.style.display = 'flex';
     requestAnimationFrame(() => { pg.classList.add('open'); });
     document.body.style.overflow = 'hidden';
@@ -1160,15 +1181,15 @@
   document.getElementById('modalClose').addEventListener('click', closeCheckoutModal);
   document.getElementById('modalCancel2').addEventListener('click', closeCheckoutModal);
 
-  document.getElementById('modalConfirm').addEventListener('click', (e) => {
+  function handlePaymentSubmit(e) {
     e.preventDefault();
-    const btn = e.target;
+    const btn = document.getElementById('modalConfirm');
     const paymentMethod = document.getElementById('paymentMethod').value;
     const senderNumber = document.getElementById('senderNumber').value.trim();
     const transactionId = document.getElementById('transactionId').value.trim();
-    
+
     if (!paymentMethod || !senderNumber || !transactionId) {
-      alert('Please fill out all fields: Payment Method, Sender Number, and Transaction ID.'); 
+      alert('Please fill in all fields: Payment Method, Sender Number, and Transaction ID.');
       return;
     }
 
@@ -1177,6 +1198,7 @@
 
     fetch('/api/purchases', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         course_id: activeCourse.id,
@@ -1185,34 +1207,107 @@
         payment_method: paymentMethod
       })
     })
-    .then(res => res.json())
-    .then(data => {
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
       if (data.success) {
-        closeCheckoutModal();
-        if (activeCourse.whatsapp) {
-          window.open(activeCourse.whatsapp, '_blank');
-        }
-        alert(`Payment submitted for "${activeCourse.title}"!\nYour purchase is now Pending — the course card will show ⏳ Pending Approval until an admin verifies your transaction.`);
-        window.location.href = 'my-courses.html';
+        if (activeCourse.whatsapp) window.open(activeCourse.whatsapp, '_blank');
+        showPendingSuccess();
       } else {
-        alert('Error: ' + data.error);
-        btn.textContent = 'Submit Payment';
+        alert('Error: ' + (data.error || 'Payment failed. Try again.'));
+        btn.textContent = 'Submit Payment ✓';
         btn.disabled = false;
       }
     })
-    .catch(error => {
-      console.error('Purchase submission error:', error);
+    .catch(function(err) {
+      console.error('Purchase error:', err);
       alert('Network error. Please check your connection and try again.');
-      btn.textContent = 'Submit Payment';
+      btn.textContent = 'Submit Payment ✓';
       btn.disabled = false;
     });
-  });
+  }
+  document.getElementById('modalConfirm').addEventListener('click', handlePaymentSubmit);
 
 
 // === CURRICULUM ACCORDION ===
   function toggleModule(id) {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('open');
+  }
+
+// === PENDING SUCCESS SCREEN ===
+  function showPendingSuccess() {
+    const pg = document.getElementById('checkoutModal');
+    pg.querySelector('.checkout-body').innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 60px);padding:32px 24px;text-align:center;max-width:480px;margin:0 auto;">
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,rgba(0,229,153,0.2),rgba(0,229,255,0.15));border:2px solid rgba(0,229,153,0.4);display:flex;align-items:center;justify-content:center;font-size:2.2rem;margin-bottom:24px;animation:pendingPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;">&#9203;</div>
+        <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;color:var(--text);margin-bottom:10px;">Payment Submitted!</h2>
+        <p style="color:var(--muted);font-size:0.92rem;line-height:1.65;margin-bottom:28px;">Your payment is under review. An admin will verify your transaction and grant access — usually within <strong style="color:var(--accent);">24 hours</strong>.</p>
+        <div style="width:100%;background:rgba(0,229,153,0.06);border:1px solid rgba(0,229,153,0.2);border-radius:12px;padding:18px 20px;margin-bottom:28px;text-align:left;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:0.78rem;color:var(--muted);">Course</span>
+            <span style="font-size:0.85rem;font-weight:600;color:var(--text);max-width:220px;text-align:right;" id="pendingCourseLabel"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.78rem;color:var(--muted);">Status</span>
+            <span style="font-size:0.82rem;font-weight:700;color:#f59e0b;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);padding:3px 10px;border-radius:20px;">&#9203; Pending Approval</span>
+          </div>
+        </div>
+        <button onclick="window.location.href='my-courses.html'" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:0.95rem;cursor:pointer;margin-bottom:12px;">View My Courses</button>
+        <button onclick="closeCheckoutModal()" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--muted);font-size:0.88rem;cursor:pointer;">Back to Course</button>
+      </div>
+    `;
+    // Fill in course name
+    var lbl = pg.querySelector('#pendingCourseLabel');
+    if (lbl && activeCourse) lbl.textContent = (activeCourse.title || '').replace(/<[^>]+>/g,'').trim().substring(0,60);
+    // Update purchase buttons on the page behind
+    setPurchaseBtnState('pending');
+  }
+
+  // === PURCHASE BUTTON STATE ===
+  function setPurchaseBtnState(state) {
+    // state: 'pending' | 'enrolled' | 'buy'
+    const configs = {
+      pending: {
+        text: '⏳ Pending Approval',
+        style: 'background:linear-gradient(135deg,rgba(245,158,11,0.3),rgba(245,158,11,0.2));color:#f59e0b;border:1px solid rgba(245,158,11,0.4);box-shadow:none;cursor:default;',
+        disabled: true
+      },
+      enrolled: {
+        text: '✓ Enrolled — Go to Course',
+        style: 'background:linear-gradient(135deg,#00e599,#00e5ff);color:#050a18;box-shadow:0 6px 20px rgba(0,229,153,0.3);',
+        disabled: false
+      },
+      buy: { text: 'Purchase Course', style: '', disabled: false }
+    };
+    const cfg = configs[state] || configs.buy;
+    ['pagePurchaseBtn','mobilePurchaseBtn'].forEach(function(id) {
+      var btn = document.getElementById(id);
+      if (!btn) return;
+      btn.textContent = cfg.text;
+      btn.style.cssText = cfg.style;
+      btn.disabled = cfg.disabled;
+      if (state === 'enrolled') {
+        btn.onclick = function() { window.location.href = 'my-courses.html'; };
+      }
+    });
+  }
+
+  // === CHECK PURCHASE STATUS ON LOAD ===
+  async function checkPurchaseStatus(courseId) {
+    if (!window.auth || !window.auth.isLoggedIn) return;
+    try {
+      const res = await fetch('/api/user/purchases', { credentials: 'include' });
+      if (!res.ok) return;
+      const data = await res.json();
+      const purchases = data.purchases || data || [];
+      const match = purchases.find(function(p) { return String(p.course_id) === String(courseId); });
+      if (!match) return;
+      if (match.status === 'approved' || match.status === 'active' || match.status === 'enrolled') {
+        setPurchaseBtnState('enrolled');
+      } else if (match.status === 'pending') {
+        setPurchaseBtnState('pending');
+      }
+    } catch(e) { /* silently ignore — API may not exist yet */ }
   }
 
 // === LOGIN PROMPT MODAL LOGIC ===
