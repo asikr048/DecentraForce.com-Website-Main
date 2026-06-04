@@ -1447,7 +1447,7 @@ async function renderCourses() {
           </span>
         </div>
         <div class="card-body">
-          <div class="card-title">${escapeHtml(title)}</div>
+          <div class="card-title">${title}</div>
           <p class="card-description">${escapeHtml(description.substring(0, 100))}${description.length > 100 ? '...' : ''}</p>
           <div class="card-stats">
             <div class="stat-pill">📦 ${getModuleCount(course)} Lecture</div>
@@ -1665,7 +1665,7 @@ function getCourseButton(course, type, isPending) {
     const desc = document.getElementById('modalCourseDesc');
     const priceEl = document.getElementById('modalCoursePrice');
 
-    if (title) title.textContent = course.title || 'Untitled Course';
+    if (title) title.innerHTML = course.title || 'Untitled Course';
     if (desc) desc.textContent = course.description || '';
     
     // Show admin discount in modal if it exists

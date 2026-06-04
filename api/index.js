@@ -385,12 +385,13 @@ async function adminInit(req, res) {
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'`);
   await pool.query(`CREATE TABLE IF NOT EXISTS courses (
-    id SERIAL PRIMARY KEY, title VARCHAR(255) NOT NULL, description TEXT DEFAULT '',
+    id SERIAL PRIMARY KEY, title TEXT NOT NULL, description TEXT DEFAULT '',
     thumbnail_url TEXT DEFAULT '', video_url TEXT DEFAULT '', price NUMERIC DEFAULT 0,
     whatsapp VARCHAR(255), status VARCHAR(50) DEFAULT 'upcoming', sequence_order INT DEFAULT 9999,
     modules JSONB DEFAULT '{}', is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP)`);
   await pool.query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS price NUMERIC DEFAULT 0`);
+  await pool.query(`ALTER TABLE courses ALTER COLUMN title TYPE TEXT`);
   await pool.query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS whatsapp VARCHAR(255)`);
   await pool.query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'upcoming'`);
   await pool.query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS sequence_order INT DEFAULT 9999`);

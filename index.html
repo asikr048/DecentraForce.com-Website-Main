@@ -1571,7 +1571,7 @@ window.addEventListener('storage', (e) => {
       const desc = document.getElementById('modalCourseDesc');
       const priceEl = document.getElementById('modalCoursePrice');
 
-      if (title) title.textContent = course.title || 'Untitled Course';
+      if (title) title.innerHTML = course.title || 'Untitled Course';
       if (desc) desc.textContent = course.description || '';
       
       // Show admin discount in modal if it exists
