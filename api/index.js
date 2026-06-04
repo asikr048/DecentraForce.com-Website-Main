@@ -330,7 +330,7 @@ async function authForgotPassword(req, res) {
       const brevoError = responseData?.message || responseData?.error || 'Unknown email delivery error';
       return res.status(500).json({ 
         success: false, 
-        error: 'Failed to send reset email. Please try again later or contact support.'
+        error: `Brevo error (${emailRes.status}): ${brevoError}`
       });
     } else {
       console.log('Brevo Success — Message ID:', responseData.messageId);
