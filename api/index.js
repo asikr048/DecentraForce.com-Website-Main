@@ -282,8 +282,8 @@ async function authForgotPassword(req, res) {
 
   const r = await query('SELECT id,username,email FROM users WHERE email=$1', [email.toLowerCase().trim()]);
   
-  // If the user doesn't exist, we still pretend it succeeded to prevent email enumeration
-  if (!r.rows.length) return res.status(200).json({ success: true, message: 'If an account exists, a reset PIN was sent.' });
+  // Return a distinct flag so the frontend can inform the user their email isn't registered
+  if (!r.rows.length) return res.status(200).json({ success: true, noAccount: true, message: 'No account found with that email.' });
 
   const user = r.rows[0];
   const pin = Math.floor(100000 + Math.random() * 900000).toString();
@@ -300,6 +300,7 @@ async function authForgotPassword(req, res) {
     const resendApiKey = process.env.RESEND_API_KEY;
     if (!resendApiKey) {
       console.error('Resend Error: RESEND_API_KEY env var is not set!');
+      return res.status(500).json({ success: false, error: 'Email service is not configured. Please contact support.' });
     }
 
     const emailRes = await fetch('https://api.resend.com/emails', {
@@ -326,16 +327,23 @@ async function authForgotPassword(req, res) {
     const responseData = await emailRes.json();
     if (!emailRes.ok) {
       console.error('Resend Failed — HTTP', emailRes.status, ':', JSON.stringify(responseData));
+      // NOTE: On Resend's free tier, emails can only be sent to verified addresses.
+      // To send to any address, verify your sending domain in the Resend dashboard.
+      const resendError = responseData?.message || responseData?.error || 'Unknown email delivery error';
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Failed to send reset email. Please try again later or contact support.'
+      });
     } else {
       console.log('Resend Success — Email ID:', responseData.id);
     }
   } catch(e) {
     console.error('Network Error during Resend fetch:', e.message);
+    return res.status(500).json({ success: false, error: 'Network error sending email. Please try again.' });
   }
 
-  // ✅ FIX: Send the success response back to the frontend
   return res.status(200).json({ success: true, message: 'Reset PIN sent successfully.' });
-} // ✅ FIX: Added the missing closing brace!
+}
 
 // ── AUTH: POST /api/auth/reset-password ───────────────────────────────────────
 
