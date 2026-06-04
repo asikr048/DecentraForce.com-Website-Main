@@ -1500,7 +1500,7 @@ function renderUsersTable(list = allUsers) {
       <td class="text-[#4a6080]">${fmtDate(u.created_at)}</td>
       <td>${u.verified ? '<span class="badge badge-green">Verified</span>' : '<span class="badge badge-gray">Unverified</span>'}</td>
       <td>${getRoleBadge(u)}</td>
-      <td>${(u.courses||[]).map(c=>`<span class="badge badge-blue mr-1">${esc(c.title)}</span>`).join('')||'<span class="text-[#3d5070] text-xs">None</span>'}</td>
+      <td>${(u.courses||[]).map(c=>`<span class="badge badge-blue mr-1">${plainTitle(c.title)}</span>`).join('')||'<span class="text-[#3d5070] text-xs">None</span>'}</td>
       <td class="flex gap-1.5 flex-wrap">
         <button onclick='openGrantModal(${JSON.stringify(u)})' class="border border-[rgba(0,229,255,0.2)] text-accent px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[rgba(0,229,255,0.08)] transition-colors">MANAGE</button>
         ${canSetRole(u) ? `<button onclick='openRoleModal(${JSON.stringify(u)})' class="border border-[rgba(167,139,250,0.3)] text-[#a78bfa] px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[rgba(167,139,250,0.08)] transition-colors">ROLE</button>` : ''}
@@ -1533,7 +1533,7 @@ function openGrantModal(user) {
       <label class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${granted.has(c.id)?'bg-[rgba(0,229,255,0.04)] border-[rgba(0,229,255,0.2)]':'bg-bg border-[rgba(0,229,255,0.07)] hover:border-[rgba(0,229,255,0.15)]'}">
         <input type="checkbox" data-course-id="${c.id}" ${granted.has(c.id)?'checked':''} class="w-4 h-4" style="accent-color:#00e5ff;">
         <div>
-          <p class="font-bold text-xs text-white">${esc(c.title)}</p>
+          <p class="font-bold text-xs text-white">${plainTitle(c.title)}</p>
           <p class="text-xs text-[#4a6080]">${esc((c.description||'').slice(0,50))}</p>
         </div>
       </label>`).join('');
@@ -1669,11 +1669,11 @@ function renderCoursesGrid() {
       ${c.thumbnail_url
         ? `<img src="${esc(c.thumbnail_url)}" class="w-full h-44 object-cover" alt="" onerror="this.style.display='none'">`
         : `<div class="w-full h-44 bg-gradient-to-br from-[#0a1228] to-bg flex items-center justify-center">
-             <span class="text-accent2 font-black text-3xl opacity-30">${esc(c.title.charAt(0))}</span>
+             <span class="text-accent2 font-black text-3xl opacity-30">${plainTitle(c.title).charAt(0)}</span>
            </div>`}
       <div class="p-5 flex-1 flex flex-col">
         <div class="flex items-start justify-between gap-3 mb-3">
-          <h3 class="font-black text-white text-base leading-snug" style="font-family:'Syne',sans-serif;">${esc(c.title)}</h3>
+          <h3 class="font-black text-white text-base leading-snug" style="font-family:'Syne',sans-serif;">${plainTitle(c.title)}</h3>
           <span class="badge ${statusMap[status]||'badge-blue'} flex-shrink-0">${status}</span>
         </div>
         <p class="text-xs text-[#4a6080] mb-4 flex-1">${esc((c.description||'').substring(0,75))}${(c.description||'').length>75?'…':''}</p>
@@ -1691,9 +1691,9 @@ function renderCoursesGrid() {
           ${currentUserRole === 'task_manager' ? `<span class="flex-1 text-center py-2 text-xs text-[#3d5070]">View Only</span>` : ''}
         </div>
         <div class="flex gap-2 mt-1.5">
-          <button onclick="openManageExam(${c.id},'${esc(c.title)}')" class="flex-1 bg-[rgba(123,92,255,0.08)] border border-[rgba(123,92,255,0.25)] text-[#a98fff] py-2 rounded-lg text-xs font-bold hover:bg-[rgba(123,92,255,0.16)] transition-colors">🎯 EXAM</button>
-          <button onclick="openManageMarks(${c.id},'${esc(c.title)}')" class="flex-1 bg-[rgba(0,229,255,0.06)] border border-[rgba(0,229,255,0.2)] text-accent py-2 rounded-lg text-xs font-bold hover:bg-[rgba(0,229,255,0.12)] transition-colors">📊 MARKS</button>
-          <button onclick="openManageResources(${c.id},'${esc(c.title)}')" class="flex-1 bg-[rgba(255,200,0,0.06)] border border-[rgba(255,200,0,0.2)] text-yellow-400 py-2 rounded-lg text-xs font-bold hover:bg-[rgba(255,200,0,0.12)] transition-colors">🔗 RESOURCES</button>
+          <button onclick="openManageExam(${c.id},'${plainTitle(c.title)}')" class="flex-1 bg-[rgba(123,92,255,0.08)] border border-[rgba(123,92,255,0.25)] text-[#a98fff] py-2 rounded-lg text-xs font-bold hover:bg-[rgba(123,92,255,0.16)] transition-colors">🎯 EXAM</button>
+          <button onclick="openManageMarks(${c.id},'${plainTitle(c.title)}')" class="flex-1 bg-[rgba(0,229,255,0.06)] border border-[rgba(0,229,255,0.2)] text-accent py-2 rounded-lg text-xs font-bold hover:bg-[rgba(0,229,255,0.12)] transition-colors">📊 MARKS</button>
+          <button onclick="openManageResources(${c.id},'${plainTitle(c.title)}')" class="flex-1 bg-[rgba(255,200,0,0.06)] border border-[rgba(255,200,0,0.2)] text-yellow-400 py-2 rounded-lg text-xs font-bold hover:bg-[rgba(255,200,0,0.12)] transition-colors">🔗 RESOURCES</button>
         </div>
       </div>
     </div>`;
@@ -1970,7 +1970,7 @@ function refreshCoupons() { renderCouponsList(); }
 
 function populateCouponCourseDropdown() {
   const sel = document.getElementById('couponCourse');
-  if(sel&&allCourses) sel.innerHTML='<option value="all">All Courses</option>'+allCourses.map(c=>`<option value="${c.id}">${esc(c.title)}</option>`).join('');
+  if(sel&&allCourses) sel.innerHTML='<option value="all">All Courses</option>'+allCourses.map(c=>`<option value="${c.id}">${plainTitle(c.title)}</option>`).join('');
 }
 
 /* ─── PURCHASES ─── */
@@ -1993,7 +1993,7 @@ function renderPurchasesList() {
   tbody.innerHTML = allPurchases.map(p=>`
     <tr>
       <td>
-        <div class="font-semibold text-white text-sm">${esc(p.course_title||'Unknown')}</div>
+        <div class="font-semibold text-white text-sm">${plainTitle(p.course_title||'Unknown')}</div>
         <div class="text-xs text-[#3d5070]">ID: ${p.course_id}</div>
       </td>
       <td>
@@ -2479,6 +2479,10 @@ function showToast(msg,type='success') {
   setTimeout(()=>{ el.classList.remove('show'); },3000);
 }
 
+function plainTitle(str) {
+  if(!str) return '';
+  return String(str).replace(/<style[sS]*?</style>/gi, '').replace(/<[^>]+>/g, '').trim() || 'Untitled';
+}
 function esc(str) {
   if(!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -3072,11 +3076,11 @@ function populateAssignmentCourseDropdown() {
   const selP = document.getElementById('pointsCourseId');
   if (selA && allCourses) {
     selA.innerHTML = '<option value="">Select a course…</option>' +
-      allCourses.map(c => `<option value="${c.id}">${esc(c.title)}</option>`).join('');
+      allCourses.map(c => `<option value="${c.id}">${plainTitle(c.title)}</option>`).join('');
   }
   if (selP && allCourses) {
     selP.innerHTML = '<option value="">Select course…</option>' +
-      allCourses.map(c => `<option value="${c.id}">${esc(c.title)}</option>`).join('');
+      allCourses.map(c => `<option value="${c.id}">${plainTitle(c.title)}</option>`).join('');
   }
 }
 

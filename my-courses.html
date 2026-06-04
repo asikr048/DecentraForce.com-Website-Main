@@ -272,6 +272,7 @@
 
   .card-body { padding: 18px 20px 20px; }
   .card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; line-height: 1.35; margin-bottom: 14px; color: var(--text); }
+  .card-title * { font-size: inherit !important; line-height: inherit !important; font-weight: inherit !important; }
   .card-stats { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .stat-pill { display: flex; align-items: center; gap: 5px; background: var(--surface2); border: 1px solid var(--border2); padding: 5px 11px; border-radius: 7px; font-size: .75rem; color: var(--muted); }
   
@@ -1403,7 +1404,9 @@ async function renderCourses() {
 
     container.innerHTML = courses.map(course => {
       const courseId = course.id || Math.random().toString(36).substring(2);
-      const title = course.title || 'Untitled Course';
+      const rawTitle = course.title || 'Untitled Course';
+      const title = rawTitle.replace(/<style[\s\S]*?<\/style>/gi, '').trim();
+      const plainTitleText = title.replace(/<[^>]+>/g, '').trim() || 'Untitled Course';
       const description = course.description || 'Learn essential skills in this comprehensive course.';
       const price = parseFloat(course.price) || 0;
       const whatsapp = course.whatsapp || '';
@@ -1433,7 +1436,7 @@ async function renderCourses() {
       <div class="course-card" style="animation-delay:.05s">
         <div class="card-thumbnail">
           ${hasThumbnail
-            ? `<img src="${thumbnailUrl}" alt="${escapeHtml(title)}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            ? `<img src="${thumbnailUrl}" alt="${escapeHtml(plainTitleText)}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                <div class="thumb-placeholder thumb-bg-${Math.floor(Math.random() * 3) + 1}" style="display:none;position:absolute;inset:0;">
                  ${getEmojiForCourse(title)}
                </div>`

@@ -420,6 +420,7 @@
     font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem;
     margin-bottom: 8px; line-height: 1.3;
   }
+  .card-body h3 * { font-size: inherit !important; line-height: inherit !important; font-weight: inherit !important; }
   .card-body p { font-size: .85rem; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
 
   .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--border); }
@@ -1530,7 +1531,7 @@ window.addEventListener('storage', (e) => {
               <span class="tag tag-purple">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
               <span class="tag tag-green">📦 ${moduleCount || 0} Lectures</span>
             </div>
-            <h3>${course.title || 'Untitled Course'}</h3>
+            <h3>${(course.title||'Untitled Course').replace(/<style[\s\S]*?<\/style>/gi,'').trim()}</h3>
             <p>${course.description ? (course.description.length > 100 ? course.description.substring(0, 100) + '...' : course.description) : 'Learn essential skills in this comprehensive course.'}</p>
             <div class="card-footer">
               <div class="rating"><span class="stars">★★★★★</span> ${ratingVal} (${reviewsVal})</div>
