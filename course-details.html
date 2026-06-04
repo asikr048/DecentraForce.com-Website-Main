@@ -79,6 +79,18 @@
     .course-layout { display: grid; grid-template-columns: 1fr 380px; gap: 50px; max-width: 1200px; margin: 0 auto; padding: 50px 5% 100px; align-items: start; }
     @media (max-width: 900px) { .course-layout { grid-template-columns: 1fr; gap: 40px; } }
 
+    /* Mobile purchase card — shown above tabs on small screens */
+    .mobile-purchase-card { display: none; }
+    @media (max-width: 900px) {
+      .mobile-purchase-card { display: block !important; order: -1; margin-bottom: 8px; }
+      /* Hide the sidebar (desktop sticky card) on mobile */
+      .course-layout > aside { display: none; }
+      /* Make main layout single column with proper ordering */
+      .course-layout { display: flex; flex-direction: column; }
+      .mobile-purchase-card { order: 1; }
+      .content-column { order: 2; }
+    }
+
     /* === LEFT COLUMN: TABS & CONTENT === */
     .content-column { min-width: 0; }
     .tabs { display: flex; gap: 32px; border-bottom: 1px solid var(--border); margin-bottom: 32px; overflow-x: auto; }
@@ -248,7 +260,6 @@
 
   <nav>
     <a href="index.html" class="logo">
-      <div class="logo-icon">DF</div>
       <span class="logo-text">Decentra<span style="color:var(--accent)">Force</span></span>
     </a>
     <a href="index.html#courses" class="btn-back">
@@ -282,6 +293,25 @@
 
   <main class="course-layout">
     
+    <!-- Mobile-only purchase card (shown between hero and tabs on mobile) -->
+    <div class="mobile-purchase-card" id="mobilePurchaseCard">
+      <div class="sticky-card" style="position:static; margin:0;">
+        <div class="card-body" style="padding: 20px;">
+          <div class="price-display" id="mobilePriceDisplay">৳0</div>
+          <button class="btn-purchase" id="mobilePurchaseBtn" style="margin-top:12px;">Purchase Course</button>
+          <div class="payment-methods" style="margin-top:16px; padding-top:14px;">
+            <p>Secure payment methods:</p>
+            <div class="pm-badges">
+              <span class="pm-badge pm-bkash">bKash</span>
+              <span class="pm-badge pm-nagad">Nagad</span>
+              <span class="pm-badge pm-rocket">Rocket</span>
+              <span class="pm-badge pm-upay">Upay</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="content-column">
       <div class="tabs">
         <div class="tab active" data-target="tab-overview">Overview</div>
@@ -563,6 +593,11 @@
       const purchaseBtn = document.getElementById('pagePurchaseBtn');
       purchaseBtn.textContent = priceVal === 0 ? 'Enroll for Free' : 'Purchase Course';
 
+      // Mobile purchase card sync
+      document.getElementById('mobilePriceDisplay').innerHTML = `${originalPriceText}${priceText}`;
+      const mobilePurchaseBtn = document.getElementById('mobilePurchaseBtn');
+      mobilePurchaseBtn.textContent = priceVal === 0 ? 'Enroll for Free' : 'Purchase Course';
+
       if (activeCourse.thumbnail_url && activeCourse.thumbnail_url.length > 10) {
         const url = activeCourse.thumbnail_url;
         const imgTag = `<img src="${url}" alt="Course Thumbnail" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.innerHTML='<span style=\\'font-size:3rem\\'>🎓</span>'">`;
@@ -606,8 +641,40 @@
       if (overviewRaw) {
         const overviewEl = document.getElementById('courseOverviewContent');
         overviewEl.classList.add('desc-text', 'overview-rich');
-        if (/<[a-z][\s\S]*>/i.test(overviewRaw)) {
-          overviewEl.innerHTML = overviewRaw;
+
+        // Sanitize: remove @import rules and <style> blocks that leak raw CSS into the page
+        function sanitizeOverview(raw) {
+          // Strip <style> blocks entirely
+          let cleaned = raw.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+          // Strip standalone @import lines (CSS injected outside style tags)
+          cleaned = cleaned.replace(/@import\s+url\([^)]*\)[^;]*;?/gi, '');
+          // Strip CSS rule blocks that accidentally got pasted in plain text
+          // Pattern: selector { ... } repeated — only strip if it looks like pure CSS (no HTML tags)
+          // We detect a CSS-only string by checking if it starts with @import or .class { 
+          const looksLikeCSS = /^(\s*(@import|@font|[.#]?[\w-]+\s*\{))/i.test(cleaned.trim());
+          if (looksLikeCSS) {
+            // Extract the actual text content after the CSS block
+            // CSS blocks end with } — find the last } and take everything after
+            const lastBrace = cleaned.lastIndexOf('}');
+            if (lastBrace !== -1) {
+              cleaned = cleaned.substring(lastBrace + 1).trim();
+            } else {
+              cleaned = '';
+            }
+          }
+          return cleaned.trim();
+        }
+
+        const sanitized = sanitizeOverview(overviewRaw);
+
+        if (sanitized && /<[a-z][\s\S]*>/i.test(sanitized)) {
+          overviewEl.innerHTML = sanitized;
+        } else if (sanitized) {
+          overviewEl.innerHTML = renderDescription(sanitized);
+        } else if (/<[a-z][\s\S]*>/i.test(overviewRaw)) {
+          // Fallback: use original but stripped of style/import only
+          const stripped = overviewRaw.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '').replace(/@import\s+url\([^)]*\)[^;]*;?/gi, '');
+          overviewEl.innerHTML = stripped;
         } else {
           overviewEl.innerHTML = renderDescription(overviewRaw);
         }
@@ -705,10 +772,10 @@
       }
 
       // 5. Attach Purchase Action
-    // 5. Attach Purchase Action
       purchaseBtn.addEventListener('click', () => {
         // Check if user is logged in
-if (!window.auth || !window.auth.isLoggedIn) {          document.getElementById('loginPromptModal').classList.add('open');
+        if (!window.auth || !window.auth.isLoggedIn) {
+          document.getElementById('loginPromptModal').classList.add('open');
           document.body.style.overflow = 'hidden';
           return;
         }
@@ -717,6 +784,20 @@ if (!window.auth || !window.auth.isLoggedIn) {          document.getElementById(
            window.location.href = 'my-courses.html?tab=free';
         } else {
            openCheckoutModal(activeCourse, priceVal);
+        }
+      });
+
+      // Mobile purchase button — same logic
+      mobilePurchaseBtn.addEventListener('click', () => {
+        if (!window.auth || !window.auth.isLoggedIn) {
+          document.getElementById('loginPromptModal').classList.add('open');
+          document.body.style.overflow = 'hidden';
+          return;
+        }
+        if (priceVal === 0) {
+          window.location.href = 'my-courses.html?tab=free';
+        } else {
+          openCheckoutModal(activeCourse, priceVal);
         }
       });
 
