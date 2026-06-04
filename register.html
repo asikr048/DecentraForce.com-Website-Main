@@ -376,6 +376,18 @@
   </div>
 
   <script>
+    // ── Read ?return= param so we can forward it through registration ──
+    const _urlParams = new URLSearchParams(window.location.search);
+    const _returnUrl = _urlParams.get('return') || '';
+
+    // Update "Log In / Sign in" links to forward the return param
+    (function() {
+      const returnSuffix = _returnUrl ? '?return=' + encodeURIComponent(_returnUrl) : '';
+      document.querySelectorAll('a[href="login.html"]').forEach(function(a) {
+        a.href = 'login.html' + returnSuffix;
+      });
+    })();
+
     const usernameInput = document.getElementById('username');
     const emailInput = document.getElementById('email');
     const confirmEmailInput = document.getElementById('confirmEmail');
@@ -552,8 +564,11 @@
         if (data.success) {
           // Show success message without requiring email check
           alert('Account created successfully!');
-          // Redirect to login page
-          window.location.href = 'login.html';
+          // Redirect to login page, forwarding the return URL if present
+          const loginRedirect = _returnUrl
+            ? 'login.html?return=' + encodeURIComponent(_returnUrl)
+            : 'login.html';
+          window.location.href = loginRedirect;
         } else {
           // Show error message
           alert('Error: ' + data.error);

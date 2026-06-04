@@ -396,6 +396,18 @@
   </div>
 
   <script>
+    // ── Read ?return= param so we can redirect back after login ──
+    const _urlParams = new URLSearchParams(window.location.search);
+    const _returnUrl = _urlParams.get('return') || '';
+
+    // Update "Create account" links to forward the return param
+    (function() {
+      const returnSuffix = _returnUrl ? '?return=' + encodeURIComponent(_returnUrl) : '';
+      document.querySelectorAll('a[href="register.html"]').forEach(function(a) {
+        a.href = 'register.html' + returnSuffix;
+      });
+    })();
+
     // Elements for general use
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
@@ -511,7 +523,7 @@
       .then(data => {
         if (data.success) {
           // Redirect based on role
-          window.location.href = data.redirectUrl || 'dashboard.html';
+          window.location.href = _returnUrl || data.redirectUrl || 'index.html';
         } else {
           alert('Error: ' + data.error);
           submitBtn.textContent = originalText;
