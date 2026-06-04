@@ -538,7 +538,15 @@
                   <div class="w-px h-3 bg-[rgba(0,229,255,0.1)]"></div>
                   <button type="button" onclick="toggleOverviewPreview()" class="hover:text-white" style="color:#d4af37;" title="Toggle preview">⬦ Preview</button>
                 </div>
-                <textarea id="courseContent" class="w-full bg-bg text-text p-4 h-48 outline-none resize-y placeholder-[#3d5070] text-sm" style="font-family:'DM Mono',monospace;font-size:.8rem;" placeholder="Write a detailed course overview in HTML…&#10;&#10;Example:&#10;&lt;p&gt;A hands-on journey from zero to shipping...&lt;/p&gt;&#10;&lt;h3 style=&quot;color:#00e5ff;margin:16px 0 8px;&quot;&gt;What You&#39;ll Build&lt;/h3&gt;&#10;&lt;ul&gt;&lt;li&gt;AI-powered portfolio site&lt;/li&gt;&lt;li&gt;Telegram automation bot&lt;/li&gt;&lt;/ul&gt;"></textarea>
+                <textarea id="courseContent" class="w-full bg-bg text-text p-4 h-48 outline-none resize-y placeholder-[#3d5070] text-sm" style="font-family:'DM Mono',monospace;font-size:.8rem;" oninput="checkOverviewForCSS(this)" placeholder="Write a detailed course overview in HTML…&#10;&#10;Example:&#10;&lt;p&gt;A hands-on journey from zero to shipping...&lt;/p&gt;&#10;&lt;h3 style=&quot;color:#00e5ff;margin:16px 0 8px;&quot;&gt;What You&#39;ll Build&lt;/h3&gt;&#10;&lt;ul&gt;&lt;li&gt;AI-powered portfolio site&lt;/li&gt;&lt;li&gt;Telegram automation bot&lt;/li&gt;&lt;/ul&gt;"></textarea>
+                <div id="overviewCSSWarning" style="display:none;margin-top:8px;padding:10px 14px;background:rgba(255,60,60,0.08);border:1px solid rgba(255,80,80,0.3);border-radius:8px;font-size:.78rem;color:#ff6b6b;display:flex;align-items:flex-start;gap:10px;">
+                  <span style="font-size:1.1rem;flex-shrink:0;">⚠️</span>
+                  <div>
+                    <strong style="display:block;margin-bottom:4px;">Raw CSS detected in Course Overview.</strong>
+                    This will display as broken text on the course page. Click the button below to automatically strip the CSS and keep only the text content. Then replace with proper HTML.
+                    <button onclick="stripOverviewCSS()" style="display:block;margin-top:8px;padding:5px 14px;background:rgba(255,80,80,0.15);border:1px solid rgba(255,80,80,0.4);border-radius:6px;color:#ff8888;font-size:.75rem;font-weight:700;cursor:pointer;letter-spacing:.05em;">⚡ STRIP CSS — KEEP TEXT ONLY</button>
+                  </div>
+                </div>
                 <iframe id="overviewPreview" style="display:none;width:100%;min-height:300px;border:none;border-top:1px solid rgba(0,229,255,0.08);background:#050a18;" frameborder="0" scrolling="auto"></iframe>
               </div>
               <p class="text-xs text-[#3d5070] mt-1.5">Supports full HTML. Use &lt;p&gt;, &lt;h3&gt;, &lt;ul&gt;&lt;li&gt;, &lt;strong&gt;, &lt;em&gt;, inline styles. Rendered live in the Preview pane above.</p>
@@ -2356,10 +2364,49 @@ function checkDescForCSS(textarea) {
   if (warning) warning.style.display = looksLikeCSS ? 'block' : 'none';
 }
 
+function checkOverviewForCSS(textarea) {
+  const val = textarea.value;
+  const looksLikeCSS = /@import\s+url/i.test(val) ||
+    /\.([\w-]+)\s*\{[^}]{10,}\}/i.test(val) ||
+    /font-family\s*:\s*['"]/.test(val) ||
+    /font-size\s*:\s*\d+px/.test(val);
+  const warning = document.getElementById('overviewCSSWarning');
+  if (warning) warning.style.display = looksLikeCSS ? 'flex' : 'none';
+}
+
+function stripOverviewCSS() {
+  const ta = document.getElementById('courseContent');
+  if (!ta) return;
+  // Use DOM to extract clean text — same approach as course-details.html
+  const tmp = document.createElement('div');
+  tmp.style.cssText = 'display:none;position:absolute;left:-9999px';
+  document.body.appendChild(tmp);
+  try {
+    let s = ta.value.replace(/@import\b[^;]*;?/gi, '');
+    tmp.innerHTML = s;
+    tmp.querySelectorAll('style').forEach(el => el.remove());
+    let text = tmp.textContent || '';
+    text = text.replace(/[\w-]+\s*:\s*[^;\n]{1,120};/g, ' ');
+    text = text.replace(/\{[^}]*\}/g, ' ');
+    text = text.replace(/\.[a-z][\w-]*/gi, ' ');
+    text = text.replace(/\s+/g, ' ').trim();
+    document.body.removeChild(tmp);
+    // Wrap in a paragraph tag for proper HTML
+    ta.value = text ? `<p>${text}</p>` : '';
+    checkOverviewForCSS(ta);
+    showToast('CSS stripped. Now replace with proper HTML content.', 'success');
+  } catch(e) {
+    try { document.body.removeChild(tmp); } catch(_) {}
+    showToast('Could not strip CSS automatically. Please edit manually.', 'error');
+  }
+}
+
 // Also check on load when editing an existing course
 function checkDescForCSSOnLoad() {
   const ta = document.getElementById('courseDesc');
   if (ta) checkDescForCSS(ta);
+  const ta2 = document.getElementById('courseContent');
+  if (ta2) checkOverviewForCSS(ta2);
 }
 
 function toggleDescPreview() {

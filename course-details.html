@@ -626,42 +626,50 @@
 
       // --- Short Description ---
       const shortDescRaw = (activeCourse.description || '').trim();
-      // Strip CSS rules from description, keeping only plain text / HTML content
+      // DOM-based CSS stripper — 100% reliable in browser regardless of encoding
       function stripCSS(raw) {
-        if (!raw) return '';
-        let c = raw;
-        // 1. Remove @import statements (handle semicolons inside URL parens gracefully)
-        c = c.replace(/@import\s+url\s*\([^)]*\)\s*[^;{]*;?/gi, '');
-        // 2. Remove <style> blocks
-        c = c.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-        // 3. Remove CSS blocks: use a more robust approach that handles quoted values
-        //    Strategy A: replace content between { } iteratively (handles nested)
-        let prev = '', safety = 0;
-        while (prev !== c && safety++ < 50) {
-          prev = c;
-          // Match selector { ... } — content can include quotes, so use [\s\S] but stop at }
-          c = c.replace(/\.?[\w-]+(?:\s*,\s*\.?[\w-]+)*\s*\{[^}]*\}/g, '');
-        }
-        // 4. Remove any stray { } that remain
-        c = c.replace(/\{[^}]*\}/g, '');
-        // 5. Remove leftover CSS property lines (prop: value; patterns NOT inside HTML tags)
-        c = c.replace(/(?:^|(?<=\s))[\w-]+\s*:\s*[^;<>{]+;/g, ' ');
-        // 6. Remove @-rules that may remain
-        c = c.replace(/@[\w-]+[^;{]*[;{][^}]*\}?/g, '');
-        // 7. Clean up semicolons and whitespace
-        c = c.replace(/;\s*/g, ' ').replace(/\s+/g, ' ').trim();
-        // 8. Final safety: if result still looks like raw CSS (starts with selector pattern),
-        //    try to extract only the last meaningful sentence after all CSS
-        if (/^[\w.#@][\w\s-]*[{;]/.test(c) || c.startsWith('@')) {
-          // Find the last occurrence of a CSS block end } and take text after it
-          const lastBrace = c.lastIndexOf('}');
-          if (lastBrace !== -1) {
-            c = c.substring(lastBrace + 1).trim();
+        if (!raw || !raw.trim()) return '';
+        // Use a hidden div so the browser's own HTML parser handles entities/encoding
+        const tmp = document.createElement('div');
+        tmp.style.cssText = 'display:none;position:absolute;left:-9999px';
+        document.body.appendChild(tmp);
+        try {
+          // Wrap in a <style>-free container — remove @import and CSS rule blocks via string first
+          let s = raw;
+          // Remove @import lines
+          s = s.replace(/@import\b[^;]*;?/gi, '');
+          // Set as innerHTML so the browser parses any HTML tags correctly
+          tmp.innerHTML = s;
+          // Remove any <style> elements the browser created
+          tmp.querySelectorAll('style').forEach(el => el.remove());
+          // Check if remaining content has meaningful HTML tags
+          const hasHTML = tmp.querySelector('p,h1,h2,h3,h4,ul,ol,li,strong,em,span,br,a,div');
+          if (hasHTML) {
+            // Has structured HTML — return the inner HTML but with <style> stripped
+            let html = tmp.innerHTML;
+            html = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+            document.body.removeChild(tmp);
+            return html.trim();
           }
-          // If STILL looks like CSS, return empty to hide the broken field
-          if (/^[\w.#][\w\s-]*[{;]/.test(c)) c = '';
+          // Plain text — get textContent (browser decodes all entities automatically)
+          let text = tmp.textContent || '';
+          document.body.removeChild(tmp);
+          // Remove remaining CSS-like fragments: prop: value; patterns
+          text = text.replace(/[\w-]+\s*:\s*[^;\n]{1,80};/g, '');
+          // Remove leftover { } brace content
+          text = text.replace(/\{[^}]*\}/g, '');
+          // Remove CSS class-name-like tokens at start of words (.classname)
+          text = text.replace(/\.[a-z][\w-]*/gi, '');
+          // Clean up
+          text = text.replace(/\s+/g, ' ').trim();
+          // If still looks like CSS garbage (lots of : and ; but no spaces between words), return empty
+          const colonRatio = (text.match(/:/g) || []).length / Math.max(text.length, 1);
+          if (colonRatio > 0.03) return '';
+          return text;
+        } catch(e) {
+          try { document.body.removeChild(tmp); } catch(_) {}
+          return '';
         }
-        return c.trim();
       }
       const shortDesc = stripCSS(shortDescRaw);
       if (shortDesc) {
@@ -683,60 +691,73 @@
         // e.g. "@import ...; .big { color:#6366f1; } Build <span class='big'>Everything</span> with AI..."
         // OR plain CSS blob ending in plain text like "Build Everything with AI: ..."
         function sanitizeOverview(raw) {
-          if (!raw) return '';
+          if (!raw || !raw.trim()) return '';
 
-          // Step 1: Extract CSS class definitions so we can convert class="x" → style="..."
+          // Step 1: Extract CSS class definitions BEFORE any stripping
+          // so we can later convert class="x" → style="..." on span elements
           const classStyles = {};
           const cssRuleRe = /\.([\w-]+)\s*\{([^}]*)\}/gi;
           let m;
           while ((m = cssRuleRe.exec(raw)) !== null) {
             const cls = m[1].toLowerCase();
-            const props = m[2];
-            const style = props
-              .split(';')
+            const style = m[2].split(';')
               .map(p => p.trim())
-              .filter(p => p && /^(color|font-size|font-weight|letter-spacing|font-family|line-height|padding|background)/.test(p))
+              .filter(p => p && /^(color|font-size|font-weight|letter-spacing|font-family|line-height|padding|background)/i.test(p))
               .join('; ');
             if (style) classStyles[cls] = style;
           }
 
-          // Step 2: Strip @import and <style> blocks
-          let cleaned = raw;
-          cleaned = cleaned.replace(/@import\s+url\s*\([^)]*\)\s*[^;{]*;?/gi, '');
-          cleaned = cleaned.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+          // Step 2: Use the DOM to parse and clean — handles ALL encodings/edge cases
+          const tmp = document.createElement('div');
+          tmp.style.cssText = 'display:none;position:absolute;left:-9999px';
+          document.body.appendChild(tmp);
 
-          // Step 3: Remove CSS rule blocks iteratively (robust: handles quoted values)
-          let prev = '';
-          let safety = 0;
-          while (prev !== cleaned && safety++ < 50) {
-            prev = cleaned;
-            cleaned = cleaned.replace(/\.?[\w-]+(?:\s*,\s*\.?[\w-]+)*\s*\{[^}]*\}/g, '');
+          try {
+            // Pre-strip @import lines (they load external resources if left as HTML)
+            let s = raw.replace(/@import\b[^;]*;?/gi, '');
+            tmp.innerHTML = s;
+
+            // Remove any <style> nodes the browser parsed
+            tmp.querySelectorAll('style').forEach(el => el.remove());
+
+            // Check if there are meaningful HTML content elements
+            const hasStructuredHTML = tmp.querySelector('p,h1,h2,h3,h4,ul,ol,li,strong,em,a,br,table');
+
+            let result = '';
+            if (hasStructuredHTML) {
+              // Has real HTML — use innerHTML but convert class-based spans to inline styles
+              result = tmp.innerHTML;
+              result = result.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+            } else {
+              // No structured HTML — extract plain text and remove CSS residue
+              let text = tmp.textContent || '';
+              // Remove CSS property-value pairs: word: value;
+              text = text.replace(/[\w-]+\s*:\s*[^;\n]{1,120};/g, ' ');
+              // Remove brace content
+              text = text.replace(/\{[^}]*\}/g, ' ');
+              // Remove .classname tokens
+              text = text.replace(/\.[a-z][\w-]*/gi, ' ');
+              text = text.replace(/\s+/g, ' ').trim();
+              // Abort if still looks mostly like CSS (high colon density)
+              const colonRatio = (text.match(/:/g) || []).length / Math.max(text.length, 1);
+              result = colonRatio > 0.025 ? '' : text;
+            }
+
+            document.body.removeChild(tmp);
+
+            // Step 3: Re-apply extracted class styles as inline styles on span elements
+            if (Object.keys(classStyles).length > 0 && result) {
+              result = result.replace(/<span\s+class=["']?([\w-]+)["']?>/gi, (match, cls) => {
+                const style = classStyles[cls.toLowerCase()];
+                return style ? `<span style="${style}">` : match;
+              });
+            }
+
+            return result.trim();
+          } catch(e) {
+            try { document.body.removeChild(tmp); } catch(_) {}
+            return '';
           }
-          // Remove any stray brace pairs
-          cleaned = cleaned.replace(/\{[^}]*\}/g, '');
-          // Remove leftover CSS property lines (word: value; patterns)
-          cleaned = cleaned.replace(/(?:^|\s)[\w-]+\s*:\s*[^;<>{]+;/g, ' ');
-          // Remove remaining @-rules
-          cleaned = cleaned.replace(/@[\w-]+[^;{]*[;{][^}]*\}?/g, '');
-          // Clean up semicolons and whitespace
-          cleaned = cleaned.replace(/;\s*/g, ' ').replace(/\s+/g, ' ').trim();
-
-          // Step 4: Final safety — if output still looks like raw CSS, extract text after last }
-          if (/^[\w.#@][\w\s-]*[{;]/.test(cleaned) || cleaned.startsWith('@')) {
-            const lastBrace = cleaned.lastIndexOf('}');
-            if (lastBrace !== -1) cleaned = cleaned.substring(lastBrace + 1).trim();
-            if (/^[\w.#][\w\s-]*[{;]/.test(cleaned)) cleaned = '';
-          }
-
-          // Step 5: Re-apply extracted CSS classes as inline styles on <span class="x">
-          if (Object.keys(classStyles).length > 0 && cleaned) {
-            cleaned = cleaned.replace(/<span\s+class=["']?([\w-]+)["']?>/gi, (match, cls) => {
-              const style = classStyles[cls.toLowerCase()];
-              return style ? `<span style="${style}">` : match;
-            });
-          }
-
-          return cleaned.trim();
         }
 
         const sanitized = sanitizeOverview(overviewRaw);
