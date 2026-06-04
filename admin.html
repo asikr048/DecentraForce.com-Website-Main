@@ -434,7 +434,7 @@
               <div class="col-span-2">
                 <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Short Description <span style="color:#4a6080;font-weight:400;text-transform:none;letter-spacing:0;">(shown as highlighted intro on course page — HTML supported)</span></label>
                 <textarea id="courseDesc" rows="3" placeholder="Brief summary shown as highlighted intro on course page. HTML supported, e.g. &lt;strong&gt;Key point&lt;/strong&gt;…" class="admin-input" style="resize:vertical;font-family:'DM Sans',sans-serif;font-size:.875rem;"></textarea>
-                <div id="courseDescPreview" style="display:none;margin-top:8px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:8px;padding:12px 16px;font-size:.85rem;color:#c0d0ea;line-height:1.7;"></div>
+                <iframe id="courseDescPreview" style="display:none;margin-top:8px;width:100%;min-height:180px;border:1px solid rgba(0,229,255,0.12);border-radius:8px;background:transparent;" frameborder="0" scrolling="auto"></iframe>
                 <button type="button" onclick="toggleDescPreview()" style="margin-top:6px;font-size:.72rem;color:#4a6080;background:none;border:none;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;font-weight:700;">⬦ Toggle HTML Preview</button>
               </div>
               <div>
@@ -538,7 +538,7 @@
                   <button type="button" onclick="toggleOverviewPreview()" class="hover:text-white" style="color:#d4af37;" title="Toggle preview">⬦ Preview</button>
                 </div>
                 <textarea id="courseContent" class="w-full bg-bg text-text p-4 h-48 outline-none resize-y placeholder-[#3d5070] text-sm" style="font-family:'DM Mono',monospace;font-size:.8rem;" placeholder="Write a detailed course overview in HTML…&#10;&#10;Example:&#10;&lt;p&gt;A hands-on journey from zero to shipping...&lt;/p&gt;&#10;&lt;h3 style=&quot;color:#00e5ff;margin:16px 0 8px;&quot;&gt;What You&#39;ll Build&lt;/h3&gt;&#10;&lt;ul&gt;&lt;li&gt;AI-powered portfolio site&lt;/li&gt;&lt;li&gt;Telegram automation bot&lt;/li&gt;&lt;/ul&gt;"></textarea>
-                <div id="overviewPreview" style="display:none;padding:20px 24px;background:#050a18;border-top:1px solid rgba(0,229,255,0.08);font-size:.9rem;color:#a4b5d6;line-height:1.75;min-height:80px;"></div>
+                <iframe id="overviewPreview" style="display:none;width:100%;min-height:300px;border:none;border-top:1px solid rgba(0,229,255,0.08);background:#050a18;" frameborder="0" scrolling="auto"></iframe>
               </div>
               <p class="text-xs text-[#3d5070] mt-1.5">Supports full HTML. Use &lt;p&gt;, &lt;h3&gt;, &lt;ul&gt;&lt;li&gt;, &lt;strong&gt;, &lt;em&gt;, inline styles. Rendered live in the Preview pane above.</p>
             </div>
@@ -1738,8 +1738,8 @@ function addLectureUI(container, title='', url='', duration='') {
 function openAddCourse() {
   if(currentUserRole==='task_manager'){showToast('Task Managers cannot add courses','error');return;}
   ['courseId','courseTitle','courseDesc','courseCategory','courseLectures','courseExercises','courseAssignments','coursePrice','courseDiscountPrice','courseWhatsapp','courseThumbnail','courseVideo','courseContent'].forEach(id => { document.getElementById(id).value=''; });
-  document.getElementById('courseDescPreview').style.display='none';
-  document.getElementById('overviewPreview').style.display='none';
+  var _dp=document.getElementById('courseDescPreview'); _dp.style.display='none'; _dp.srcdoc='';
+  var _op=document.getElementById('overviewPreview'); _op.style.display='none'; _op.srcdoc='';
   document.getElementById('courseActive').checked = true;
   document.getElementById('imagePreviewContainer').classList.add('hidden');
   document.getElementById('imagePreview').src='';
@@ -2291,11 +2291,40 @@ function moveCourseOrder(id,dir) {
 function saveCourseOrder() { showToast('Course order saved! Refresh homepage.','success'); }
 
 /* ─── COURSE OVERVIEW & SHORT DESC HTML HELPERS ─── */
+function _buildPreviewDoc(html, fonts) {
+  const fontLink = fonts ? '<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">' : '';
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">${fontLink}<style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{--bg:#050a18;--surface:#0d1630;--border:#1a2540;--accent:#00e5ff;--accent2:#7b5cff;--accent3:#ff4d8d;--text:#e8eeff;--muted:#7d8fb3;--card-bg:#0d1628;}
+    html,body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;line-height:1.7;padding:20px 24px;min-height:100%;}
+    h1,h2,h3,h4,h5,h6{font-family:'Syne',sans-serif;font-weight:800;color:var(--text);line-height:1.15;margin-bottom:.6em;}
+    h1{font-size:2.2rem;}h2{font-size:1.7rem;}h3{font-size:1.15rem;color:var(--accent);}
+    p{margin-bottom:.9em;color:#b8c9e8;font-size:.93rem;}
+    ul,ol{padding-left:1.4em;margin-bottom:1em;}
+    li{color:#b8c9e8;font-size:.91rem;margin-bottom:.3em;}
+    strong,b{color:var(--text);font-weight:700;}
+    em,i{color:#c0d0ea;font-style:italic;}
+    code{font-family:'DM Mono',monospace;background:rgba(0,229,255,.07);color:#00e5ff;padding:.15em .4em;border-radius:4px;font-size:.88em;}
+    a{color:var(--accent);text-decoration:underline;}
+    .empty-msg{color:#3d5070;font-style:italic;font-size:.88rem;}
+  </style></head><body>${html||'<span class="empty-msg">Nothing to preview yet.</span>'}<script>
+    function resize(){document.body.style.height='auto';window.parent.postMessage({iframeId:'${fonts?'overviewPreview':'courseDescPreview'}',h:document.body.scrollHeight},'*');}
+    window.addEventListener('load',resize);new MutationObserver(resize).observe(document.body,{childList:true,subtree:true,characterData:true});
+  <\/script></body></html>`;
+}
+
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.iframeId) {
+    const fr = document.getElementById(e.data.iframeId);
+    if (fr) fr.style.height = (e.data.h + 32) + 'px';
+  }
+});
+
 function toggleOverviewPreview() {
   const ta = document.getElementById('courseContent');
   const pv = document.getElementById('overviewPreview');
   if (pv.style.display === 'none') {
-    pv.innerHTML = ta.value || '<em style="color:#3d5070">Nothing to preview yet.</em>';
+    pv.srcdoc = _buildPreviewDoc(ta.value, true);
     pv.style.display = 'block';
   } else {
     pv.style.display = 'none';
@@ -2306,7 +2335,7 @@ function toggleDescPreview() {
   const ta = document.getElementById('courseDesc');
   const pv = document.getElementById('courseDescPreview');
   if (pv.style.display === 'none') {
-    pv.innerHTML = ta.value || '<em style="color:#3d5070">Nothing to preview yet.</em>';
+    pv.srcdoc = _buildPreviewDoc(ta.value, false);
     pv.style.display = 'block';
   } else {
     pv.style.display = 'none';
