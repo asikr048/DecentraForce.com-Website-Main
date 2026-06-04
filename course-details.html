@@ -628,13 +628,40 @@
       const shortDescRaw = (activeCourse.description || '').trim();
       // Strip CSS rules from description, keeping only plain text / HTML content
       function stripCSS(raw) {
+        if (!raw) return '';
         let c = raw;
-        c = c.replace(/@import\s+url\s*\([^)]*\)[^;]*;?/gi, '');
+        // 1. Remove @import statements (handle semicolons inside URL parens gracefully)
+        c = c.replace(/@import\s+url\s*\([^)]*\)\s*[^;{]*;?/gi, '');
+        // 2. Remove <style> blocks
         c = c.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+        // 3. Remove CSS blocks: use a more robust approach that handles quoted values
+        //    Strategy A: replace content between { } iteratively (handles nested)
         let prev = '', safety = 0;
-        while (prev !== c && safety++ < 30) { prev = c; c = c.replace(/\.?[\w-]+\s*\{[^{}]*\}/g, ''); }
-        c = c.replace(/\{[^}]*\}/g, '').replace(/\s*;\s*/g, ' ').replace(/\s+/g, ' ').trim();
-        return c;
+        while (prev !== c && safety++ < 50) {
+          prev = c;
+          // Match selector { ... } — content can include quotes, so use [\s\S] but stop at }
+          c = c.replace(/\.?[\w-]+(?:\s*,\s*\.?[\w-]+)*\s*\{[^}]*\}/g, '');
+        }
+        // 4. Remove any stray { } that remain
+        c = c.replace(/\{[^}]*\}/g, '');
+        // 5. Remove leftover CSS property lines (prop: value; patterns NOT inside HTML tags)
+        c = c.replace(/(?:^|(?<=\s))[\w-]+\s*:\s*[^;<>{]+;/g, ' ');
+        // 6. Remove @-rules that may remain
+        c = c.replace(/@[\w-]+[^;{]*[;{][^}]*\}?/g, '');
+        // 7. Clean up semicolons and whitespace
+        c = c.replace(/;\s*/g, ' ').replace(/\s+/g, ' ').trim();
+        // 8. Final safety: if result still looks like raw CSS (starts with selector pattern),
+        //    try to extract only the last meaningful sentence after all CSS
+        if (/^[\w.#@][\w\s-]*[{;]/.test(c) || c.startsWith('@')) {
+          // Find the last occurrence of a CSS block end } and take text after it
+          const lastBrace = c.lastIndexOf('}');
+          if (lastBrace !== -1) {
+            c = c.substring(lastBrace + 1).trim();
+          }
+          // If STILL looks like CSS, return empty to hide the broken field
+          if (/^[\w.#][\w\s-]*[{;]/.test(c)) c = '';
+        }
+        return c.trim();
       }
       const shortDesc = stripCSS(shortDescRaw);
       if (shortDesc) {
@@ -656,14 +683,15 @@
         // e.g. "@import ...; .big { color:#6366f1; } Build <span class='big'>Everything</span> with AI..."
         // OR plain CSS blob ending in plain text like "Build Everything with AI: ..."
         function sanitizeOverview(raw) {
-          // Step 1: Extract CSS class definitions from the blob
+          if (!raw) return '';
+
+          // Step 1: Extract CSS class definitions so we can convert class="x" → style="..."
           const classStyles = {};
           const cssRuleRe = /\.([\w-]+)\s*\{([^}]*)\}/gi;
           let m;
           while ((m = cssRuleRe.exec(raw)) !== null) {
             const cls = m[1].toLowerCase();
             const props = m[2];
-            // Build inline style string from relevant CSS props
             const style = props
               .split(';')
               .map(p => p.trim())
@@ -672,31 +700,36 @@
             if (style) classStyles[cls] = style;
           }
 
-          // Step 2: Strip @import lines and all CSS rule blocks
+          // Step 2: Strip @import and <style> blocks
           let cleaned = raw;
-          cleaned = cleaned.replace(/@import\s+url\s*\([^)]*\)[^;]*;?/gi, '');
+          cleaned = cleaned.replace(/@import\s+url\s*\([^)]*\)\s*[^;{]*;?/gi, '');
           cleaned = cleaned.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-          // Remove CSS blocks iteratively — handles both .className { } and plain word { }
-          // The pattern: optional dot, word chars, optional spaces, open brace, content, close brace
+
+          // Step 3: Remove CSS rule blocks iteratively (robust: handles quoted values)
           let prev = '';
           let safety = 0;
-          while (prev !== cleaned && safety++ < 30) {
+          while (prev !== cleaned && safety++ < 50) {
             prev = cleaned;
-            // Match .class { ... } or word { ... } — non-greedy content between braces
-            cleaned = cleaned.replace(/\.?[\w-]+\s*\{[^{}]*\}/g, '');
+            cleaned = cleaned.replace(/\.?[\w-]+(?:\s*,\s*\.?[\w-]+)*\s*\{[^}]*\}/g, '');
           }
-          // Remove any remaining brace pairs
+          // Remove any stray brace pairs
           cleaned = cleaned.replace(/\{[^}]*\}/g, '');
-          // Remove semicolons left from CSS (but NOT in URLs or HTML)
-          cleaned = cleaned.replace(/\s*;\s*/g, ' ');
-          // Collapse whitespace
-          cleaned = cleaned.replace(/\s+/g, ' ').trim();
+          // Remove leftover CSS property lines (word: value; patterns)
+          cleaned = cleaned.replace(/(?:^|\s)[\w-]+\s*:\s*[^;<>{]+;/g, ' ');
+          // Remove remaining @-rules
+          cleaned = cleaned.replace(/@[\w-]+[^;{]*[;{][^}]*\}?/g, '');
+          // Clean up semicolons and whitespace
+          cleaned = cleaned.replace(/;\s*/g, ' ').replace(/\s+/g, ' ').trim();
 
-          // Step 3: If cleaned result has no HTML tags but we extracted class styles,
-          // try to re-apply inline styles to any <span class="x"> in the ORIGINAL raw (after removing CSS blocks)
-          // This handles the pattern: .big{color:x} ...<span class="big">text</span>...
-          if (Object.keys(classStyles).length > 0) {
-            // Apply extracted styles to span elements that reference those classes
+          // Step 4: Final safety — if output still looks like raw CSS, extract text after last }
+          if (/^[\w.#@][\w\s-]*[{;]/.test(cleaned) || cleaned.startsWith('@')) {
+            const lastBrace = cleaned.lastIndexOf('}');
+            if (lastBrace !== -1) cleaned = cleaned.substring(lastBrace + 1).trim();
+            if (/^[\w.#][\w\s-]*[{;]/.test(cleaned)) cleaned = '';
+          }
+
+          // Step 5: Re-apply extracted CSS classes as inline styles on <span class="x">
+          if (Object.keys(classStyles).length > 0 && cleaned) {
             cleaned = cleaned.replace(/<span\s+class=["']?([\w-]+)["']?>/gi, (match, cls) => {
               const style = classStyles[cls.toLowerCase()];
               return style ? `<span style="${style}">` : match;

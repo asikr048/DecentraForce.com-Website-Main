@@ -433,7 +433,8 @@
               </div>
               <div class="col-span-2">
                 <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Short Description <span style="color:#4a6080;font-weight:400;text-transform:none;letter-spacing:0;">(shown as highlighted intro on course page — HTML supported)</span></label>
-                <textarea id="courseDesc" rows="3" placeholder="Brief summary shown as highlighted intro on course page. HTML supported, e.g. &lt;strong&gt;Key point&lt;/strong&gt;…" class="admin-input" style="resize:vertical;font-family:'DM Sans',sans-serif;font-size:.875rem;"></textarea>
+                <textarea id="courseDesc" rows="3" placeholder="Brief summary shown as highlighted intro on course page. HTML supported, e.g. &lt;strong&gt;Key point&lt;/strong&gt;…" class="admin-input" style="resize:vertical;font-family:'DM Sans',sans-serif;font-size:.875rem;" oninput="checkDescForCSS(this)"></textarea>
+                <div id="descCSSWarning" style="display:none;margin-top:6px;padding:8px 12px;background:rgba(255,60,60,0.08);border:1px solid rgba(255,80,80,0.3);border-radius:6px;font-size:.75rem;color:#ff6b6b;">&#9888;&#65039; <strong>CSS detected in description.</strong> Raw CSS (@import, .class{}, etc.) will be stripped on the course page. Use plain text or HTML tags only. For styled content, use the <strong>Course Overview</strong> field below instead.</div>
                 <iframe id="courseDescPreview" style="display:none;margin-top:8px;width:100%;min-height:180px;border:1px solid rgba(0,229,255,0.12);border-radius:8px;background:transparent;" frameborder="0" scrolling="auto"></iframe>
                 <button type="button" onclick="toggleDescPreview()" style="margin-top:6px;font-size:.72rem;color:#4a6080;background:none;border:none;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;font-weight:700;">⬦ Toggle HTML Preview</button>
               </div>
@@ -1769,6 +1770,7 @@ function openEditCourse(id) {
   document.getElementById('courseId').value         = c.id;
   document.getElementById('courseTitle').value      = c.title||'';
   document.getElementById('courseDesc').value       = c.description||'';
+  checkDescForCSSOnLoad();
   document.getElementById('courseThumbnail').value  = c.thumbnail_url||'';
   document.getElementById('courseVideo').value      = c.video_url||'';
   document.getElementById('coursePrice').value      = c.price||'';
@@ -2342,6 +2344,22 @@ function toggleOverviewPreview() {
   } else {
     pv.style.display = 'none';
   }
+}
+
+function checkDescForCSS(textarea) {
+  const val = textarea.value;
+  const looksLikeCSS = /@import\s+url/i.test(val) ||
+    /\.([\w-]+)\s*\{[^}]{10,}\}/i.test(val) ||
+    /font-family\s*:\s*['"]/.test(val) ||
+    /font-size\s*:\s*\d+px/.test(val);
+  const warning = document.getElementById('descCSSWarning');
+  if (warning) warning.style.display = looksLikeCSS ? 'block' : 'none';
+}
+
+// Also check on load when editing an existing course
+function checkDescForCSSOnLoad() {
+  const ta = document.getElementById('courseDesc');
+  if (ta) checkDescForCSS(ta);
 }
 
 function toggleDescPreview() {
