@@ -292,7 +292,6 @@
 
   <main class="course-layout">
     
-    <!-- Mobile-only purchase card (shown between hero and tabs on mobile) -->
     <div class="mobile-purchase-card" id="mobilePurchaseCard">
       <div class="sticky-card" style="position:static; margin:0;">
         <div class="card-thumbnail" id="mobileCardThumbnail" style="height:200px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:3rem; overflow:hidden;">🎓</div>
@@ -320,16 +319,13 @@
       </div>
 
       <div class="tab-content active" id="tab-overview">
-        <!-- Short Description -->
         <div id="shortDescWrapper" style="display:none; margin-bottom: 28px;">
           <div class="desc-highlight" id="shortDescBox"></div>
         </div>
-        <!-- Course Overview (from admin panel courseContent / modules.content) -->
         <div id="courseOverviewWrapper" style="display:none; margin-bottom: 8px;">
           <div class="desc-section-title" id="overviewSectionTitle">Course Overview</div>
           <div id="courseOverviewContent"></div>
         </div>
-        <!-- Fallback plain description -->
         <div class="desc-text" id="courseDescription" style="display:none;">
           Fetching course details...
         </div>
@@ -636,8 +632,13 @@
         try {
           // Wrap in a <style>-free container — remove @import and CSS rule blocks via string first
           let s = raw;
-          // Remove @import lines
-          s = s.replace(/@import\b[^;]*;?/gi, '');
+          
+          // FIX: robustly remove @import even if URLs contain semicolons
+          s = s.replace(/@import\s*(?:url\([^)]+\)|["'][^"']+["'])[^;]*;/gi, '');
+          
+          // FIX: explicitly remove raw CSS blocks from the text to prevent them from rendering
+          s = s.replace(/\.([\w-]+)\s*\{([^}]*)\}/gi, '');
+          
           // Set as innerHTML so the browser parses any HTML tags correctly
           tmp.innerHTML = s;
           // Remove any <style> elements the browser created
@@ -713,8 +714,12 @@
           document.body.appendChild(tmp);
 
           try {
-            // Pre-strip @import lines (they load external resources if left as HTML)
-            let s = raw.replace(/@import\b[^;]*;?/gi, '');
+            // FIX: robustly remove @import lines (safely handling internal semicolons inside URLs)
+            let s = raw.replace(/@import\s*(?:url\([^)]+\)|["'][^"']+["'])[^;]*;/gi, '');
+            
+            // FIX: explicitly remove raw CSS blocks from the text to prevent them from rendering
+            s = s.replace(/\.([\w-]+)\s*\{([^}]*)\}/gi, '');
+
             tmp.innerHTML = s;
 
             // Remove any <style> nodes the browser parsed
