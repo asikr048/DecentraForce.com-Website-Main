@@ -396,17 +396,56 @@
           <span id="modalCoursePrice" style="font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; color:var(--accent); margin:0;"></span>
         </div>
 
-        <div id="paymentInstructionsPanel" style="background: rgba(123,92,255,0.08); border: 1px solid rgba(123,92,255,0.2); padding: 16px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
-          <p style="color: var(--text); font-size: 1.1rem; margin-bottom: 12px;">
-            <strong style="color: #00e5ff; font-size: 1.3rem; letter-spacing: 0.5px;">Send Money to : 01302201431</strong>
-          </p>
-          <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px;">
-            <span class="pm-badge pm-bkash">bKash</span>
-            <span class="pm-badge pm-nagad">Nagad</span>
-            <span class="pm-badge pm-rocket">Rocket</span>
-            <span class="pm-badge pm-upay">Upay</span>
+        <div id="paymentInstructionsPanel" style="border-radius: 14px; margin-bottom: 24px; overflow: hidden; border: 1px solid rgba(226,19,110,0.2);">
+          <!-- Header with method badges -->
+          <div style="background: linear-gradient(135deg, rgba(226,19,110,0.15), rgba(123,92,255,0.12)); padding: 14px 18px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px;">
+              <span class="pm-badge pm-bkash">bKash</span>
+              <span class="pm-badge pm-nagad">Nagad</span>
+              <span class="pm-badge pm-rocket">Rocket</span>
+              <span class="pm-badge pm-upay">Upay</span>
+            </div>
+            <p style="color: var(--muted); font-size: 0.78rem; margin: 0;">Send money using any of the above apps or dial USSD</p>
           </div>
-          <button id="sentMoneyBtn" class="btn-purchase" style="margin-top:0;">I have sent the money</button>
+          <!-- Steps -->
+          <div style="background: rgba(0,0,0,0.25); padding: 4px 0;">
+            <div style="display: flex; align-items: flex-start; gap: 14px; padding: 13px 18px; border-bottom: 1px solid rgba(255,255,255,0.04);">
+              <span style="font-size: 1.2rem; line-height: 1; flex-shrink: 0; margin-top: 2px;">&#128241;</span>
+              <span style="font-size: 0.88rem; color: var(--text); line-height: 1.5;">Open <strong style="color:#e2136e;">bKash</strong>, <strong style="color:#f06522;">Nagad</strong>, <strong style="color:#8c3494;">Rocket</strong>, or <strong style="color:#00b386;">Upay</strong> App &mdash; or Dial on Phone</span>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 14px; padding: 13px 18px; border-bottom: 1px solid rgba(255,255,255,0.04);">
+              <span style="font-size: 1.2rem; line-height: 1; flex-shrink: 0; margin-top: 2px;">&#128073;</span>
+              <span style="font-size: 0.88rem; color: var(--text); line-height: 1.5;">Choose <strong style="color: var(--accent);">"Send Money"</strong></span>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 14px; padding: 13px 18px; border-bottom: 1px solid rgba(255,255,255,0.04);">
+              <span style="font-size: 1.2rem; line-height: 1; flex-shrink: 0; margin-top: 2px;">&#128222;</span>
+              <div style="flex: 1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span style="font-size: 0.88rem; color: var(--text);">Send to Number:</span>
+                <span style="font-family: monospace; font-size: 1rem; font-weight: 700; color: #e2136e; background: rgba(226,19,110,0.1); border: 1px solid rgba(226,19,110,0.3); padding: 3px 10px; border-radius: 6px; letter-spacing: 1px;">01302201431</span>
+                <button onclick="navigator.clipboard.writeText('01302201431').then(function(){ var b=this; b.textContent='Copied!'; setTimeout(function(){ b.textContent='Copy'; },1500); }.bind(this))" style="font-size: 0.72rem; padding: 3px 9px; border-radius: 6px; background: rgba(226,19,110,0.2); border: 1px solid rgba(226,19,110,0.35); color: #e2136e; cursor: pointer; font-weight: 700;">Copy</button>
+              </div>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 14px; padding: 13px 18px; border-bottom: 1px solid rgba(255,255,255,0.04);">
+              <span style="font-size: 1.2rem; line-height: 1; flex-shrink: 0; margin-top: 2px;">&#128176;</span>
+              <div style="flex: 1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span style="font-size: 0.88rem; color: var(--text);">Enter Exact Amount:</span>
+                <span id="paymentStepAmount" style="font-family: monospace; font-size: 1rem; font-weight: 700; color: #00e5ff; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.25); padding: 3px 10px; border-radius: 6px;">—</span>
+                <span style="font-size: 0.78rem; color: var(--muted); background: rgba(255,255,255,0.05); padding: 3px 8px; border-radius: 6px;">BDT</span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 14px; padding: 13px 18px; border-bottom: 1px solid rgba(255,255,255,0.04);">
+              <span style="font-size: 1.2rem; line-height: 1; flex-shrink: 0; margin-top: 2px;">&#128273;</span>
+              <span style="font-size: 0.88rem; color: var(--text); line-height: 1.5;">Enter your <strong style="color: var(--accent);">PIN</strong> to confirm the transaction</span>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 14px; padding: 13px 18px;">
+              <span style="font-size: 1.2rem; line-height: 1; flex-shrink: 0; margin-top: 2px;">&#128203;</span>
+              <span style="font-size: 0.88rem; color: var(--text); line-height: 1.5;">Copy the <strong style="color: #d4af37;">TrxID</strong> from SMS/App, then fill in your <strong style="color: var(--accent);">number &amp; TrxID</strong> below &amp; submit</span>
+            </div>
+          </div>
+          <!-- CTA Button -->
+          <div style="padding: 14px 18px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.06); text-align: center;">
+            <button id="sentMoneyBtn" class="btn-purchase" style="margin-top:0; width: 100%;">I have sent the money &rarr;</button>
+          </div>
         </div>
 
         <div id="paymentDetailsForm" style="display: none; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;">
@@ -921,6 +960,7 @@
     const shortDesc = course.description ? (course.description.substring(0, 100) + '...') : 'Complete your payment to access the course.';
     document.getElementById('modalCourseDesc').textContent = shortDesc;
     document.getElementById('modalCoursePrice').textContent = `৳${price}`;
+    var stepAmt = document.getElementById('paymentStepAmount'); if(stepAmt) stepAmt.textContent = price;
     
     document.getElementById('paymentInstructionsPanel').style.display = 'block';
     document.getElementById('paymentDetailsForm').style.display = 'none';
