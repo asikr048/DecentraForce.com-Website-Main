@@ -1683,7 +1683,17 @@ function renderCoursesGrid() {
 
   grid.innerHTML = allCourses.map(c => {
     let stats = { lectures:0, exercises:0, assignments:0 };
-    try { const p = typeof c.modules==='string'?JSON.parse(c.modules):c.modules; if(p&&typeof p==='object') stats=p; } catch(e){}
+    let curriculum = [];
+    try {
+      const p = typeof c.modules==='string'?JSON.parse(c.modules):c.modules;
+      if(p&&typeof p==='object') {
+        stats = p;
+        curriculum = Array.isArray(p.curriculum) ? p.curriculum : [];
+      }
+    } catch(e){}
+    // Count actual lectures from curriculum; fall back to manually-entered field
+    const actualLectureCount = curriculum.reduce((sum, m) => sum + (Array.isArray(m.lectures) ? m.lectures.length : 0), 0);
+    const lectureDisplay = actualLectureCount || stats.lectures || 0;
     const statusMap = { ongoing:'badge-green', completed:'badge-gray', upcoming:'badge-blue' };
     const status = c.status||'upcoming';
     return `
@@ -1700,7 +1710,7 @@ function renderCoursesGrid() {
         </div>
         <p class="text-xs text-[#4a6080] mb-4 flex-1">${esc((c.description||'').substring(0,75))}${(c.description||'').length>75?'…':''}</p>
         <div class="flex flex-wrap gap-1.5 mb-4">
-          ${[['📹',stats.lectures||0,'Lectures'],['⌨',stats.exercises||0,'Exercises'],['📋',stats.assignments||0,'Assignments']].map(([icon,n,label])=>`
+          ${[['📹',lectureDisplay,'Lectures'],['⌨',stats.exercises||0,'Exercises'],['📋',stats.assignments||0,'Assignments']].map(([icon,n,label])=>`
             <span class="bg-[#0a1228] text-[#4a6080] px-2.5 py-1 rounded-md text-xs border border-[rgba(0,229,255,0.06)] font-medium">${icon} ${esc(n)} ${label}</span>`).join('')}
         </div>
         <div class="flex items-center justify-between mb-4">
