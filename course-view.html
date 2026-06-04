@@ -1360,9 +1360,10 @@
     if (!courseModules || typeof courseModules !== 'object') courseModules = {};
 
     const curriculum  = Array.isArray(courseModules.curriculum) ? courseModules.curriculum : [];
-    // Count actual lectures from curriculum; fall back to the manually-entered field only if curriculum is empty
+    // Prefer manually-entered "Total Lectures" field; fall back to counting from curriculum
+    const manualLectures = parseInt(courseModules.lectures) || 0;
     const actualLectureCount = curriculum.reduce((sum, m) => sum + (Array.isArray(m.lectures) ? m.lectures.length : 0), 0);
-    const lectures    = actualLectureCount || parseInt(courseModules.lectures)    || 0;
+    const lectures    = manualLectures || actualLectureCount;
     const exercises   = parseInt(courseModules.exercises)   || 0;
     const assignCount = parseInt(courseModules.assignments) || 0;
     const content     = courseModules.content || '';

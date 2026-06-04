@@ -1502,12 +1502,12 @@ window.addEventListener('storage', (e) => {
           const modulesObj = typeof course.modules === 'string' ? JSON.parse(course.modules) : course.modules;
           if (modulesObj && modulesObj.category) categoryTag = modulesObj.category;
           if (modulesObj && modulesObj.level) levelTag = modulesObj.level;
-          // Count actual lectures from curriculum array
-          if (modulesObj && Array.isArray(modulesObj.curriculum) && modulesObj.curriculum.length > 0) {
+          // Prefer manually-entered "Total Lectures" field (admin explicitly sets this)
+          if (modulesObj && parseInt(modulesObj.lectures) > 0) {
+            moduleCount = parseInt(modulesObj.lectures);
+          } else if (modulesObj && Array.isArray(modulesObj.curriculum) && modulesObj.curriculum.length > 0) {
+            // Fall back to counting from curriculum
             moduleCount = modulesObj.curriculum.reduce((sum, m) => sum + (Array.isArray(m.lectures) ? m.lectures.length : 0), 0);
-          } else if (modulesObj && modulesObj.lectures) {
-            // Fall back to manually-entered lectures number
-            moduleCount = parseInt(modulesObj.lectures) || 0;
           } else if (Array.isArray(modulesObj)) {
             moduleCount = modulesObj.length;
           }

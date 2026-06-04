@@ -1691,9 +1691,9 @@ function renderCoursesGrid() {
         curriculum = Array.isArray(p.curriculum) ? p.curriculum : [];
       }
     } catch(e){}
-    // Count actual lectures from curriculum; fall back to manually-entered field
-    const actualLectureCount = curriculum.reduce((sum, m) => sum + (Array.isArray(m.lectures) ? m.lectures.length : 0), 0);
-    const lectureDisplay = actualLectureCount || stats.lectures || 0;
+    // Prefer manually-entered "Total Lectures" field; fall back to counting from curriculum
+    const manualLectures = parseInt(stats.lectures) || 0;
+    const lectureDisplay = manualLectures || actualLectureCount;
     const statusMap = { ongoing:'badge-green', completed:'badge-gray', upcoming:'badge-blue' };
     const status = c.status||'upcoming';
     return `
