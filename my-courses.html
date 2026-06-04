@@ -1204,13 +1204,22 @@
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     const labels = { courses: 'My Courses', profile: 'Profile', rewards: 'Rewards' };
     document.getElementById('breadcrumb-label').textContent = labels[name] || 'My Courses';
+    // Persist panel so refresh returns here
+    try { sessionStorage.setItem('myCoursesPanel', name); } catch(e) {}
+    // Update URL hash without triggering scroll
+    try { history.replaceState(null, '', '#panel=' + name + (name === 'courses' ? '&tab=' + _currentTab : '')); } catch(e) {}
   }
 
- function setTab(name) {
+  var _currentTab = 'enrolled';
+  function setTab(name) {
+    _currentTab = name;
     ['enrolled','premium','free'].forEach(t => {
       document.getElementById('tab-' + t)?.classList.toggle('active', t === name);
       document.getElementById('panel-' + t)?.classList.toggle('active', t === name);
     });
+    // Persist tab so refresh returns here
+    try { sessionStorage.setItem('myCoursesTab', name); } catch(e) {}
+    try { history.replaceState(null, '', '#panel=courses&tab=' + name); } catch(e) {}
     // Animate progress bars
     setTimeout(() => {
       document.querySelectorAll('.progress-fill').forEach(fill => {
@@ -1230,14 +1239,23 @@
   window.saveProfileData = saveProfileData;
   window.showPanel = showPanel;
   window.setTab = setTab;
- window.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab');
-    if (tab === 'enrolled' || tab === 'premium' || tab === 'free') {
-      setTab(tab);
-    } else {
-      setTab('enrolled');
-    }
+  window.addEventListener('DOMContentLoaded', () => {
+    // Restore panel + tab from URL hash or sessionStorage
+    const hash = window.location.hash; // e.g. #panel=courses&tab=premium
+    const hashParams = new URLSearchParams(hash.replace('#', ''));
+    const savedPanel = hashParams.get('panel') || sessionStorage.getItem('myCoursesPanel') || 'courses';
+    const savedTab   = hashParams.get('tab')   || sessionStorage.getItem('myCoursesTab')   || 'enrolled';
+
+    // Also check legacy ?tab= query param
+    const qParams = new URLSearchParams(window.location.search);
+    const qTab = qParams.get('tab');
+
+    const panel = ['courses','profile','rewards'].includes(savedPanel) ? savedPanel : 'courses';
+    const tab   = (qTab && ['enrolled','premium','free'].includes(qTab)) ? qTab
+                : (['enrolled','premium','free'].includes(savedTab) ? savedTab : 'enrolled');
+
+    showPanel(panel);
+    if (panel === 'courses') setTab(tab);
   });
 
   /* ────────────────────────────────────────────────────────

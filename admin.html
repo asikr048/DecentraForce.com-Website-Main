@@ -1325,6 +1325,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (typeof initDefaultFeedbacks === 'function') initDefaultFeedbacks();
   if (typeof initDefaultMentors === 'function') initDefaultMentors();
   if (typeof initDefaultCourses === 'function') initDefaultCourses();
+
+  // Restore last active tab after refresh
+  try {
+    const savedTab = sessionStorage.getItem('adminActiveTab');
+    if (savedTab && ALL_TABS.includes(savedTab)) {
+      showTab(savedTab);
+    }
+  } catch(e) {}
 });
 
 async function checkAdminAuth() {
@@ -1393,6 +1401,9 @@ function showTab(name) {
   document.getElementById(`tab-${name}`)?.classList.remove('hidden');
   document.querySelector(`[data-tab="${name}"]`)?.classList.add('active');
   document.getElementById('breadcrumb').textContent = BREADCRUMBS[name] || name;
+
+  // Persist active tab so refresh returns to same section
+  try { sessionStorage.setItem('adminActiveTab', name); } catch(e) {}
 
   if (name === 'feedback') { if (typeof initDefaultFeedbacks==='function') initDefaultFeedbacks(); renderFeedbacksList(); refreshUserFeedbacks(); }
   if (name === 'mentors') renderMentorsList();
@@ -2481,7 +2492,8 @@ function showToast(msg,type='success') {
 
 function plainTitle(str) {
   if(!str) return '';
-  return String(str).replace(/<style[sS]*?</style>/gi, '').replace(/<[^>]+>/g, '').trim() || 'Untitled';
+  var s = String(str).replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, '').trim();
+  return s || 'Untitled';
 }
 function esc(str) {
   if(!str) return '';
