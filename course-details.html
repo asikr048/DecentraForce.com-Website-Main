@@ -37,12 +37,11 @@
     /* Two-column hero: text left, thumbnail right */
     .hero-container {
       max-width: 1200px; margin: 0 auto;
-      display: grid; grid-template-columns: 1fr 320px;
-      gap: 40px; align-items: center;
+      display: block;
       position: relative; z-index: 1;
     }
     .hero-left { display: flex; flex-direction: column; gap: 16px; }
-    .hero-right { display: flex; justify-content: flex-end; }
+    .hero-right { display: none; }
     .hero-thumb {
       width: 100%; aspect-ratio: 16/9; border-radius: 16px; overflow: hidden;
       background: var(--surface2); border: 1px solid rgba(0,229,255,0.15);
@@ -602,14 +601,10 @@
         const url = activeCourse.thumbnail_url;
         const imgTag = `<img src="${url}" alt="Course Thumbnail" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.innerHTML='<span style=\\'font-size:3rem\\'>🎓</span>'">`;
 
-        // Sticky card thumbnail
+        // Sticky card thumbnail only
         document.getElementById('cardThumbnail').innerHTML = imgTag;
 
-        // Hero right-column thumbnail
-        const heroThumb = document.getElementById('heroThumb');
-        if (heroThumb) heroThumb.innerHTML = imgTag;
-
-        // Subtle hero background tint
+        // Subtle hero background tint (no duplicate image in hero-right)
         const heroEl = document.querySelector('.course-hero');
         if (heroEl) {
           heroEl.style.backgroundImage = `linear-gradient(135deg, rgba(5,10,24,0.97) 0%, rgba(8,15,34,0.93) 55%, rgba(8,15,34,0.86) 100%), url('${url}')`;
@@ -625,7 +620,17 @@
       } catch(e) {}
 
       // --- Short Description ---
-      const shortDesc = (activeCourse.description || '').trim();
+      const shortDescRaw = (activeCourse.description || '').trim();
+      // Sanitize CSS from short description too
+      function stripCSS(raw) {
+        let c = raw.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+        c = c.replace(/@import\s+url\s*\([^)]*\)\s*[^;]*;?/gi, '');
+        let prev = '';
+        while (prev !== c) { prev = c; c = c.replace(/[.#]?[\w-]+(?:\s*[.#:[\w=~|^$*"'\s-]+)?\s*\{[^{}]*\}/g, ''); }
+        c = c.replace(/\{[^}]*\}/g, '').replace(/;/g, '').replace(/\s+/g, ' ').trim();
+        return c;
+      }
+      const shortDesc = stripCSS(shortDescRaw);
       if (shortDesc) {
         const shortBox = document.getElementById('shortDescBox');
         shortBox.innerHTML = /<[a-z][\s\S]*>/i.test(shortDesc)
@@ -642,27 +647,34 @@
         const overviewEl = document.getElementById('courseOverviewContent');
         overviewEl.classList.add('desc-text', 'overview-rich');
 
-        // Sanitize: remove @import rules and <style> blocks that leak raw CSS into the page
+        // Sanitize: strip all raw CSS that leaked into the content field
         function sanitizeOverview(raw) {
-          // Strip <style> blocks entirely
-          let cleaned = raw.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-          // Strip standalone @import lines (CSS injected outside style tags)
-          cleaned = cleaned.replace(/@import\s+url\([^)]*\)[^;]*;?/gi, '');
-          // Strip CSS rule blocks that accidentally got pasted in plain text
-          // Pattern: selector { ... } repeated — only strip if it looks like pure CSS (no HTML tags)
-          // We detect a CSS-only string by checking if it starts with @import or .class { 
-          const looksLikeCSS = /^(\s*(@import|@font|[.#]?[\w-]+\s*\{))/i.test(cleaned.trim());
-          if (looksLikeCSS) {
-            // Extract the actual text content after the CSS block
-            // CSS blocks end with } — find the last } and take everything after
-            const lastBrace = cleaned.lastIndexOf('}');
-            if (lastBrace !== -1) {
-              cleaned = cleaned.substring(lastBrace + 1).trim();
-            } else {
-              cleaned = '';
-            }
+          let cleaned = raw;
+
+          // 1. Remove <style> blocks
+          cleaned = cleaned.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+
+          // 2. Remove @import lines (with or without semicolon)
+          cleaned = cleaned.replace(/@import\s+url\s*\([^)]*\)\s*[^;]*;?/gi, '');
+
+          // 3. Remove ALL CSS rule blocks: anything matching  selector { ... }
+          //    Uses a greedy loop to handle nested/repeated blocks
+          //    Matches: .class, #id, tag, or .CLASS (uppercase too)
+          let prev = '';
+          while (prev !== cleaned) {
+            prev = cleaned;
+            // Remove CSS blocks: word/dot/hash followed by { ... }
+            cleaned = cleaned.replace(/[.#]?[\w-]+(?:\s*[.#:[\w=~|^$*"'\s-]+)?\s*\{[^{}]*\}/g, '');
           }
-          return cleaned.trim();
+
+          // 4. Clean up leftover semicolons and stray braces from CSS
+          cleaned = cleaned.replace(/\{[^}]*\}/g, '');
+          cleaned = cleaned.replace(/;/g, '');
+
+          // 5. Collapse whitespace
+          cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+          return cleaned;
         }
 
         const sanitized = sanitizeOverview(overviewRaw);
@@ -671,12 +683,8 @@
           overviewEl.innerHTML = sanitized;
         } else if (sanitized) {
           overviewEl.innerHTML = renderDescription(sanitized);
-        } else if (/<[a-z][\s\S]*>/i.test(overviewRaw)) {
-          // Fallback: use original but stripped of style/import only
-          const stripped = overviewRaw.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '').replace(/@import\s+url\([^)]*\)[^;]*;?/gi, '');
-          overviewEl.innerHTML = stripped;
         } else {
-          overviewEl.innerHTML = renderDescription(overviewRaw);
+          overviewEl.innerHTML = '<p style="color:var(--muted)">No overview available yet.</p>';
         }
         document.getElementById('courseOverviewWrapper').style.display = 'block';
       } else {
