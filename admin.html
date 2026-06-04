@@ -1813,7 +1813,7 @@ function openEditCourse(id) {
 
 async function saveCourse() {
   const id    = document.getElementById('courseId').value;
-  const title = document.getElementById('courseTitle').value.trim();
+  const title = plainTitle(document.getElementById('courseTitle').value.trim());
   if(!title) { showToast('Course Title is required','error'); return; }
 
   const curriculum = [];
