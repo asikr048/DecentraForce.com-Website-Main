@@ -295,6 +295,7 @@
     <!-- Mobile-only purchase card (shown between hero and tabs on mobile) -->
     <div class="mobile-purchase-card" id="mobilePurchaseCard">
       <div class="sticky-card" style="position:static; margin:0;">
+        <div class="card-thumbnail" id="mobileCardThumbnail" style="height:200px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:3rem; overflow:hidden;">🎓</div>
         <div class="card-body" style="padding: 20px;">
           <div class="price-display" id="mobilePriceDisplay">৳0</div>
           <button class="btn-purchase" id="mobilePurchaseBtn" style="margin-top:12px;">Purchase Course</button>
@@ -601,8 +602,12 @@
         const url = activeCourse.thumbnail_url;
         const imgTag = `<img src="${url}" alt="Course Thumbnail" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.innerHTML='<span style=\\'font-size:3rem\\'>🎓</span>'">`;
 
-        // Sticky card thumbnail only
+        // Sticky card thumbnail (desktop sidebar)
         document.getElementById('cardThumbnail').innerHTML = imgTag;
+
+        // Mobile card thumbnail
+        const mobileThumb = document.getElementById('mobileCardThumbnail');
+        if (mobileThumb) mobileThumb.innerHTML = imgTag;
 
         // Subtle hero background tint (no duplicate image in hero-right)
         const heroEl = document.querySelector('.course-hero');
@@ -621,13 +626,14 @@
 
       // --- Short Description ---
       const shortDescRaw = (activeCourse.description || '').trim();
-      // Sanitize CSS from short description too
+      // Strip CSS rules from description, keeping only plain text / HTML content
       function stripCSS(raw) {
-        let c = raw.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-        c = c.replace(/@import\s+url\s*\([^)]*\)\s*[^;]*;?/gi, '');
-        let prev = '';
-        while (prev !== c) { prev = c; c = c.replace(/[.#]?[\w-]+(?:\s*[.#:[\w=~|^$*"'\s-]+)?\s*\{[^{}]*\}/g, ''); }
-        c = c.replace(/\{[^}]*\}/g, '').replace(/;/g, '').replace(/\s+/g, ' ').trim();
+        let c = raw;
+        c = c.replace(/@import\s+url\s*\([^)]*\)[^;]*;?/gi, '');
+        c = c.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+        let prev = '', safety = 0;
+        while (prev !== c && safety++ < 30) { prev = c; c = c.replace(/\.?[\w-]+\s*\{[^{}]*\}/g, ''); }
+        c = c.replace(/\{[^}]*\}/g, '').replace(/\s*;\s*/g, ' ').replace(/\s+/g, ' ').trim();
         return c;
       }
       const shortDesc = stripCSS(shortDescRaw);
@@ -640,41 +646,64 @@
       }
 
       // --- Course Overview (modules.content first, then fall back to description) ---
-      // modules.content is the rich HTML field from the admin panel "Course Overview" textarea.
-      // If it is blank, we render the short description as overview so the tab is never empty.
-      const overviewRaw = (parsedModules.content || '').trim() || shortDesc;
+      // Use the RAW modules.content — don't fall back to shortDesc (avoids duplication)
+      const overviewRaw = (parsedModules.content || '').trim();
       if (overviewRaw) {
         const overviewEl = document.getElementById('courseOverviewContent');
         overviewEl.classList.add('desc-text', 'overview-rich');
 
-        // Sanitize: strip all raw CSS that leaked into the content field
+        // Smart parser: handles admin content that mixes CSS definitions + plain text
+        // e.g. "@import ...; .big { color:#6366f1; } Build <span class='big'>Everything</span> with AI..."
+        // OR plain CSS blob ending in plain text like "Build Everything with AI: ..."
         function sanitizeOverview(raw) {
-          let cleaned = raw;
-
-          // 1. Remove <style> blocks
-          cleaned = cleaned.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-
-          // 2. Remove @import lines (with or without semicolon)
-          cleaned = cleaned.replace(/@import\s+url\s*\([^)]*\)\s*[^;]*;?/gi, '');
-
-          // 3. Remove ALL CSS rule blocks: anything matching  selector { ... }
-          //    Uses a greedy loop to handle nested/repeated blocks
-          //    Matches: .class, #id, tag, or .CLASS (uppercase too)
-          let prev = '';
-          while (prev !== cleaned) {
-            prev = cleaned;
-            // Remove CSS blocks: word/dot/hash followed by { ... }
-            cleaned = cleaned.replace(/[.#]?[\w-]+(?:\s*[.#:[\w=~|^$*"'\s-]+)?\s*\{[^{}]*\}/g, '');
+          // Step 1: Extract CSS class definitions from the blob
+          const classStyles = {};
+          const cssRuleRe = /\.([\w-]+)\s*\{([^}]*)\}/gi;
+          let m;
+          while ((m = cssRuleRe.exec(raw)) !== null) {
+            const cls = m[1].toLowerCase();
+            const props = m[2];
+            // Build inline style string from relevant CSS props
+            const style = props
+              .split(';')
+              .map(p => p.trim())
+              .filter(p => p && /^(color|font-size|font-weight|letter-spacing|font-family|line-height|padding|background)/.test(p))
+              .join('; ');
+            if (style) classStyles[cls] = style;
           }
 
-          // 4. Clean up leftover semicolons and stray braces from CSS
+          // Step 2: Strip @import lines and all CSS rule blocks
+          let cleaned = raw;
+          cleaned = cleaned.replace(/@import\s+url\s*\([^)]*\)[^;]*;?/gi, '');
+          cleaned = cleaned.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+          // Remove CSS blocks iteratively — handles both .className { } and plain word { }
+          // The pattern: optional dot, word chars, optional spaces, open brace, content, close brace
+          let prev = '';
+          let safety = 0;
+          while (prev !== cleaned && safety++ < 30) {
+            prev = cleaned;
+            // Match .class { ... } or word { ... } — non-greedy content between braces
+            cleaned = cleaned.replace(/\.?[\w-]+\s*\{[^{}]*\}/g, '');
+          }
+          // Remove any remaining brace pairs
           cleaned = cleaned.replace(/\{[^}]*\}/g, '');
-          cleaned = cleaned.replace(/;/g, '');
-
-          // 5. Collapse whitespace
+          // Remove semicolons left from CSS (but NOT in URLs or HTML)
+          cleaned = cleaned.replace(/\s*;\s*/g, ' ');
+          // Collapse whitespace
           cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
-          return cleaned;
+          // Step 3: If cleaned result has no HTML tags but we extracted class styles,
+          // try to re-apply inline styles to any <span class="x"> in the ORIGINAL raw (after removing CSS blocks)
+          // This handles the pattern: .big{color:x} ...<span class="big">text</span>...
+          if (Object.keys(classStyles).length > 0) {
+            // Apply extracted styles to span elements that reference those classes
+            cleaned = cleaned.replace(/<span\s+class=["']?([\w-]+)["']?>/gi, (match, cls) => {
+              const style = classStyles[cls.toLowerCase()];
+              return style ? `<span style="${style}">` : match;
+            });
+          }
+
+          return cleaned.trim();
         }
 
         const sanitized = sanitizeOverview(overviewRaw);
