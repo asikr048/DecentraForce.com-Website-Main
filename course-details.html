@@ -698,6 +698,11 @@
         return str;
       }
       const overviewRaw = extractTextAfterCSS((parsedModules.content || '').trim());
+      // If still looks like a CSS blob (contains @import or .class { ), hide the section entirely
+      const looksLikeCSS = overviewRaw && (/@import\s/i.test(overviewRaw) || /\.[\w-]+\s*\{/.test(overviewRaw));
+      if (looksLikeCSS) {
+        document.getElementById('courseOverviewWrapper').style.display = 'none';
+      }
       if (overviewRaw) {
         const overviewEl = document.getElementById('courseOverviewContent');
         overviewEl.classList.add('desc-text', 'overview-rich');
