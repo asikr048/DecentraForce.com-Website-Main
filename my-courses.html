@@ -1358,7 +1358,7 @@ async function renderCourses() {
     // Store for openCourseContent access gate
     window._approvedCourseIds = new Set(enrolledCourseIds);
 
-    // Find enrolled courses (approved purchases) for the Enrolled tab
+    // Find enrolled courses (approved purchases)
     const enrolledCourses = courses.filter(course =>
       enrolledCourseIds.includes(course.id?.toString())
     );
@@ -1373,15 +1373,21 @@ async function renderCourses() {
       return;
     }
 
-    // Premium tab = all price > 0 courses (enrolled ones show "Enrolled" badge+button)
-    const premiumCourses = courses.filter(c => (parseFloat(c.price) || 0) > 0);
-
-    // Free tab = all price 0 courses (enrolled ones show "Enrolled" badge+button)
-    const freeCourses = courses.filter(c => (parseFloat(c.price) || 0) === 0);
+    // Premium = price > 0, NOT yet enrolled (pending courses stay here so button flips to pending state)
+    const premiumCourses = courses.filter(c => {
+      const price = parseFloat(c.price) || 0;
+      return price > 0 && !enrolledCourseIds.includes(c.id?.toString());
+    });
+    
+    // Free = price 0, not enrolled
+    const freeCourses = courses.filter(c => {
+      const price = parseFloat(c.price) || 0;
+      return price === 0 && !enrolledCourseIds.includes(c.id?.toString());
+    });
 
     renderCourseGrid('enrolled-courses', enrolledCourses, 'Enrolled', pendingCourseIds);
-    renderCourseGrid('premium-courses',  premiumCourses,  'Premium',  pendingCourseIds, enrolledCourseIds);
-    renderCourseGrid('free-courses',     freeCourses,     'Free',     pendingCourseIds, enrolledCourseIds);
+    renderCourseGrid('premium-courses',  premiumCourses,  'Premium',  pendingCourseIds);
+    renderCourseGrid('free-courses',     freeCourses,     'Free',     pendingCourseIds);
   }
 
   function enrollFreeCourse(courseId, courseTitle) {
@@ -1396,12 +1402,7 @@ async function renderCourses() {
       timestamp: new Date().toISOString(),
       id: Date.now().toString()
     };
-    let purchases = [];
-    try {
-      const raw = localStorage.getItem('purchases');
-      if (raw) purchases = JSON.parse(raw);
-      if (!Array.isArray(purchases)) purchases = [];
-    } catch(e) { purchases = []; }
+    const purchases = loadPurchasesFromLocalStorage();
     purchases.push(purchase);
     localStorage.setItem('purchases', JSON.stringify(purchases));
     
@@ -1409,7 +1410,7 @@ async function renderCourses() {
     renderCourses(); // Instantly refresh the grid
   }
 
-  function renderCourseGrid(containerId, courses, type, pendingCourseIds = [], enrolledCourseIds = []) {
+  function renderCourseGrid(containerId, courses, type, pendingCourseIds = []) {
     const container = document.getElementById(containerId);
     
     if (!container) return;
@@ -1428,17 +1429,12 @@ async function renderCourses() {
       const price = parseFloat(course.price) || 0;
       const whatsapp = course.whatsapp || '';
       
-      const isPending  = pendingCourseIds.includes(courseId.toString());
-      // In Premium/Free tabs, check if this course is enrolled
-      const isEnrolledInTab = (type === 'Premium' || type === 'Free') && enrolledCourseIds.includes(courseId.toString());
+      const isPending = pendingCourseIds.includes(courseId.toString());
       
       // Determine status badge
       let statusText = 'Premium';
       let statusClass = 'nano';
       if (type === 'Enrolled') {
-        statusText = 'Enrolled';
-        statusClass = 'sub';
-      } else if (isEnrolledInTab) {
         statusText = 'Enrolled';
         statusClass = 'sub';
       } else if (type === 'Free') {
@@ -1476,8 +1472,8 @@ async function renderCourses() {
           <p class="card-description">${escapeHtml(description.substring(0, 100))}${description.length > 100 ? '...' : ''}</p>
           <div class="card-stats">
             <div class="stat-pill">📦 ${getModuleCount(course)} Lecture</div>
-            ${price > 0 && type !== 'Enrolled' && !isEnrolledInTab ? `<div class="stat-pill">💰 ${priceDisplay}</div>` : ''}
-            ${whatsapp && (type === 'Enrolled' || isEnrolledInTab) ? `<div class="stat-pill">💬 WhatsApp Group</div>` : ''}
+            ${price > 0 && type !== 'Enrolled' ? `<div class="stat-pill">💰 ${priceDisplay}</div>` : ''}
+            ${whatsapp && type === 'Enrolled' ? `<div class="stat-pill">💬 WhatsApp Group</div>` : ''}
           </div>
           ${type === 'Enrolled' ? `
           <div class="card-progress">
@@ -1488,7 +1484,7 @@ async function renderCourses() {
         </div>
         <div class="card-footer">
           <div class="card-rating"><span class="stars">★★★★★</span> 4.9</div>
-          ${getCourseButton(course, type, isPending, isEnrolledInTab)}
+          ${getCourseButton(course, type, isPending)}
         </div>
       </div>
       `
@@ -1496,27 +1492,23 @@ async function renderCourses() {
 
     // Attach event listeners
     if (type === 'Premium') {
-      // Enrolled-in-premium: go to course-details
-      container.querySelectorAll('.view-enrolled-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const cid = this.dataset.courseId;
-          window.location.href = `course-details.html?id=${encodeURIComponent(cid)}`;
-        });
-      });
       container.querySelectorAll('.buy-now-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
           const courseId = this.dataset.courseId;
+          // Navigate to course details page instead of opening modal directly
           window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
         });
       });
+      
+      // Add click handler to premium course cards
       container.querySelectorAll('.course-card').forEach(card => {
-        const courseId = card.querySelector('.buy-now-btn, .view-enrolled-btn')?.dataset.courseId;
+        const courseId = card.querySelector('.buy-now-btn')?.dataset.courseId;
         if (courseId) {
           card.style.cursor = 'pointer';
           card.addEventListener('click', function(e) {
-            if (e.target.closest('.buy-now-btn') || e.target.closest('.view-enrolled-btn') || e.target.closest('a')) return;
+            // Don't navigate if clicking on the purchase button or any link
+            if (e.target.closest('.buy-now-btn') || e.target.closest('a')) return;
             window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
           });
         }
@@ -1524,14 +1516,6 @@ async function renderCourses() {
     }
     
     if (type === 'Free') {
-      // Enrolled-in-free: go to course-details
-      container.querySelectorAll('.view-enrolled-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const cid = this.dataset.courseId;
-          window.location.href = `course-details.html?id=${encodeURIComponent(cid)}`;
-        });
-      });
       container.querySelectorAll('.enroll-free-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
@@ -1566,15 +1550,10 @@ async function renderCourses() {
     }
   }
 
-function getCourseButton(course, type, isPending, isEnrolledInTab = false) {
+function getCourseButton(course, type, isPending) {
     const courseId = course.id || '';
     const whatsapp = course.whatsapp || '';
     const status = course.status || 'ongoing'; // Default to ongoing
-
-    // If enrolled in a premium/free tab — show course-details link
-    if (isEnrolledInTab) {
-      return `<a href="course-details.html?id=${encodeURIComponent(courseId)}" class="continue-btn view-enrolled-btn" data-course-id="${courseId}" style="cursor:pointer;text-decoration:none;background:linear-gradient(135deg,#00e599,#00e5ff);color:#050a18;">✓ Purchased — View</a>`;
-    }
 
     // Determine button based on course type
     if (type === 'Enrolled' || type === 'Purchased') {
