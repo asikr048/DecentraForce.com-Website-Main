@@ -68,7 +68,7 @@ async function publicCourses(req, res) {
   const r = await query(`
     SELECT id, title, description,
       CASE WHEN length(thumbnail_url)>2000000 THEN '' ELSE thumbnail_url END AS thumbnail_url,
-      modules, created_at, price, whatsapp, status, sequence_order
+      modules, created_at, price, discount_price, whatsapp, status, sequence_order
     FROM courses WHERE is_active=TRUE ORDER BY COALESCE(sequence_order,9999), created_at DESC
   `);
   return res.status(200).json({ success: true, courses: r.rows });
@@ -448,7 +448,7 @@ async function adminCourses(req, res) {
     // 500KB (enough for the admin preview) and return URLs as-is.
     const r = await query(`
       SELECT c.id,c.title,c.description,c.video_url,c.modules,c.is_active,c.created_at,
-        c.price,c.whatsapp,c.status,c.sequence_order,
+        c.price,c.discount_price,c.whatsapp,c.status,c.sequence_order,
         CASE
           WHEN left(c.thumbnail_url,5)='data:' THEN left(c.thumbnail_url,500000)
           ELSE c.thumbnail_url
@@ -459,24 +459,24 @@ async function adminCourses(req, res) {
     return res.status(200).json({ success: true, courses: r.rows });
   }
   if (req.method === 'POST') {
-    const { title,description,thumbnail_url,video_url,price,whatsapp,modules,is_active,status,sequence_order } = req.body||{};
+    const { title,description,thumbnail_url,video_url,price,discount_price,whatsapp,modules,is_active,status,sequence_order } = req.body||{};
     if (!title) return res.status(400).json({ success: false, error: 'Title required' });
     if (price==null) return res.status(400).json({ success: false, error: 'Price required' });
     if (!whatsapp) return res.status(400).json({ success: false, error: 'WhatsApp link required' });
     const r = await query(
-      `INSERT INTO courses (title,description,thumbnail_url,video_url,price,whatsapp,modules,is_active,status,sequence_order)
-       VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9,$10) RETURNING *`,
-      [title,description||'',thumbnail_url||'',video_url||'',price,whatsapp,modules||'{}',is_active!==false,status||'upcoming',sequence_order??9999]
+      `INSERT INTO courses (title,description,thumbnail_url,video_url,price,discount_price,whatsapp,modules,is_active,status,sequence_order)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11) RETURNING *`,
+      [title,description||'',thumbnail_url||'',video_url||'',price,discount_price||null,whatsapp,modules||'{}',is_active!==false,status||'upcoming',sequence_order??9999]
     );
     return res.status(201).json({ success: true, course: r.rows[0] });
   }
   if (req.method === 'PUT') {
-    const { id,title,description,thumbnail_url,video_url,price,whatsapp,modules,is_active,status,sequence_order } = req.body||{};
+    const { id,title,description,thumbnail_url,video_url,price,discount_price,whatsapp,modules,is_active,status,sequence_order } = req.body||{};
     if (!id) return res.status(400).json({ success: false, error: 'ID required' });
     const r = await query(
-      `UPDATE courses SET title=$1,description=$2,thumbnail_url=$3,video_url=$4,price=$5,whatsapp=$6,
-       modules=$7::jsonb,is_active=$8,status=$9,sequence_order=$10 WHERE id=$11 RETURNING *`,
-      [title,description,thumbnail_url,video_url,price,whatsapp,modules,is_active,status||'upcoming',sequence_order??9999,id]
+      `UPDATE courses SET title=$1,description=$2,thumbnail_url=$3,video_url=$4,price=$5,discount_price=$6,whatsapp=$7,
+       modules=$8::jsonb,is_active=$9,status=$10,sequence_order=$11 WHERE id=$12 RETURNING *`,
+      [title,description,thumbnail_url,video_url,price,discount_price||null,whatsapp,modules,is_active,status||'upcoming',sequence_order??9999,id]
     );
     return res.status(200).json({ success: true, course: r.rows[0] });
   }
