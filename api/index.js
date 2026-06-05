@@ -1155,7 +1155,70 @@ async function adminReorder(req, res) {
 // Runs DDL (ALTER TABLE / CREATE TABLE IF NOT EXISTS) exactly once per cold start.
 // This prevents the same DDL from running on every request inside route handlers.
 // ═══════════════════════════════════════════════════════════════════════════════
-let _bootMigrationDone = false;
+// ── PUBLIC: GET /api/_public/course-reviews ──────────────────────────────────
+async function publicCourseReviews(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
+  const { course_id } = req.query || {};
+  if (!course_id) return res.status(400).json({ success: false, error: 'course_id required' });
+  const r = await query(`
+    SELECT cr.id, cr.rating, cr.comment, cr.created_at,
+           u.username AS reviewer_name
+    FROM course_reviews cr
+    JOIN users u ON u.id = cr.user_id
+    WHERE cr.course_id = $1
+    ORDER BY cr.created_at DESC
+  `, [course_id]);
+  // Compute aggregate
+  const rows = r.rows;
+  const avg_rating = rows.length ? (rows.reduce((s, x) => s + x.rating, 0) / rows.length) : 0;
+  return res.status(200).json({ success: true, reviews: rows, avg_rating: Math.round(avg_rating * 10) / 10, review_count: rows.length });
+}
+
+// ── USER: POST /api/course-reviews ────────────────────────────────────────────
+async function submitCourseReview(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+  const token = req.cookies?.session_token;
+  if (!token) return res.status(401).json({ success: false, error: 'Not authenticated' });
+  const userResult = await query(
+    `SELECT id, username FROM users WHERE session_token=$1 AND session_expires>NOW()`, [token]
+  );
+  if (!userResult.rows.length) return res.status(401).json({ success: false, error: 'Invalid or expired session' });
+  const user = userResult.rows[0];
+  const { course_id, rating, comment } = req.body || {};
+  if (!course_id || !rating) return res.status(400).json({ success: false, error: 'course_id and rating required' });
+  if (rating < 1 || rating > 5) return res.status(400).json({ success: false, error: 'Rating must be 1–5' });
+  // Only enrolled/approved users may review
+  const access = await query(
+    `SELECT 1 FROM user_courses WHERE user_id=$1 AND course_id=$2 LIMIT 1`, [user.id, course_id]
+  );
+  if (!access.rows.length) return res.status(403).json({ success: false, error: 'You must be enrolled to review this course' });
+  const r = await query(`
+    INSERT INTO course_reviews (course_id, user_id, rating, comment)
+    VALUES ($1, $2, $3, $4)
+    ON CONFLICT (user_id, course_id) DO UPDATE SET rating=EXCLUDED.rating, comment=EXCLUDED.comment, created_at=NOW()
+    RETURNING *
+  `, [course_id, user.id, rating, comment || '']);
+  return res.status(200).json({ success: true, review: r.rows[0] });
+}
+
+// ── ADMIN: GET /api/admin/course-reviews ─────────────────────────────────────
+async function adminCourseReviews(req, res) {
+  const admin = await requireStaff(req, res); if (!admin) return;
+  if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
+  // Returns per-course aggregate for admin panel
+  const r = await query(`
+    SELECT cr.course_id, c.title,
+           ROUND(AVG(cr.rating)::numeric, 1) AS avg_rating,
+           COUNT(*)::int AS review_count
+    FROM course_reviews cr
+    JOIN courses c ON c.id = cr.course_id
+    GROUP BY cr.course_id, c.title
+    ORDER BY cr.course_id
+  `);
+  return res.status(200).json({ success: true, stats: r.rows });
+}
+
+
 async function runBootMigration() {
   if (_bootMigrationDone) return;
   _bootMigrationDone = true;
@@ -1175,6 +1238,15 @@ async function runBootMigration() {
     await query(`CREATE TABLE IF NOT EXISTS coupons (
       id SERIAL PRIMARY KEY, code VARCHAR(50) UNIQUE,
       discount_percent INT, created_at TIMESTAMP DEFAULT NOW()
+    )`);
+    await query(`CREATE TABLE IF NOT EXISTS course_reviews (
+      id SERIAL PRIMARY KEY,
+      course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      comment TEXT,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (user_id, course_id)
     )`);
   } catch (e) {
     // Non-fatal — log and continue; tables likely already exist
@@ -1201,6 +1273,9 @@ export default async function handler(req, res) {
     if (path.endsWith('/_public/verify-coupon') || path.endsWith('/public/verify-coupon')) return await verifyCoupon(req, res);
     if (path.endsWith('/_public/mentors')       || path.endsWith('/public/mentors'))       return await publicMentors(req, res);
     if (path.endsWith('/_public/testimonials')  || path.endsWith('/public/testimonials'))  return await publicTestimonials(req, res);
+    if (path.endsWith('/_public/course-reviews')|| path.endsWith('/public/course-reviews')) return await publicCourseReviews(req, res);
+    if (path.endsWith('/course-reviews'))        return await submitCourseReview(req, res);
+    if (path.endsWith('/admin/course-reviews'))  return await adminCourseReviews(req, res);
 
     // IMPORTANT: specific routes checked before generic /purchases to avoid endsWith overlap
     if (path.endsWith('/admin/purchases'))     return await adminPurchases(req, res);

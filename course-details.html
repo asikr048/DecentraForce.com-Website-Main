@@ -421,7 +421,7 @@
         <div class="course-badges" id="heroBadges"></div>
         <h1 class="course-title" id="heroTitle">Loading Course...</h1>
         <div class="course-meta">
-          <span><strong class="rating-stars">★★★★★</strong>&nbsp;<span id="heroRating">4.8 (500+ reviews)</span></span>
+          <span><strong class="rating-stars" id="heroStars">★★★★★</strong>&nbsp;<span id="heroRating">Loading...</span></span>
           <span>
             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
             <span id="heroEnrolled">1,200+ Enrolled</span>
@@ -464,6 +464,7 @@
         <div class="tab active" data-target="tab-overview">Overview</div>
         <div class="tab" data-target="tab-curriculum">Curriculum & Modules</div>
         <div class="tab" data-target="tab-assignments">Assignments & Exercises</div>
+        <div class="tab" data-target="tab-reviews">Reviews</div>
       </div>
 
       <div class="tab-content active" id="tab-overview">
@@ -495,7 +496,44 @@
           </div>
         </div>
       </div>
-    </div>
+
+      <div class="tab-content" id="tab-reviews">
+        <!-- Rating summary bar -->
+        <div id="reviewSummaryBar" style="display:flex;align-items:center;gap:18px;padding:18px 0 22px;border-bottom:1px solid rgba(0,229,255,0.08);margin-bottom:24px;">
+          <div style="text-align:center;">
+            <div id="reviewAvgBig" style="font-size:2.8rem;font-weight:900;color:#fbbf24;font-family:'Syne',sans-serif;line-height:1;">—</div>
+            <div id="reviewStarsBig" style="color:#fbbf24;font-size:1rem;letter-spacing:2px;margin:4px 0 2px;">☆☆☆☆☆</div>
+            <div id="reviewCountLabel" style="font-size:0.75rem;color:var(--muted);">0 reviews</div>
+          </div>
+          <div id="reviewBarsWrap" style="flex:1;display:flex;flex-direction:column;gap:5px;">
+            <!-- bars filled by JS -->
+          </div>
+        </div>
+
+        <!-- Submit review form (only shown to enrolled users) -->
+        <div id="reviewFormWrap" style="display:none;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.1);border-radius:12px;padding:20px;margin-bottom:28px;">
+          <h3 style="font-size:0.92rem;font-weight:700;color:#fff;margin:0 0 14px;font-family:'Syne',sans-serif;">Leave a Review</h3>
+          <div style="display:flex;gap:8px;margin-bottom:12px;" id="starRatingPicker">
+            <span class="star-pick" data-v="1" style="font-size:1.7rem;cursor:pointer;color:#4a6080;transition:color .15s;">★</span>
+            <span class="star-pick" data-v="2" style="font-size:1.7rem;cursor:pointer;color:#4a6080;transition:color .15s;">★</span>
+            <span class="star-pick" data-v="3" style="font-size:1.7rem;cursor:pointer;color:#4a6080;transition:color .15s;">★</span>
+            <span class="star-pick" data-v="4" style="font-size:1.7rem;cursor:pointer;color:#4a6080;transition:color .15s;">★</span>
+            <span class="star-pick" data-v="5" style="font-size:1.7rem;cursor:pointer;color:#4a6080;transition:color .15s;">★</span>
+          </div>
+          <input type="hidden" id="reviewRatingVal" value="0">
+          <textarea id="reviewCommentInput" placeholder="Share your experience with this course..." style="width:100%;min-height:90px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,229,255,0.12);border-radius:8px;color:#b8c9e8;padding:12px;font-size:0.88rem;resize:vertical;box-sizing:border-box;font-family:'DM Sans',sans-serif;outline:none;"></textarea>
+          <button id="submitReviewBtn" style="margin-top:10px;padding:10px 22px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#050a18;font-weight:700;font-size:0.85rem;border:none;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;">Submit Review</button>
+          <span id="reviewSubmitMsg" style="margin-left:12px;font-size:0.82rem;color:var(--muted);"></span>
+        </div>
+        <div id="reviewLoginNote" style="display:none;font-size:0.85rem;color:var(--muted);margin-bottom:20px;">
+          You must be enrolled in this course to leave a review.
+        </div>
+
+        <!-- Review list -->
+        <div id="reviewsList" style="display:flex;flex-direction:column;gap:16px;">
+          <p style="color:var(--muted);font-size:0.9rem;">Loading reviews...</p>
+        </div>
+      </div>
 
     <aside>
       <div class="sticky-card">
@@ -1273,7 +1311,7 @@
         disabled: true
       },
       enrolled: {
-        text: '✓ Enrolled — Go to Course',
+        text: '✓ Purchased — Go to Course',
         style: 'background:linear-gradient(135deg,#00e599,#00e5ff);color:#050a18;box-shadow:0 6px 20px rgba(0,229,153,0.3);',
         disabled: false
       },
@@ -1310,7 +1348,170 @@
     } catch(e) { /* silently ignore — API may not exist yet */ }
   }
 
-// === LOGIN PROMPT MODAL LOGIC ===
+// === REVIEWS LOGIC ===
+  let _reviewData = { reviews: [], avg_rating: 0, review_count: 0 };
+  let _isEnrolledForReview = false;
+
+  function renderStarsStr(rating, total=5) {
+    const full = Math.round(rating);
+    return '★'.repeat(full) + '☆'.repeat(total - full);
+  }
+
+  function renderReviewSummary(data) {
+    const { avg_rating, review_count, reviews } = data;
+    document.getElementById('reviewAvgBig').textContent = review_count ? avg_rating.toFixed(1) : '—';
+    document.getElementById('reviewStarsBig').textContent = review_count ? renderStarsStr(avg_rating) : '☆☆☆☆☆';
+    document.getElementById('reviewCountLabel').textContent = review_count + ' review' + (review_count !== 1 ? 's' : '');
+    // Breakdown bars
+    const bars = document.getElementById('reviewBarsWrap');
+    bars.innerHTML = [5,4,3,2,1].map(star => {
+      const cnt = reviews.filter(r => r.rating === star).length;
+      const pct = review_count ? Math.round(cnt / review_count * 100) : 0;
+      return `<div style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--muted);">
+        <span style="color:#fbbf24;width:16px;text-align:right;">${star}★</span>
+        <div style="flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:#fbbf24;border-radius:4px;transition:width .4s;"></div>
+        </div>
+        <span style="width:24px;">${cnt}</span>
+      </div>`;
+    }).join('');
+    // Update hero rating
+    const heroRating = document.getElementById('heroRating');
+    const heroStars = document.getElementById('heroStars');
+    if (heroRating) {
+      heroRating.textContent = review_count
+        ? `${avg_rating.toFixed(1)} (${review_count} review${review_count !== 1 ? 's' : ''})`
+        : 'No reviews yet';
+    }
+    if (heroStars) {
+      heroStars.textContent = review_count ? renderStarsStr(avg_rating) : '★★★★★';
+      heroStars.style.color = review_count ? '#fbbf24' : 'rgba(251,191,36,0.3)';
+    }
+  }
+
+  function renderReviewList(reviews) {
+    const list = document.getElementById('reviewsList');
+    if (!reviews.length) {
+      list.innerHTML = '<p style="color:var(--muted);font-size:0.9rem;">No reviews yet. Be the first to review!</p>';
+      return;
+    }
+    list.innerHTML = reviews.map(r => {
+      const date = new Date(r.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+      return `<div style="background:rgba(0,229,255,0.03);border:1px solid rgba(0,229,255,0.08);border-radius:10px;padding:16px 18px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div>
+            <span style="font-weight:700;color:#fff;font-size:0.9rem;">${escHTML(r.reviewer_name)}</span>
+            <span style="color:#fbbf24;margin-left:10px;font-size:0.9rem;">${renderStarsStr(r.rating)}</span>
+          </div>
+          <span style="font-size:0.73rem;color:var(--muted);">${date}</span>
+        </div>
+        ${r.comment ? `<p style="color:#b8c9e8;font-size:0.88rem;line-height:1.6;margin:0;">${escHTML(r.comment)}</p>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  async function loadReviews(courseId) {
+    try {
+      const res = await fetch(`/api/_public/course-reviews?course_id=${courseId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      _reviewData = data;
+      renderReviewSummary(data);
+      renderReviewList(data.reviews);
+    } catch(e) {
+      document.getElementById('reviewsList').innerHTML = '<p style="color:var(--muted);font-size:0.9rem;">Could not load reviews.</p>';
+    }
+  }
+
+  function initReviewForm(courseId) {
+    // Star picker
+    let pickedRating = 0;
+    document.querySelectorAll('.star-pick').forEach(star => {
+      star.addEventListener('mouseover', function() {
+        const v = parseInt(this.dataset.v);
+        document.querySelectorAll('.star-pick').forEach(s => {
+          s.style.color = parseInt(s.dataset.v) <= v ? '#fbbf24' : '#4a6080';
+        });
+      });
+      star.addEventListener('mouseleave', function() {
+        document.querySelectorAll('.star-pick').forEach(s => {
+          s.style.color = parseInt(s.dataset.v) <= pickedRating ? '#fbbf24' : '#4a6080';
+        });
+      });
+      star.addEventListener('click', function() {
+        pickedRating = parseInt(this.dataset.v);
+        document.getElementById('reviewRatingVal').value = pickedRating;
+        document.querySelectorAll('.star-pick').forEach(s => {
+          s.style.color = parseInt(s.dataset.v) <= pickedRating ? '#fbbf24' : '#4a6080';
+        });
+      });
+    });
+
+    document.getElementById('submitReviewBtn').addEventListener('click', async function() {
+      const rating = parseInt(document.getElementById('reviewRatingVal').value) || 0;
+      const comment = document.getElementById('reviewCommentInput').value.trim();
+      const msgEl = document.getElementById('reviewSubmitMsg');
+      if (!rating) { msgEl.textContent = 'Please select a star rating.'; msgEl.style.color = '#ff4d8d'; return; }
+      this.disabled = true;
+      this.textContent = 'Submitting...';
+      try {
+        const res = await fetch('/api/course-reviews', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ course_id: courseId, rating, comment })
+        });
+        const data = await res.json();
+        if (data.success) {
+          msgEl.textContent = '✓ Review submitted!';
+          msgEl.style.color = '#00e599';
+          document.getElementById('reviewCommentInput').value = '';
+          pickedRating = 0;
+          document.getElementById('reviewRatingVal').value = 0;
+          document.querySelectorAll('.star-pick').forEach(s => s.style.color = '#4a6080');
+          await loadReviews(courseId);
+        } else {
+          msgEl.textContent = data.error || 'Failed to submit.';
+          msgEl.style.color = '#ff4d8d';
+        }
+      } catch(e) {
+        msgEl.textContent = 'Network error. Please try again.';
+        msgEl.style.color = '#ff4d8d';
+      }
+      this.disabled = false;
+      this.textContent = 'Submit Review';
+    });
+  }
+
+  // Called after purchase status is resolved
+  function showReviewFormIfEnrolled(isEnrolled) {
+    _isEnrolledForReview = isEnrolled;
+    document.getElementById('reviewFormWrap').style.display = isEnrolled ? 'block' : 'none';
+    document.getElementById('reviewLoginNote').style.display = (!isEnrolled && window.auth?.isLoggedIn) ? 'block' : 'none';
+  }
+
+  // ── Hook into existing DOMContentLoaded block ──
+  // We delay init until the main block has already set courseId
+  window.addEventListener('load', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('id');
+    if (!courseId) return;
+    loadReviews(courseId);
+    initReviewForm(courseId);
+    // Check enrollment status for review form
+    if (window.auth && window.auth.isLoggedIn) {
+      fetch('/api/user/purchases', { credentials: 'include' })
+        .then(r => r.json())
+        .then(data => {
+          const purchases = data.purchases || [];
+          const match = purchases.find(p => String(p.course_id) === String(courseId));
+          const enrolled = match && (match.status === 'approved' || match.status === 'active' || match.status === 'enrolled');
+          showReviewFormIfEnrolled(enrolled);
+        }).catch(() => {});
+    }
+  });
+
+
   function closeLoginPromptModal() {
     document.getElementById('loginPromptModal').classList.remove('open');
     document.body.style.overflow = '';

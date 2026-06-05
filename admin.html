@@ -1435,10 +1435,21 @@ async function loadUsers() {
   } catch { showToast('Failed to load users','error'); }
 }
 
+let _reviewStats = {}; // course_id → { avg_rating, review_count }
+
 async function loadCourses() {
   try {
-    const res  = await fetch('/api/admin/courses', { credentials: 'include' });
+    const [res, revRes] = await Promise.all([
+      fetch('/api/admin/courses', { credentials: 'include' }),
+      fetch('/api/admin/course-reviews', { credentials: 'include' })
+    ]);
     const data = await res.json();
+    const revData = await revRes.json().catch(() => ({ stats: [] }));
+    // Build lookup
+    _reviewStats = {};
+    if (revData.success && Array.isArray(revData.stats)) {
+      revData.stats.forEach(s => { _reviewStats[s.course_id] = s; });
+    }
     if (data.success) { allCourses = data.courses; renderCoursesGrid(); }
   } catch { showToast('Failed to load courses','error'); }
 }
@@ -1717,6 +1728,17 @@ function renderCoursesGrid() {
           <span class="text-accent font-black text-sm">৳${esc(c.price||'0')}</span>
           <span class="text-xs text-[#3d5070]">${esc(c.enrolled_count||0)} enrolled</span>
         </div>
+        ${(function(){
+          const rs = _reviewStats[c.id];
+          if (!rs || rs.review_count === 0) return `<div class="text-xs text-[#3d5070] mb-3">☆ No reviews yet</div>`;
+          const full = Math.round(rs.avg_rating);
+          const stars = '★'.repeat(full) + '☆'.repeat(5-full);
+          return `<div class="flex items-center gap-2 mb-3" title="${rs.review_count} review(s)">
+            <span style="color:#fbbf24;font-size:.85rem;letter-spacing:1px;">${stars}</span>
+            <span class="text-xs font-bold text-white">${parseFloat(rs.avg_rating).toFixed(1)}</span>
+            <span class="text-xs text-[#3d5070]">(${rs.review_count} review${rs.review_count!==1?'s':''})</span>
+          </div>`;
+        })()}
         <div class="flex gap-2 flex-wrap">
           ${currentUserRole !== 'task_manager' ? `<button onclick="openEditCourse(${c.id})" class="flex-1 bg-[#0a1228] border border-[rgba(0,229,255,0.1)] text-white py-2 rounded-lg text-xs font-bold hover:border-[rgba(0,229,255,0.3)] hover:text-accent transition-colors">EDIT</button>` : ''}
           ${currentUserRole !== 'task_manager' ? `<button onclick="deleteCourse(${c.id})" class="flex-1 bg-[rgba(255,77,141,0.06)] border border-[rgba(255,77,141,0.2)] text-accent3 py-2 rounded-lg text-xs font-bold hover:bg-[rgba(255,77,141,0.12)] transition-colors">DELETE</button>` : ''}
