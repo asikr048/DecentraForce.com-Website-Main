@@ -421,14 +421,14 @@
         <div class="course-badges" id="heroBadges"></div>
         <h1 class="course-title" id="heroTitle">Loading Course...</h1>
         <div class="course-meta">
-          <span><strong class="rating-stars">★★★★★</strong>&nbsp;<span id="heroRating">4.8 (500+ reviews)</span></span>
-          <span>
+          <span id="heroRatingWrap"><strong class="rating-stars" id="heroStars">★★★★★</strong>&nbsp;<span id="heroRating"></span></span>
+          <span id="heroEnrolledWrap">
             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-            <span id="heroEnrolled">1,200+ Enrolled</span>
+            <span id="heroEnrolled"></span>
           </span>
-          <span>
+          <span id="heroLanguageWrap">
             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-            Bangla / English
+            <span id="heroLanguage"></span>
           </span>
         </div>
       </div>
@@ -464,6 +464,7 @@
         <div class="tab active" data-target="tab-overview">Overview</div>
         <div class="tab" data-target="tab-curriculum">Curriculum & Modules</div>
         <div class="tab" data-target="tab-assignments">Assignments & Exercises</div>
+        <div class="tab" data-target="tab-reviews">Reviews</div>
       </div>
 
       <div class="tab-content active" id="tab-overview">
@@ -491,6 +492,56 @@
             <div class="module-header">Practical Exercises</div>
             <div class="module-body">
               This course includes hands-on assignments to test your knowledge. Details will be unlocked upon enrollment.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REVIEWS TAB ── -->
+      <div class="tab-content" id="tab-reviews">
+        <div id="reviewsContainer" style="margin-bottom:32px;">
+          <div class="desc-section-title" style="margin-bottom:18px;">Student Reviews</div>
+          <div id="approvedReviewsList" style="display:flex;flex-direction:column;gap:14px;">
+            <p style="color:var(--muted);font-size:.9rem;">Loading reviews…</p>
+          </div>
+        </div>
+
+        <!-- Submit review form -->
+        <div class="module-item" id="reviewFormBox" style="margin-top:8px;">
+          <div class="module-header" style="cursor:pointer;" onclick="toggleReviewForm()">
+            <span>✍️ Write a Review</span>
+            <span id="reviewFormToggleIcon" style="float:right;font-size:.8rem;color:var(--accent);">▼ Open</span>
+          </div>
+          <div class="module-body" id="reviewFormBody" style="display:none;">
+            <div id="reviewSuccessMsg" style="display:none;padding:12px 16px;background:rgba(0,229,153,0.1);border:1px solid rgba(0,229,153,0.3);border-radius:8px;color:#00e599;font-size:.88rem;margin-bottom:14px;">
+              ✓ Your review has been submitted and is pending approval. Thank you!
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;" id="reviewFormFields">
+              <div>
+                <label style="display:block;font-size:.75rem;font-weight:700;color:#6a80a0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Your Name *</label>
+                <input type="text" id="reviewName" placeholder="e.g. Rafiq Hossain" maxlength="100"
+                  style="width:100%;background:var(--surface2);border:1px solid rgba(0,229,255,0.1);border-radius:8px;padding:10px 14px;color:#fff;font-size:.875rem;outline:none;">
+              </div>
+              <div>
+                <label style="display:block;font-size:.75rem;font-weight:700;color:#6a80a0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Rating *</label>
+                <div id="reviewStarPicker" style="display:flex;gap:6px;font-size:1.6rem;cursor:pointer;">
+                  <span class="review-star" data-val="1">☆</span>
+                  <span class="review-star" data-val="2">☆</span>
+                  <span class="review-star" data-val="3">☆</span>
+                  <span class="review-star" data-val="4">☆</span>
+                  <span class="review-star" data-val="5">☆</span>
+                </div>
+                <input type="hidden" id="reviewRating" value="0">
+              </div>
+              <div>
+                <label style="display:block;font-size:.75rem;font-weight:700;color:#6a80a0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Review (optional)</label>
+                <textarea id="reviewText" rows="3" placeholder="Share your experience…" maxlength="2000"
+                  style="width:100%;background:var(--surface2);border:1px solid rgba(0,229,255,0.1);border-radius:8px;padding:10px 14px;color:#fff;font-size:.875rem;outline:none;resize:vertical;font-family:inherit;"></textarea>
+              </div>
+              <button onclick="submitReview()" id="reviewSubmitBtn"
+                style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:11px 0;font-weight:800;font-size:.88rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;width:100%;transition:opacity .2s;">
+                SUBMIT REVIEW
+              </button>
             </div>
           </div>
         </div>
@@ -719,7 +770,40 @@
       // Also set the overview section title to the course name (plain text, stripped of HTML tags)
       const plainTitle = rawTitle.replace(/<[^>]+>/g, '').trim() || 'Course Overview';
       document.getElementById('overviewSectionTitle').textContent = plainTitle;
-      
+
+      // ── Dynamic Hero Meta (rating, enrolled, language) ───────────────────────
+      (function populateHeroMeta(c) {
+        // Rating / review count
+        const showRating = c.display_rating_visible !== false;
+        const ratingWrap = document.getElementById('heroRatingWrap');
+        if (showRating && c.display_rating != null) {
+          const r = parseFloat(c.display_rating);
+          const full = Math.round(r);
+          document.getElementById('heroStars').textContent = '★'.repeat(Math.min(full,5)) + '☆'.repeat(Math.max(0,5-full));
+          let ratingText = r.toFixed(1);
+          if (c.display_review_count != null) ratingText += ` (${c.display_review_count}+ reviews)`;
+          document.getElementById('heroRating').textContent = ratingText;
+        } else {
+          ratingWrap.style.display = 'none';
+        }
+
+        // Enrolled count
+        const enrolledWrap = document.getElementById('heroEnrolledWrap');
+        if (c.display_enrolled != null) {
+          document.getElementById('heroEnrolled').textContent = `${c.display_enrolled.toLocaleString()}+ Enrolled`;
+        } else {
+          enrolledWrap.style.display = 'none';
+        }
+
+        // Language
+        const langWrap = document.getElementById('heroLanguageWrap');
+        if (c.display_language) {
+          document.getElementById('heroLanguage').textContent = c.display_language;
+        } else {
+          langWrap.style.display = 'none';
+        }
+      })(activeCourse);
+
       const status = activeCourse.status || 'upcoming';
       let badgesHTML = `<span class="c-badge status">${status}</span>`;
       
@@ -1124,11 +1208,113 @@
         checkPurchaseStatus(activeCourse.id);
       }
 
+      // ── Load approved reviews ──────────────────────────────────────────────
+      loadApprovedReviews(courseId);
+
     } catch (err) {
       console.error(err);
       document.getElementById('heroTitle').textContent = 'Failed to load details.';
     }
   });
+
+  // ── REVIEW SYSTEM ─────────────────────────────────────────────────────────
+  let _selectedRating = 0;
+
+  function toggleReviewForm() {
+    const body = document.getElementById('reviewFormBody');
+    const icon = document.getElementById('reviewFormToggleIcon');
+    const open = body.style.display === 'none' || body.style.display === '';
+    body.style.display = open ? 'block' : 'none';
+    icon.textContent = open ? '▲ Close' : '▼ Open';
+  }
+
+  // Star picker
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.review-star').forEach(star => {
+      star.addEventListener('click', () => {
+        _selectedRating = parseInt(star.dataset.val);
+        document.getElementById('reviewRating').value = _selectedRating;
+        document.querySelectorAll('.review-star').forEach((s, i) => {
+          s.textContent = i < _selectedRating ? '★' : '☆';
+          s.style.color = i < _selectedRating ? '#fbbf24' : '#4a6080';
+        });
+      });
+      star.addEventListener('mouseenter', () => {
+        const v = parseInt(star.dataset.val);
+        document.querySelectorAll('.review-star').forEach((s, i) => {
+          s.textContent = i < v ? '★' : '☆';
+          s.style.color = i < v ? '#fbbf24' : '#4a6080';
+        });
+      });
+      star.addEventListener('mouseleave', () => {
+        document.querySelectorAll('.review-star').forEach((s, i) => {
+          s.textContent = i < _selectedRating ? '★' : '☆';
+          s.style.color = i < _selectedRating ? '#fbbf24' : '#4a6080';
+        });
+      });
+    });
+  });
+
+  async function loadApprovedReviews(courseId) {
+    const container = document.getElementById('approvedReviewsList');
+    if (!container) return;
+    try {
+      const res = await fetch(`/api/_public/course-reviews?course_id=${courseId}`);
+      const data = await res.json();
+      const reviews = data.reviews || [];
+      if (!reviews.length) {
+        container.innerHTML = '<p style="color:var(--muted);font-size:.9rem;">No reviews yet. Be the first to review this course!</p>';
+        return;
+      }
+      container.innerHTML = reviews.map(r => {
+        const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+        const date = new Date(r.created_at).toLocaleDateString('en-GB',{year:'numeric',month:'short',day:'numeric'});
+        return `<div style="padding:14px 18px;background:var(--surface2);border:1px solid rgba(0,229,255,0.07);border-radius:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-weight:700;color:#fff;font-size:.92rem;">${r.reviewer_name.replace(/</g,'&lt;')}</span>
+            <span style="font-size:.75rem;color:#4a6080;">${date}</span>
+          </div>
+          <div style="color:#fbbf24;font-size:.9rem;margin-bottom:6px;">${stars}</div>
+          ${r.review_text ? `<p style="color:#b8c9e8;font-size:.875rem;margin:0;line-height:1.55;">${r.review_text.replace(/</g,'&lt;')}</p>` : ''}
+        </div>`;
+      }).join('');
+    } catch (e) {
+      container.innerHTML = '<p style="color:var(--muted);font-size:.9rem;">Could not load reviews.</p>';
+    }
+  }
+
+  async function submitReview() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('id');
+    const name = (document.getElementById('reviewName').value || '').trim();
+    const rating = parseInt(document.getElementById('reviewRating').value) || 0;
+    const text = (document.getElementById('reviewText').value || '').trim();
+
+    if (!name) { alert('Please enter your name.'); return; }
+    if (!rating) { alert('Please select a star rating.'); return; }
+
+    const btn = document.getElementById('reviewSubmitBtn');
+    btn.textContent = 'Submitting…'; btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/_public/course-reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ course_id: courseId, reviewer_name: name, rating, review_text: text })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('reviewFormFields').style.display = 'none';
+        document.getElementById('reviewSuccessMsg').style.display = 'block';
+      } else {
+        alert(data.error || 'Failed to submit review.');
+        btn.textContent = 'SUBMIT REVIEW'; btn.disabled = false;
+      }
+    } catch (e) {
+      alert('Network error. Please try again.');
+      btn.textContent = 'SUBMIT REVIEW'; btn.disabled = false;
+    }
+  }
 
   // === MODAL LOGIC (Exact match to requirements) ===
   var _checkoutBodyHTML = null; // cached original body for restore

@@ -68,7 +68,8 @@ async function publicCourses(req, res) {
   const r = await query(`
     SELECT id, title, description,
       CASE WHEN length(thumbnail_url)>2000000 THEN '' ELSE thumbnail_url END AS thumbnail_url,
-      modules, created_at, price, whatsapp, status, sequence_order
+      modules, created_at, price, whatsapp, status, sequence_order,
+      display_rating, display_review_count, display_enrolled, display_language, display_rating_visible
     FROM courses WHERE is_active=TRUE ORDER BY COALESCE(sequence_order,9999), created_at DESC
   `);
   return res.status(200).json({ success: true, courses: r.rows });
@@ -449,6 +450,7 @@ async function adminCourses(req, res) {
     const r = await query(`
       SELECT c.id,c.title,c.description,c.video_url,c.modules,c.is_active,c.created_at,
         c.price,c.whatsapp,c.status,c.sequence_order,
+        c.display_rating,c.display_review_count,c.display_enrolled,c.display_language,c.display_rating_visible,
         CASE
           WHEN left(c.thumbnail_url,5)='data:' THEN left(c.thumbnail_url,500000)
           ELSE c.thumbnail_url
@@ -459,24 +461,32 @@ async function adminCourses(req, res) {
     return res.status(200).json({ success: true, courses: r.rows });
   }
   if (req.method === 'POST') {
-    const { title,description,thumbnail_url,video_url,price,whatsapp,modules,is_active,status,sequence_order } = req.body||{};
+    const { title,description,thumbnail_url,video_url,price,whatsapp,modules,is_active,status,sequence_order,
+            display_rating,display_review_count,display_enrolled,display_language,display_rating_visible } = req.body||{};
     if (!title) return res.status(400).json({ success: false, error: 'Title required' });
     if (price==null) return res.status(400).json({ success: false, error: 'Price required' });
     if (!whatsapp) return res.status(400).json({ success: false, error: 'WhatsApp link required' });
     const r = await query(
-      `INSERT INTO courses (title,description,thumbnail_url,video_url,price,whatsapp,modules,is_active,status,sequence_order)
-       VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9,$10) RETURNING *`,
-      [title,description||'',thumbnail_url||'',video_url||'',price,whatsapp,modules||'{}',is_active!==false,status||'upcoming',sequence_order??9999]
+      `INSERT INTO courses (title,description,thumbnail_url,video_url,price,whatsapp,modules,is_active,status,sequence_order,
+         display_rating,display_review_count,display_enrolled,display_language,display_rating_visible)
+       VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
+      [title,description||'',thumbnail_url||'',video_url||'',price,whatsapp,modules||'{}',is_active!==false,status||'upcoming',sequence_order??9999,
+       display_rating||null, display_review_count||null, display_enrolled||null, display_language||null, display_rating_visible!==false]
     );
     return res.status(201).json({ success: true, course: r.rows[0] });
   }
   if (req.method === 'PUT') {
-    const { id,title,description,thumbnail_url,video_url,price,whatsapp,modules,is_active,status,sequence_order } = req.body||{};
+    const { id,title,description,thumbnail_url,video_url,price,whatsapp,modules,is_active,status,sequence_order,
+            display_rating,display_review_count,display_enrolled,display_language,display_rating_visible } = req.body||{};
     if (!id) return res.status(400).json({ success: false, error: 'ID required' });
     const r = await query(
       `UPDATE courses SET title=$1,description=$2,thumbnail_url=$3,video_url=$4,price=$5,whatsapp=$6,
-       modules=$7::jsonb,is_active=$8,status=$9,sequence_order=$10 WHERE id=$11 RETURNING *`,
-      [title,description,thumbnail_url,video_url,price,whatsapp,modules,is_active,status||'upcoming',sequence_order??9999,id]
+       modules=$7::jsonb,is_active=$8,status=$9,sequence_order=$10,
+       display_rating=$11,display_review_count=$12,display_enrolled=$13,display_language=$14,display_rating_visible=$15
+       WHERE id=$16 RETURNING *`,
+      [title,description,thumbnail_url,video_url,price,whatsapp,modules,is_active,status||'upcoming',sequence_order??9999,
+       display_rating||null, display_review_count||null, display_enrolled||null, display_language||null, display_rating_visible!==false,
+       id]
     );
     return res.status(200).json({ success: true, course: r.rows[0] });
   }
@@ -1152,6 +1162,119 @@ async function adminReorder(req, res) {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ONE-TIME BOOT MIGRATION
+// ── PUBLIC: POST /api/_public/course-reviews ─────────────────────────────────
+// Anyone (logged-in or not) can submit a review for a course.
+// Reviews land as 'pending'; admin promotes them to 'approved' or 'rejected'.
+async function publicCourseReviews(req, res) {
+  if (req.method === 'GET') {
+    // Return only approved reviews for a given course
+    const courseId = req.query?.course_id || new URLSearchParams(req.url.split('?')[1] || '').get('course_id');
+    if (!courseId) return res.status(400).json({ success: false, error: 'course_id required' });
+    const r = await query(
+      `SELECT id, reviewer_name, rating, review_text, created_at
+       FROM course_reviews WHERE course_id=$1 AND status='approved'
+       ORDER BY created_at DESC`,
+      [courseId]
+    );
+    return res.status(200).json({ success: true, reviews: r.rows });
+  }
+  if (req.method === 'POST') {
+    const { course_id, reviewer_name, rating, review_text } = req.body || {};
+    if (!course_id || !reviewer_name || !rating)
+      return res.status(400).json({ success: false, error: 'course_id, reviewer_name, and rating are required' });
+    if (rating < 1 || rating > 5)
+      return res.status(400).json({ success: false, error: 'Rating must be 1–5' });
+    // Optionally link to logged-in user
+    let userId = null;
+    try {
+      const token = req.cookies?.session_token;
+      if (token) {
+        const ur = await query(`SELECT id FROM users WHERE session_token=$1 AND session_expires>NOW()`, [token]);
+        if (ur.rows.length) userId = ur.rows[0].id;
+      }
+    } catch(_) {}
+    await query(
+      `INSERT INTO course_reviews (course_id, user_id, reviewer_name, rating, review_text, status)
+       VALUES ($1,$2,$3,$4,$5,'pending')`,
+      [course_id, userId, reviewer_name.trim().substring(0,255), parseInt(rating), (review_text||'').trim().substring(0,2000)]
+    );
+    return res.status(201).json({ success: true, message: 'Review submitted and pending approval' });
+  }
+  return res.status(405).json({ error: 'Method not allowed' });
+}
+
+// ── ADMIN: GET/PUT /api/admin/course-reviews ──────────────────────────────────
+// Admin can list all reviews for a course, approve/reject them, and update
+// the display overrides shown in course-details hero (rating, count, enrolled, language).
+async function adminCourseReviews(req, res) {
+  const admin = await requireManagerOrAbove(req, res); if (!admin) return;
+
+  if (req.method === 'GET') {
+    const courseId = req.query?.course_id || new URLSearchParams(req.url.split('?')[1] || '').get('course_id');
+    let r;
+    if (courseId) {
+      r = await query(
+        `SELECT cr.*, u.username AS user_username
+         FROM course_reviews cr LEFT JOIN users u ON u.id=cr.user_id
+         WHERE cr.course_id=$1 ORDER BY cr.created_at DESC`,
+        [courseId]
+      );
+    } else {
+      r = await query(
+        `SELECT cr.*, u.username AS user_username, c.title AS course_title
+         FROM course_reviews cr
+         LEFT JOIN users u ON u.id=cr.user_id
+         LEFT JOIN courses c ON c.id=cr.course_id
+         ORDER BY cr.created_at DESC LIMIT 200`
+      );
+    }
+    return res.status(200).json({ success: true, reviews: r.rows });
+  }
+
+  // PUT — update review status (approve/reject) or update display overrides on the course
+  if (req.method === 'PUT') {
+    const { review_id, status, course_id, display_rating, display_review_count, display_enrolled, display_language, display_rating_visible } = req.body || {};
+
+    // Update review status
+    if (review_id && status) {
+      if (!['approved','rejected','pending'].includes(status))
+        return res.status(400).json({ success: false, error: 'Invalid status' });
+      await query(`UPDATE course_reviews SET status=$1 WHERE id=$2`, [status, review_id]);
+      return res.status(200).json({ success: true });
+    }
+
+    // Update display overrides on course
+    if (course_id) {
+      await query(
+        `UPDATE courses SET
+           display_rating=$1, display_review_count=$2,
+           display_enrolled=$3, display_language=$4, display_rating_visible=$5
+         WHERE id=$6`,
+        [
+          display_rating != null ? parseFloat(display_rating) : null,
+          display_review_count != null ? parseInt(display_review_count) : null,
+          display_enrolled != null ? parseInt(display_enrolled) : null,
+          display_language || null,
+          display_rating_visible !== false,
+          course_id
+        ]
+      );
+      return res.status(200).json({ success: true });
+    }
+    return res.status(400).json({ success: false, error: 'review_id+status or course_id required' });
+  }
+
+  // DELETE a review
+  if (req.method === 'DELETE') {
+    const { review_id } = req.body || {};
+    if (!review_id) return res.status(400).json({ success: false, error: 'review_id required' });
+    await query(`DELETE FROM course_reviews WHERE id=$1`, [review_id]);
+    return res.status(200).json({ success: true });
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
+}
+
 // Runs DDL (ALTER TABLE / CREATE TABLE IF NOT EXISTS) exactly once per cold start.
 // This prevents the same DDL from running on every request inside route handlers.
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1176,6 +1299,23 @@ async function runBootMigration() {
       id SERIAL PRIMARY KEY, code VARCHAR(50) UNIQUE,
       discount_percent INT, created_at TIMESTAMP DEFAULT NOW()
     )`);
+    // Course reviews table
+    await query(`CREATE TABLE IF NOT EXISTS course_reviews (
+      id SERIAL PRIMARY KEY,
+      course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      reviewer_name VARCHAR(255) NOT NULL,
+      rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+      review_text TEXT DEFAULT '',
+      status VARCHAR(20) DEFAULT 'pending',
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    )`);
+    // Display meta columns on courses (admin-controlled overrides)
+    await query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS display_rating NUMERIC(3,1) DEFAULT NULL`);
+    await query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS display_review_count INTEGER DEFAULT NULL`);
+    await query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS display_enrolled INTEGER DEFAULT NULL`);
+    await query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS display_language VARCHAR(100) DEFAULT NULL`);
+    await query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS display_rating_visible BOOLEAN DEFAULT TRUE`);
   } catch (e) {
     // Non-fatal — log and continue; tables likely already exist
     console.warn('Boot migration warning:', e.message);
@@ -1198,6 +1338,7 @@ export default async function handler(req, res) {
   try {
     // Public
     if (path.endsWith('/_public/courses')       || path.endsWith('/public/courses'))       return await publicCourses(req, res);
+    if (path.endsWith('/_public/course-reviews') || path.endsWith('/public/course-reviews')) return await publicCourseReviews(req, res);
     if (path.endsWith('/_public/verify-coupon') || path.endsWith('/public/verify-coupon')) return await verifyCoupon(req, res);
     if (path.endsWith('/_public/mentors')       || path.endsWith('/public/mentors'))       return await publicMentors(req, res);
     if (path.endsWith('/_public/testimonials')  || path.endsWith('/public/testimonials'))  return await publicTestimonials(req, res);
@@ -1233,6 +1374,7 @@ export default async function handler(req, res) {
     if (path.endsWith('/_public/leaderboard') || path.endsWith('/public/leaderboard')) return await publicLeaderboard(req, res);
     if (path.endsWith('/_public/exam')        || path.endsWith('/public/exam'))        return await publicExam(req, res);
     if (path.endsWith('/exam/submit'))         return await submitExam(req, res);
+    if (path.endsWith('/admin/course-reviews'))  return await adminCourseReviews(req, res);
     if (path.endsWith('/admin/resources'))       return await adminResources(req, res);
     if (path.endsWith('/admin/assignments-crud')) return await adminAssignmentsCrud(req, res);
     if (path.endsWith('/admin/points'))           return await adminPoints(req, res);
