@@ -834,9 +834,15 @@
 
 
       // 3. Populate Price & Thumbnail (Sticky Card)
-      const priceVal = parseFloat(activeCourse.price) || 0;
+      const regularPrice = parseFloat(activeCourse.price) || 0;
+      const discountPrice = parseFloat(activeCourse.discount_price) || 0;
+      // If a discount price is set, it becomes the actual price; regular price is shown crossed out
+      const priceVal = discountPrice > 0 ? discountPrice : regularPrice;
       const priceText = priceVal === 0 ? 'Free' : `৳${priceVal}`;
-      const originalPriceText = priceVal === 0 ? '' : `<span>৳${Math.round(priceVal * 1.5)}</span>`;
+      // Show crossed-out regular price only when a discount price exists and differs from regular price
+      const originalPriceText = (discountPrice > 0 && regularPrice > 0 && regularPrice !== discountPrice)
+        ? `<span>৳${regularPrice}</span>`
+        : '';
       
       document.getElementById('cardPrice').innerHTML = `${originalPriceText}${priceText}`;
       const purchaseBtn = document.getElementById('pagePurchaseBtn');
