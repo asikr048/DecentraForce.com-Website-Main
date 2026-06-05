@@ -459,6 +459,25 @@
               </div>
             </div>
 
+            <div class="grid grid-cols-4 gap-5">
+              <div>
+                <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Rating (e.g. 4.8)</label>
+                <input type="number" id="courseRating" placeholder="4.8" step="0.1" min="0" max="5" class="admin-input">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Review Count</label>
+                <input type="text" id="courseReviewCount" placeholder="500+" class="admin-input">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Enrolled Count</label>
+                <input type="text" id="courseEnrolledCount" placeholder="1,200+" class="admin-input">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Language(s)</label>
+                <input type="text" id="courseLanguage" placeholder="Bangla / English" class="admin-input">
+              </div>
+            </div>
+
             <div class="grid grid-cols-3 gap-5">
               <div>
                 <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Regular Price (৳) <span class="text-accent3">*</span></label>
@@ -1769,7 +1788,7 @@ function addLectureUI(container, title='', url='', duration='') {
 /* ─── ADD / EDIT COURSE ─── */
 function openAddCourse() {
   if(currentUserRole==='task_manager'){showToast('Task Managers cannot add courses','error');return;}
-  ['courseId','courseTitle','courseDesc','courseCategory','courseLectures','courseExercises','courseAssignments','coursePrice','courseDiscountPrice','courseWhatsapp','courseThumbnail','courseVideo','courseContent'].forEach(id => { document.getElementById(id).value=''; });
+  ['courseId','courseTitle','courseDesc','courseCategory','courseLectures','courseExercises','courseAssignments','courseRating','courseReviewCount','courseEnrolledCount','courseLanguage','coursePrice','courseDiscountPrice','courseWhatsapp','courseThumbnail','courseVideo','courseContent'].forEach(id => { document.getElementById(id).value=''; });
   var _dp=document.getElementById('courseDescPreview'); _dp.style.display='none'; _dp.srcdoc='';
   var _op=document.getElementById('overviewPreview'); _op.style.display='none'; _op.srcdoc='';
   document.getElementById('courseActive').checked = true;
@@ -1806,6 +1825,10 @@ function openEditCourse(id) {
   document.getElementById('courseLectures').value  = m.lectures||'';
   document.getElementById('courseExercises').value = m.exercises||'';
   document.getElementById('courseAssignments').value = m.assignments||'';
+  document.getElementById('courseRating').value        = m.rating||'';
+  document.getElementById('courseReviewCount').value   = m.review_count||'';
+  document.getElementById('courseEnrolledCount').value = m.enrolled_count||'';
+  document.getElementById('courseLanguage').value      = m.language||'';
   document.getElementById('courseActive').checked  = c.is_active;
 
   builderContainer.innerHTML='';
@@ -1840,10 +1863,14 @@ async function saveCourse() {
   });
 
   const modules = {
-    content:     stripStylesFromHTML(document.getElementById('courseContent').value),
-    lectures:    document.getElementById('courseLectures').value||0,
-    exercises:   document.getElementById('courseExercises').value||0,
-    assignments: document.getElementById('courseAssignments').value||0,
+    content:       stripStylesFromHTML(document.getElementById('courseContent').value),
+    lectures:      document.getElementById('courseLectures').value||0,
+    exercises:     document.getElementById('courseExercises').value||0,
+    assignments:   document.getElementById('courseAssignments').value||0,
+    rating:        document.getElementById('courseRating').value||'',
+    review_count:  document.getElementById('courseReviewCount').value||'',
+    enrolled_count:document.getElementById('courseEnrolledCount').value||'',
+    language:      document.getElementById('courseLanguage').value||'',
     curriculum
   };
 

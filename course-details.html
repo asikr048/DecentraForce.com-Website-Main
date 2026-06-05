@@ -421,14 +421,14 @@
         <div class="course-badges" id="heroBadges"></div>
         <h1 class="course-title" id="heroTitle">Loading Course...</h1>
         <div class="course-meta">
-          <span><strong class="rating-stars">★★★★★</strong>&nbsp;<span id="heroRating">4.8 (500+ reviews)</span></span>
+          <span><strong class="rating-stars" id="heroRatingStars">★★★★★</strong>&nbsp;<span id="heroRating">Loading...</span></span>
           <span>
             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-            <span id="heroEnrolled">1,200+ Enrolled</span>
+            <span id="heroEnrolled">Loading...</span>
           </span>
-          <span>
+          <span id="heroLanguageWrap">
             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-            Bangla / English
+            <span id="heroLanguage">Loading...</span>
           </span>
         </div>
       </div>
@@ -724,12 +724,55 @@
       let badgesHTML = `<span class="c-badge status">${status}</span>`;
       
       let categoryTag = 'Blockchain';
+      let parsedMods = {};
       try {
-        const parsedMods = typeof activeCourse.modules === 'string' ? JSON.parse(activeCourse.modules) : activeCourse.modules;
+        parsedMods = typeof activeCourse.modules === 'string' ? JSON.parse(activeCourse.modules) : (activeCourse.modules || {});
         if (parsedMods && parsedMods.category) categoryTag = parsedMods.category;
       } catch(e){}
       badgesHTML += `<span class="c-badge category">${categoryTag}</span>`;
       document.getElementById('heroBadges').innerHTML = badgesHTML;
+
+      // 1b. Populate Hero Meta: Rating, Enrolled Count, Language
+      (function() {
+        const m = parsedMods || {};
+        // Rating & review count
+        const rating = parseFloat(m.rating) || 0;
+        const reviewCount = (m.review_count || '').toString().trim();
+        const ratingEl = document.getElementById('heroRating');
+        const starsEl  = document.getElementById('heroRatingStars');
+        if (rating > 0) {
+          // Build star display: full ★ for each integer, half/empty for remainder
+          const fullStars  = Math.floor(rating);
+          const halfStar   = (rating - fullStars) >= 0.5;
+          let starsStr = '★'.repeat(fullStars) + (halfStar ? '★' : '') ;
+          starsEl.textContent = starsStr;
+          ratingEl.textContent = reviewCount
+            ? `${rating} (${reviewCount} reviews)`
+            : String(rating);
+        } else {
+          // No rating set — hide the whole rating span
+          ratingEl.closest('span').style.display = 'none';
+        }
+
+        // Enrolled count
+        const enrolledCount = (m.enrolled_count || '').toString().trim();
+        const enrolledEl = document.getElementById('heroEnrolled');
+        if (enrolledCount) {
+          enrolledEl.textContent = enrolledCount + ' Enrolled';
+        } else {
+          enrolledEl.closest('span').style.display = 'none';
+        }
+
+        // Language
+        const language = (m.language || '').toString().trim();
+        const langWrap = document.getElementById('heroLanguageWrap');
+        const langEl   = document.getElementById('heroLanguage');
+        if (language) {
+          langEl.textContent = language;
+        } else {
+          langWrap.style.display = 'none';
+        }
+      })();
 
       // 2. Populate Overview Description — beautiful structured rendering
       function renderDescription(raw) {
