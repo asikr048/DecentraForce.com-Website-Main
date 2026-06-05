@@ -487,34 +487,6 @@
               </div>
             </div>
 
-            <!-- ── Display Overrides (shown in course hero) ── -->
-            <div class="p-4 border border-[rgba(0,229,255,0.08)] rounded-xl bg-bg">
-              <p class="text-xs font-bold text-[#6a80a0] uppercase tracking-wider mb-4">Hero Display Overrides <span style="color:#4a6080;font-weight:400;text-transform:none;letter-spacing:0;">(what students see in the course header)</span></p>
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Display Rating <span style="color:#4a6080;font-weight:400;text-transform:none;">(e.g. 4.8)</span></label>
-                  <input type="number" id="courseDisplayRating" placeholder="4.8" min="1" max="5" step="0.1" class="admin-input">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Review Count <span style="color:#4a6080;font-weight:400;text-transform:none;">(e.g. 500)</span></label>
-                  <input type="number" id="courseDisplayReviewCount" placeholder="500" min="0" class="admin-input">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Enrolled Count <span style="color:#4a6080;font-weight:400;text-transform:none;">(e.g. 1200)</span></label>
-                  <input type="number" id="courseDisplayEnrolled" placeholder="1200" min="0" class="admin-input">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Language <span style="color:#4a6080;font-weight:400;text-transform:none;">(e.g. Bangla / English)</span></label>
-                  <input type="text" id="courseDisplayLanguage" placeholder="Bangla / English" class="admin-input">
-                </div>
-              </div>
-              <div class="flex items-center gap-3 mt-3">
-                <input type="checkbox" id="courseDisplayRatingVisible" checked class="w-4 h-4" style="accent-color:#d4af37;">
-                <label class="text-sm text-white cursor-pointer" for="courseDisplayRatingVisible">Show rating/reviews in course header</label>
-              </div>
-              <p class="text-xs text-[#3d5070] mt-2">Leave fields empty to hide them from the course page header. These are manually curated display values.</p>
-            </div>
-
             <!-- Thumbnail -->
             <div>
               <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Course Thumbnail</label>
@@ -879,65 +851,6 @@
               <div id="userFeedbacksList" class="space-y-3 max-h-[340px] overflow-y-auto pr-1">
                 <div class="text-center py-6 text-[#3d5070] text-sm">No user feedbacks yet.</div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Course Reviews Panel ── -->
-        <div class="card mt-6">
-          <div class="card-header justify-between">
-            <div class="flex items-center gap-2.5">
-              <div class="card-icon bg-[rgba(212,175,55,0.08)]">
-                <svg class="w-4 h-4 text-accent3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-              </div>
-              <div>
-                <h2 class="text-sm font-bold text-white">Course Reviews Inbox</h2>
-                <p class="text-xs text-[#4a6080]">Approve or reject student reviews per course</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <select id="reviewCourseFilter" class="admin-input text-xs" style="width:220px;" onchange="loadCourseReviews()">
-                <option value="">— Select a course —</option>
-              </select>
-              <button onclick="loadCourseReviews()" class="text-[#4a6080] hover:text-accent transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              </button>
-            </div>
-          </div>
-          <div class="card-body">
-            <!-- Display override quick-edit for selected course -->
-            <div id="reviewDisplayOverrideBox" style="display:none;margin-bottom:18px;padding:14px 16px;background:var(--bg);border:1px solid rgba(0,229,255,0.08);border-radius:10px;">
-              <p class="text-xs font-bold text-[#6a80a0] uppercase tracking-wider mb-3">Hero Display Overrides for this course</p>
-              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px;">
-                <div>
-                  <label class="block text-[10px] font-bold text-[#6a80a0] mb-1 uppercase tracking-wider">Display Rating</label>
-                  <input type="number" id="rdoRating" placeholder="e.g. 4.8" min="1" max="5" step="0.1" class="admin-input text-sm">
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-[#6a80a0] mb-1 uppercase tracking-wider">Review Count</label>
-                  <input type="number" id="rdoReviewCount" placeholder="e.g. 500" min="0" class="admin-input text-sm">
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-[#6a80a0] mb-1 uppercase tracking-wider">Enrolled Count</label>
-                  <input type="number" id="rdoEnrolled" placeholder="e.g. 1200" min="0" class="admin-input text-sm">
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-[#6a80a0] mb-1 uppercase tracking-wider">Language</label>
-                  <input type="text" id="rdoLanguage" placeholder="Bangla / English" class="admin-input text-sm">
-                </div>
-              </div>
-              <div class="flex items-center justify-between">
-                <label class="flex items-center gap-2 cursor-pointer text-sm text-white">
-                  <input type="checkbox" id="rdoRatingVisible" checked style="accent-color:#d4af37;" class="w-4 h-4">
-                  Show rating in header
-                </label>
-                <button onclick="saveDisplayOverrides()" class="btn-gold px-5 py-2 rounded-lg text-xs tracking-widest">SAVE OVERRIDES</button>
-              </div>
-            </div>
-
-            <!-- Reviews list -->
-            <div id="courseReviewsList" class="space-y-3 max-h-[480px] overflow-y-auto pr-1">
-              <p class="text-center py-6 text-[#3d5070] text-sm">Select a course above to see its reviews.</p>
             </div>
           </div>
         </div>
@@ -1503,7 +1416,7 @@ function showTab(name, persist) {
     try { sessionStorage.setItem('adminActiveTab', name); } catch(e) {}
   }
 
-  if (name === 'feedback') { if (typeof initDefaultFeedbacks==='function') initDefaultFeedbacks(); renderFeedbacksList(); refreshUserFeedbacks(); populateReviewCourseFilter(); }
+  if (name === 'feedback') { if (typeof initDefaultFeedbacks==='function') initDefaultFeedbacks(); renderFeedbacksList(); refreshUserFeedbacks(); }
   if (name === 'mentors') renderMentorsList();
   if (name === 'section-order') { renderSectionOrderList(); renderCourseOrderList(); renderMentorOrderList(); renderFeedbackOrderList(); }
   if (name === 'purchases') loadPurchases();
@@ -1856,8 +1769,7 @@ function addLectureUI(container, title='', url='', duration='') {
 /* ─── ADD / EDIT COURSE ─── */
 function openAddCourse() {
   if(currentUserRole==='task_manager'){showToast('Task Managers cannot add courses','error');return;}
-  ['courseId','courseTitle','courseDesc','courseCategory','courseLectures','courseExercises','courseAssignments','coursePrice','courseDiscountPrice','courseWhatsapp','courseThumbnail','courseVideo','courseContent','courseDisplayRating','courseDisplayReviewCount','courseDisplayEnrolled','courseDisplayLanguage'].forEach(id => { document.getElementById(id).value=''; });
-  document.getElementById('courseDisplayRatingVisible').checked = true;
+  ['courseId','courseTitle','courseDesc','courseCategory','courseLectures','courseExercises','courseAssignments','coursePrice','courseDiscountPrice','courseWhatsapp','courseThumbnail','courseVideo','courseContent'].forEach(id => { document.getElementById(id).value=''; });
   var _dp=document.getElementById('courseDescPreview'); _dp.style.display='none'; _dp.srcdoc='';
   var _op=document.getElementById('overviewPreview'); _op.style.display='none'; _op.srcdoc='';
   document.getElementById('courseActive').checked = true;
@@ -1895,12 +1807,6 @@ function openEditCourse(id) {
   document.getElementById('courseExercises').value = m.exercises||'';
   document.getElementById('courseAssignments').value = m.assignments||'';
   document.getElementById('courseActive').checked  = c.is_active;
-  // Display override fields
-  document.getElementById('courseDisplayRating').value       = c.display_rating != null ? c.display_rating : '';
-  document.getElementById('courseDisplayReviewCount').value  = c.display_review_count != null ? c.display_review_count : '';
-  document.getElementById('courseDisplayEnrolled').value     = c.display_enrolled != null ? c.display_enrolled : '';
-  document.getElementById('courseDisplayLanguage').value     = c.display_language || '';
-  document.getElementById('courseDisplayRatingVisible').checked = c.display_rating_visible !== false;
 
   builderContainer.innerHTML='';
   if(!m.curriculum||!m.curriculum.length) {
@@ -1958,11 +1864,6 @@ async function saveCourse() {
     whatsapp:       document.getElementById('courseWhatsapp').value,
     status:         document.getElementById('courseStatus').value,
     is_active:      document.getElementById('courseActive').checked,
-    display_rating:         document.getElementById('courseDisplayRating').value || null,
-    display_review_count:   document.getElementById('courseDisplayReviewCount').value || null,
-    display_enrolled:       document.getElementById('courseDisplayEnrolled').value || null,
-    display_language:       document.getElementById('courseDisplayLanguage').value || null,
-    display_rating_visible: document.getElementById('courseDisplayRatingVisible').checked,
   };
   if(id) body.id = parseInt(id);
 
@@ -2229,125 +2130,6 @@ function deleteFeedbackUI(id) {
 }
 
 function refreshFeedbacks() { renderFeedbacksList(); }
-
-/* ─── COURSE REVIEWS (Admin: approve / reject / display overrides) ─── */
-
-async function populateReviewCourseFilter() {
-  const sel = document.getElementById('reviewCourseFilter');
-  if (!sel) return;
-  // Reuse allCourses if loaded
-  const courses = typeof allCourses !== 'undefined' && allCourses.length ? allCourses : [];
-  sel.innerHTML = '<option value="">— Select a course —</option>' +
-    courses.map(c => `<option value="${c.id}">${esc((c.title||'').replace(/<[^>]+>/g,'').substring(0,60))}</option>`).join('');
-}
-
-async function loadCourseReviews() {
-  const courseId = document.getElementById('reviewCourseFilter').value;
-  const container = document.getElementById('courseReviewsList');
-  const overrideBox = document.getElementById('reviewDisplayOverrideBox');
-  if (!courseId) {
-    container.innerHTML = '<p class="text-center py-6 text-[#3d5070] text-sm">Select a course above to see its reviews.</p>';
-    overrideBox.style.display = 'none';
-    return;
-  }
-  container.innerHTML = '<p class="text-center py-4 text-[#3d5070] text-sm">Loading…</p>';
-
-  // Load reviews
-  const res = await fetch(`/api/admin/course-reviews?course_id=${courseId}`, { credentials: 'include' });
-  const data = await res.json();
-  const reviews = data.reviews || [];
-
-  // Populate override box from selected course data
-  const course = (typeof allCourses !== 'undefined' ? allCourses : []).find(c => c.id == courseId);
-  if (course) {
-    document.getElementById('rdoRating').value        = course.display_rating != null ? course.display_rating : '';
-    document.getElementById('rdoReviewCount').value   = course.display_review_count != null ? course.display_review_count : '';
-    document.getElementById('rdoEnrolled').value      = course.display_enrolled != null ? course.display_enrolled : '';
-    document.getElementById('rdoLanguage').value      = course.display_language || '';
-    document.getElementById('rdoRatingVisible').checked = course.display_rating_visible !== false;
-    overrideBox.style.display = 'block';
-  }
-
-  if (!reviews.length) {
-    container.innerHTML = '<p class="text-center py-6 text-[#3d5070] text-sm">No reviews submitted for this course yet.</p>';
-    return;
-  }
-
-  const statusColor = { pending: '#d4af37', approved: '#00e599', rejected: '#ff4d8d' };
-  container.innerHTML = reviews.map(r => {
-    const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
-    const date = new Date(r.created_at).toLocaleDateString('en-GB', { year:'numeric', month:'short', day:'numeric' });
-    const col = statusColor[r.status] || '#6a80a0';
-    return `<div style="padding:14px 16px;background:var(--bg);border:1px solid rgba(0,229,255,0.07);border-radius:10px;">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <span style="font-weight:700;color:#fff;font-size:.88rem;">${esc(r.reviewer_name)}</span>
-            ${r.user_username ? `<span style="font-size:.72rem;color:#4a6080;">(${esc(r.user_username)})</span>` : ''}
-            <span style="font-size:.78rem;padding:2px 8px;border-radius:4px;font-weight:700;background:${col}18;color:${col};">${r.status}</span>
-          </div>
-          <div style="color:#fbbf24;font-size:.85rem;margin-bottom:4px;">${stars}</div>
-          ${r.review_text ? `<p style="color:#8a9dc0;font-size:.82rem;margin:0;line-height:1.5;">${esc(r.review_text)}</p>` : '<p style="color:#4a6080;font-size:.78rem;font-style:italic;margin:0;">No text</p>'}
-          <span style="font-size:.7rem;color:#3d5070;display:block;margin-top:6px;">${date}</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
-          ${r.status !== 'approved' ? `<button onclick="updateReviewStatus(${r.id},'approved')" style="padding:5px 12px;background:rgba(0,229,153,0.12);border:1px solid rgba(0,229,153,0.3);color:#00e599;border-radius:6px;font-size:.72rem;font-weight:700;cursor:pointer;letter-spacing:.04em;">✓ Approve</button>` : ''}
-          ${r.status !== 'rejected' ? `<button onclick="updateReviewStatus(${r.id},'rejected')" style="padding:5px 12px;background:rgba(255,77,141,0.08);border:1px solid rgba(255,77,141,0.2);color:#ff4d8d;border-radius:6px;font-size:.72rem;font-weight:700;cursor:pointer;letter-spacing:.04em;">✕ Reject</button>` : ''}
-          ${r.status !== 'pending' ? `<button onclick="updateReviewStatus(${r.id},'pending')" style="padding:5px 12px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);color:#d4af37;border-radius:6px;font-size:.72rem;font-weight:700;cursor:pointer;letter-spacing:.04em;">↩ Pending</button>` : ''}
-          <button onclick="deleteReview(${r.id})" style="padding:5px 12px;background:rgba(255,77,77,0.06);border:1px solid rgba(255,77,77,0.15);color:#ff4d4d;border-radius:6px;font-size:.72rem;font-weight:700;cursor:pointer;">🗑 Delete</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function updateReviewStatus(reviewId, status) {
-  const res = await fetch('/api/admin/course-reviews', {
-    method: 'PUT', credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ review_id: reviewId, status })
-  });
-  const data = await res.json();
-  if (data.success) { showToast(`Review ${status}`, 'success'); loadCourseReviews(); }
-  else showToast(data.error || 'Failed', 'error');
-}
-
-async function deleteReview(reviewId) {
-  if (!confirm('Delete this review permanently?')) return;
-  const res = await fetch('/api/admin/course-reviews', {
-    method: 'DELETE', credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ review_id: reviewId })
-  });
-  const data = await res.json();
-  if (data.success) { showToast('Review deleted', 'success'); loadCourseReviews(); }
-  else showToast(data.error || 'Failed', 'error');
-}
-
-async function saveDisplayOverrides() {
-  const courseId = document.getElementById('reviewCourseFilter').value;
-  if (!courseId) { showToast('Select a course first', 'error'); return; }
-  const body = {
-    course_id:              parseInt(courseId),
-    display_rating:         document.getElementById('rdoRating').value || null,
-    display_review_count:   document.getElementById('rdoReviewCount').value || null,
-    display_enrolled:       document.getElementById('rdoEnrolled').value || null,
-    display_language:       document.getElementById('rdoLanguage').value || null,
-    display_rating_visible: document.getElementById('rdoRatingVisible').checked,
-  };
-  const res = await fetch('/api/admin/course-reviews', {
-    method: 'PUT', credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  const data = await res.json();
-  if (data.success) {
-    showToast('Display overrides saved!', 'success');
-    // Refresh allCourses cache so the course form picks up new values
-    localStorage.removeItem('courses'); localStorage.removeItem('courses_timestamp');
-    await loadCourses();
-  } else showToast(data.error || 'Failed', 'error');
-}
 
 /* ─── USER FEEDBACK INBOX ─── */
 function refreshUserFeedbacks() { renderUserFeedbacksList(); }
