@@ -1426,16 +1426,16 @@ async function renderCourses() {
       return;
     }
 
-    // Premium = price > 0, NOT yet enrolled (pending courses stay here so button flips to pending state)
+    // Premium = price > 0 — show ALL premium courses, enrolled ones show with Enrolled badge
     const premiumCourses = courses.filter(c => {
       const price = parseFloat(c.price) || 0;
-      return price > 0 && !enrolledCourseIds.includes(c.id?.toString());
+      return price > 0;
     });
     
-    // Free = price 0, not enrolled
+    // Free = price 0 — show ALL free courses, enrolled ones show with Enrolled badge
     const freeCourses = courses.filter(c => {
       const price = parseFloat(c.price) || 0;
-      return price === 0 && !enrolledCourseIds.includes(c.id?.toString());
+      return price === 0;
     });
 
     if (!currentUser) {
@@ -1485,14 +1485,21 @@ async function renderCourses() {
       const plainTitleText = title.replace(/<[^>]+>/g, '').trim() || 'Untitled Course';
       const description = course.description || 'Learn essential skills in this comprehensive course.';
       const price = parseFloat(course.price) || 0;
+      const discountPrice = parseFloat(course.discount_price) || 0;
+      const hasDiscount = price > 0 && discountPrice > 0 && discountPrice < price;
+      const effectivePrice = hasDiscount ? discountPrice : price;
       const whatsapp = course.whatsapp || '';
       
+      const isEnrolled = window._approvedCourseIds && window._approvedCourseIds.has(courseId.toString());
       const isPending = pendingCourseIds.includes(courseId.toString());
       
       // Determine status badge
       let statusText = 'Premium';
       let statusClass = 'nano';
       if (type === 'Enrolled') {
+        statusText = 'Enrolled';
+        statusClass = 'sub';
+      } else if (isEnrolled) {
         statusText = 'Enrolled';
         statusClass = 'sub';
       } else if (type === 'Free') {
@@ -1503,7 +1510,15 @@ async function renderCourses() {
         statusClass = 'nano';
       }
       
-      const priceDisplay = price > 0 ? `৳${price}` : 'Free';
+      // Price display: real price = discount_price if set, else price. Show original price struck through.
+      let priceDisplay;
+      if (price === 0) {
+        priceDisplay = 'Free';
+      } else if (hasDiscount) {
+        priceDisplay = `<span style="text-decoration:line-through;color:var(--muted);font-size:0.8rem;margin-right:4px;">৳${price}</span><span style="font-weight:700;color:var(--accent)">৳${discountPrice}</span>`;
+      } else {
+        priceDisplay = `৳${price}`;
+      }
       
       const thumbnailUrl = course.thumbnail_url || '';
       const hasThumbnail = thumbnailUrl && thumbnailUrl.length > 10;
@@ -1530,7 +1545,7 @@ async function renderCourses() {
           <p class="card-description">${escapeHtml(description.substring(0, 100))}${description.length > 100 ? '...' : ''}</p>
           <div class="card-stats">
             <div class="stat-pill">📦 ${getModuleCount(course)} Lecture</div>
-            ${price > 0 && type !== 'Enrolled' ? `<div class="stat-pill">💰 ${priceDisplay}</div>` : ''}
+            ${effectivePrice > 0 && type !== 'Enrolled' && !isEnrolled ? `<div class="stat-pill">💰 ${priceDisplay}</div>` : ''}
             ${whatsapp && type === 'Enrolled' ? `<div class="stat-pill">💬 WhatsApp Group</div>` : ''}
           </div>
           ${type === 'Enrolled' ? `
@@ -1542,13 +1557,23 @@ async function renderCourses() {
         </div>
         <div class="card-footer">
           <div class="card-rating"><span class="stars">★★★★★</span> 4.9</div>
-          ${getCourseButton(course, type, isPending)}
+          ${getCourseButton(course, isEnrolled ? 'Enrolled' : type, isPending)}
         </div>
       </div>
       `
     }).join('');
 
     // Attach event listeners
+    // Always wire up open-course-btn (enrolled cards appear in all tabs)
+    container.querySelectorAll('.open-course-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const courseId = this.dataset.courseId;
+        const course = courses.find(c => (c.id || '').toString() === courseId.toString());
+        if (course) openCourseContent(courseId, course.title);
+      });
+    });
+
     if (type === 'Premium') {
       container.querySelectorAll('.buy-now-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
@@ -1561,13 +1586,19 @@ async function renderCourses() {
       
       // Add click handler to premium course cards
       container.querySelectorAll('.course-card').forEach(card => {
-        const courseId = card.querySelector('.buy-now-btn')?.dataset.courseId;
+        const openBtn = card.querySelector('.open-course-btn');
+        const buyBtn  = card.querySelector('.buy-now-btn');
+        const courseId = (openBtn || buyBtn)?.dataset.courseId;
         if (courseId) {
           card.style.cursor = 'pointer';
           card.addEventListener('click', function(e) {
-            // Don't navigate if clicking on the purchase button or any link
-            if (e.target.closest('.buy-now-btn') || e.target.closest('a')) return;
-            window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
+            if (e.target.closest('.open-course-btn') || e.target.closest('.buy-now-btn') || e.target.closest('a')) return;
+            if (openBtn) {
+              const course = courses.find(c => (c.id || '').toString() === courseId.toString());
+              if (course) openCourseContent(courseId, course.title);
+            } else {
+              window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
+            }
           });
         }
       });
@@ -1583,18 +1614,28 @@ async function renderCourses() {
           if (course) enrollFreeCourse(courseId, course.title);
         });
       });
+
+      // Free tab card click — enrolled cards open course, others go to details
+      container.querySelectorAll('.course-card').forEach(card => {
+        const openBtn = card.querySelector('.open-course-btn');
+        const enrollBtn = card.querySelector('.enroll-free-btn');
+        const courseId = (openBtn || enrollBtn)?.dataset.courseId;
+        if (courseId) {
+          card.style.cursor = 'pointer';
+          card.addEventListener('click', function(e) {
+            if (e.target.closest('.open-course-btn') || e.target.closest('.enroll-free-btn') || e.target.closest('a')) return;
+            if (openBtn) {
+              const course = courses.find(c => (c.id || '').toString() === courseId.toString());
+              if (course) openCourseContent(courseId, course.title);
+            } else {
+              window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
+            }
+          });
+        }
+      });
     }
     
     if (type === 'Enrolled') {
-      container.querySelectorAll('.open-course-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const courseId = this.dataset.courseId;
-          const course = courses.find(c => (c.id || '').toString() === courseId.toString());
-          if (course) openCourseContent(courseId, course.title);
-        });
-      });
-      
       container.querySelectorAll('.course-card').forEach(card => {
         const courseId = card.querySelector('.open-course-btn')?.dataset.courseId;
         if (courseId) {
