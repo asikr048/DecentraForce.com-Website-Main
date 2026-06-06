@@ -177,11 +177,16 @@
     .lecture-row { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid rgba(0,229,255,0.05); transition: background 0.15s; }
     .lecture-row:last-child { border-bottom: none; }
     .lecture-row:hover { background: rgba(0,229,255,0.03); }
+    .lecture-row.is-public { cursor: pointer; }
+    .lecture-row.is-public:hover { background: rgba(0,229,255,0.07); }
     .lecture-lock { width: 28px; height: 28px; border-radius: 8px; background: rgba(123,92,255,0.1); border: 1px solid rgba(123,92,255,0.2); display: grid; place-items: center; flex-shrink: 0; }
+    .lecture-lock.public { background: rgba(0,229,255,0.1); border-color: rgba(0,229,255,0.25); }
     .lecture-info { flex: 1; min-width: 0; }
     .lecture-title { font-size: 0.9rem; color: #a4b5d6; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lecture-row.is-public .lecture-title { color: var(--text); }
     .lecture-duration { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
     .lecture-locked-badge { font-size: 0.7rem; color: var(--accent2); background: rgba(123,92,255,0.1); border: 1px solid rgba(123,92,255,0.2); padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+    .lecture-preview-badge { font-size: 0.7rem; color: var(--accent); background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.25); padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; font-weight: 700; }
     .curriculum-summary { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; padding: 16px 20px; background: rgba(0,229,255,0.04); border: 1px solid rgba(0,229,255,0.1); border-radius: 12px; }
     .curriculum-stat { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--muted); }
     .curriculum-stat strong { color: var(--text); font-weight: 700; }
@@ -1162,6 +1167,7 @@
         curriculum.forEach((mod, idx) => {
           const lectures = mod.lectures || [];
           const moduleId = `mod-${idx}`;
+          const publicCount = lectures.filter(l => l.access === 'public').length;
           html += `<div class="module-item" id="${moduleId}">
             <div class="module-header" onclick="toggleModule('${moduleId}')">
               <div class="module-header-left">
@@ -1169,24 +1175,33 @@
                 <span class="module-title-text">${escHTML(mod.moduleTitle || `Module ${idx + 1}`)}</span>
               </div>
               <div style="display:flex;align-items:center;gap:12px">
-                <span class="module-lecture-count">${lectures.length} lecture${lectures.length !== 1 ? 's' : ''}</span>
+                <span class="module-lecture-count">${lectures.length} lecture${lectures.length !== 1 ? 's' : ''}${publicCount > 0 ? ` · <span style="color:var(--accent);font-weight:600">${publicCount} free preview</span>` : ''}</span>
                 <svg class="module-chevron" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
               </div>
             </div>
             <div class="module-body">
               ${lectures.length === 0
                 ? `<div class="lecture-row"><span class="lecture-title" style="color:var(--muted);font-style:italic">No lectures added yet.</span></div>`
-                : lectures.map((lec) => `
-                  <div class="lecture-row">
-                    <div class="lecture-lock">
-                      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--accent2)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                : lectures.map((lec) => {
+                    const isPublic = lec.access === 'public';
+                    return `
+                  <div class="lecture-row${isPublic ? ' is-public' : ''}" ${isPublic && lec.url ? `onclick="window.location.href='course-view.html?id=${activeCourse.id}&preview=1&url=${encodeURIComponent(lec.url)}'"` : ''}>
+                    <div class="lecture-lock${isPublic ? ' public' : ''}">
+                      ${isPublic
+                        ? `<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--accent)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+                        : `<svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--accent2)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>`
+                      }
                     </div>
                     <div class="lecture-info">
                       <div class="lecture-title">${escHTML(lec.title || 'Untitled Lecture')}</div>
                       ${lec.duration ? `<div class="lecture-duration">⏱ ${escHTML(lec.duration)}</div>` : ''}
                     </div>
-                    <span class="lecture-locked-badge">🔒 Enrolled Only</span>
-                  </div>`).join('')
+                    ${isPublic
+                      ? `<span class="lecture-preview-badge">▶ Free Preview</span>`
+                      : `<span class="lecture-locked-badge">🔒 Enrolled Only</span>`
+                    }
+                  </div>`;
+                  }).join('')
               }
             </div>
           </div>`;

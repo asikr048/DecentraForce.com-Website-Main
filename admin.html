@@ -1776,7 +1776,8 @@ function addModuleUI(title='') {
   return builderContainer.lastElementChild;
 }
 
-function addLectureUI(container, title='', url='', duration='') {
+function addLectureUI(container, title='', url='', duration='', access='enrolled_only') {
+  const isPublic = access === 'public';
   const html = `
     <div class="lecture-block flex items-start gap-2.5">
       <div class="flex-1 space-y-2">
@@ -1785,10 +1786,26 @@ function addLectureUI(container, title='', url='', duration='') {
           <input type="url" placeholder="YouTube URL" class="admin-input text-sm flex-1 lecture-url" value="${esc(url)}">
           <input type="text" placeholder="Duration" class="admin-input text-sm w-28 lecture-duration" value="${esc(duration)}">
         </div>
+        <div class="flex items-center gap-2 pt-0.5">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-[#4a6080]">Access:</span>
+          <label class="flex items-center gap-1.5 cursor-pointer select-none">
+            <input type="radio" name="access_${Math.random().toString(36).slice(2,8)}" class="lecture-access" value="public" ${isPublic ? 'checked' : ''} style="accent-color:#00e5ff">
+            <span class="text-xs font-semibold" style="color:#00e5ff">🌐 Public Preview</span>
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer select-none ml-2">
+            <input type="radio" name="access_${Math.random().toString(36).slice(2,8)}" class="lecture-access" value="enrolled_only" ${!isPublic ? 'checked' : ''} style="accent-color:#7b5cff">
+            <span class="text-xs font-semibold" style="color:#7b5cff">🔒 Enrolled Only</span>
+          </label>
+        </div>
       </div>
       <button type="button" onclick="this.closest('.lecture-block').remove()" class="text-[#3d5070] hover:text-accent3 mt-1.5 transition-colors text-xs">✕</button>
     </div>`;
   container.insertAdjacentHTML('beforeend', html);
+  // Sync radio names so only one per lecture-block can be selected
+  const block = container.lastElementChild;
+  const radios = block.querySelectorAll('.lecture-access');
+  const uid = 'acc_' + Math.random().toString(36).slice(2,8);
+  radios.forEach(r => r.name = uid);
 }
 
 /* ─── ADD / EDIT COURSE ─── */
@@ -1843,7 +1860,7 @@ function openEditCourse(id) {
   } else {
     m.curriculum.forEach(mod => {
       const el = addModuleUI(mod.moduleTitle);
-      mod.lectures.forEach(l => addLectureUI(el.querySelector('.lectures-container'),l.title,l.url,l.duration));
+      mod.lectures.forEach(l => addLectureUI(el.querySelector('.lectures-container'),l.title,l.url,l.duration,l.access||'enrolled_only'));
     });
   }
   showTab('add-course');
@@ -1863,7 +1880,9 @@ async function saveCourse() {
       const t = lec.querySelector('.lecture-title').value.trim();
       const u = lec.querySelector('.lecture-url').value.trim();
       const d = lec.querySelector('.lecture-duration').value.trim();
-      if(t||u) lectures.push({title:t,url:u,duration:d});
+      const checkedAccess = lec.querySelector('.lecture-access:checked');
+      const a = checkedAccess ? checkedAccess.value : 'enrolled_only';
+      if(t||u) lectures.push({title:t,url:u,duration:d,access:a});
     });
     if(moduleTitle||lectures.length) curriculum.push({moduleTitle,lectures});
   });

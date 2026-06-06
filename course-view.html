@@ -1309,6 +1309,8 @@
   let courseModules = {};
   let flatLectures  = [];
   let currentLectureIndex = -1;
+  let isEnrolledUser = false;  // true if user has an approved purchase for this course
+  let isPreviewMode  = false;  // true when coming from course-details public preview
 
   let mainPlayer      = null;
   let isPlayerReady   = false;
@@ -1337,7 +1339,19 @@
 
     const params   = new URLSearchParams(window.location.search);
     const courseId = params.get('id');
+    isPreviewMode  = params.get('preview') === '1';
     if (!courseId) { showError('No course ID provided.'); return; }
+
+    // Check if user is enrolled (approved purchase)
+    try {
+      const pRes  = await fetch('/api/user/purchases', { credentials: 'include' });
+      const pData = await pRes.json();
+      if (pData.purchases) {
+        isEnrolledUser = pData.purchases.some(p =>
+          String(p.courseId || p.course_id) === String(courseId) && p.status === 'approved'
+        );
+      }
+    } catch(e) { /* treat as not enrolled */ }
 
     try {
       const res  = await fetch('/api/_public/courses');
@@ -1425,22 +1439,40 @@
 
       let lecturesHtml = '';
       modLectures.forEach((lec, lIdx) => {
-        const flatIdx = globalIndex++;
+        const flatIdx   = globalIndex++;
+        const isPublic  = lec.access === 'public';
+        const canAccess = isEnrolledUser || isPublic;
+
         flatLectures.push({
           flatIdx, moduleIdx: mIdx,
           title: lec.title || `Lecture ${lIdx+1}`,
-          url: lec.url || '',
+          url: canAccess ? (lec.url || '') : '',
           desc: lec.description || 'No description provided.',
-          duration: lec.duration || '0:00'
+          duration: lec.duration || '0:00',
+          isPublic,
+          isLocked: !canAccess
         });
-        lecturesHtml += `
+
+        if (canAccess) {
+          lecturesHtml += `
           <div class="acc-lecture-item" id="lec-item-${flatIdx}" onclick="loadLecture(${flatIdx})">
-            <div class="acc-lecture-icon">▶</div>
+            <div class="acc-lecture-icon" style="color:${isPublic && !isEnrolledUser ? 'var(--accent)' : 'var(--muted)'}">▶</div>
             <div class="acc-lecture-info">
               <div class="acc-lecture-title">${escapeHtml(lec.title || `Lecture ${lIdx+1}`)}</div>
-              <div class="acc-lecture-dur">${escapeHtml(lec.duration || '0:00')}</div>
+              <div class="acc-lecture-dur">${escapeHtml(lec.duration || '0:00')}${isPublic && !isEnrolledUser ? ' · <span style="color:var(--accent);font-size:0.65rem;font-weight:700">FREE PREVIEW</span>' : ''}</div>
             </div>
           </div>`;
+        } else {
+          lecturesHtml += `
+          <div class="acc-lecture-item" id="lec-item-${flatIdx}" onclick="showLockedLecturePrompt(${flatIdx})" style="opacity:0.7">
+            <div class="acc-lecture-icon">🔒</div>
+            <div class="acc-lecture-info">
+              <div class="acc-lecture-title">${escapeHtml(lec.title || `Lecture ${lIdx+1}`)}</div>
+              <div class="acc-lecture-dur">${escapeHtml(lec.duration || '0:00')} · <span style="color:var(--accent2);font-size:0.65rem;font-weight:700">ENROLLED ONLY</span></div>
+            </div>
+          </div>`;
+        }
+      });
       });
 
       topics.forEach(t => {
@@ -1469,7 +1501,15 @@
     });
 
     listContainer.innerHTML = html;
-    if (flatLectures.length > 0) loadLecture(0);
+
+    // If arriving from a public preview click, jump to that specific video
+    const urlParams = new URLSearchParams(window.location.search);
+    const previewUrl = urlParams.get('url');
+    if (isPreviewMode && previewUrl) {
+      const targetIdx = flatLectures.findIndex(l => l.url === previewUrl && !l.isLocked);
+      if (targetIdx >= 0) { loadLecture(targetIdx); return; }
+    }
+    if (flatLectures.length > 0) loadLecture(flatLectures.findIndex(l => !l.isLocked) ?? 0);
   }
 
   function toggleAccordion(mIdx) {
@@ -1508,6 +1548,10 @@
 
   function loadLecture(flatIdx) {
     if (flatIdx < 0 || flatIdx >= flatLectures.length) return;
+    const lec = flatLectures[flatIdx];
+
+    // Block locked lectures
+    if (lec.isLocked) { showLockedLecturePrompt(flatIdx); return; }
 
     document.querySelectorAll('.acc-lecture-item').forEach(el => el.classList.remove('active'));
     const activeEl = document.getElementById(`lec-item-${flatIdx}`);
@@ -1518,7 +1562,6 @@
     }
 
     currentLectureIndex = flatIdx;
-    const lec = flatLectures[flatIdx];
 
     document.getElementById('displayLessonTitle').textContent = lec.title;
     document.getElementById('displayLessonDesc').textContent  = lec.desc;
@@ -1528,7 +1571,6 @@
     const pct = Math.round(((flatIdx + 1) / flatLectures.length) * 100);
     document.getElementById('sideModPct').textContent = `${pct}%`;
     document.getElementById('sideModFill').style.width = `${pct}%`;
-    // Compact header progress
     const hPct = document.getElementById('headerPct');
     const hFill = document.getElementById('headerFill');
     const hWrap = document.getElementById('headerProgressWrap');
@@ -1544,6 +1586,35 @@
     ytContainer.classList.remove('has-started');
 
     initOrUpdatePlayer(lec.url);
+  }
+
+  function showLockedLecturePrompt(flatIdx) {
+    const lec = flatLectures[flatIdx];
+    const courseId = activeCourse?.id || '';
+    const price = parseFloat(activeCourse?.price) || 0;
+    const discountPrice = parseFloat(activeCourse?.discount_price) || 0;
+    const effectivePrice = discountPrice > 0 && discountPrice < price ? discountPrice : price;
+    const priceLabel = price === 0 ? 'Free' : (discountPrice > 0 && discountPrice < price
+      ? `<span style="text-decoration:line-through;color:var(--muted);font-size:0.85rem;margin-right:6px">৳${price}</span>৳${discountPrice}`
+      : `৳${price}`);
+
+    document.getElementById('displayLessonTitle').textContent = lec.title;
+    document.getElementById('displayLessonDesc').textContent  = '🔒 This lecture is available to enrolled students only.';
+
+    const playerArea = document.getElementById('mainPlayerArea');
+    playerArea.innerHTML = `
+      <div style="height:100%;min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px 24px;text-align:center;background:rgba(5,10,24,0.95);border-radius:12px;">
+        <div style="width:72px;height:72px;border-radius:50%;background:rgba(123,92,255,0.15);border:2px solid rgba(123,92,255,0.3);display:grid;place-items:center;font-size:2rem;">🔒</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.15rem;color:var(--text);margin-bottom:8px;">${escapeHtml(lec.title)}</div>
+          <div style="color:var(--muted);font-size:0.9rem;max-width:360px;line-height:1.6;">This lecture is for enrolled students only. ${price === 0 ? 'Enroll for free to unlock all content.' : 'Purchase this course to unlock all lectures.'}</div>
+        </div>
+        ${price === 0
+          ? `<a href="course-details.html?id=${courseId}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;background:linear-gradient(135deg,#00e599,#00e5ff);color:#111;font-weight:700;font-size:0.95rem;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">🎓 Enroll for Free</a>`
+          : `<a href="course-details.html?id=${courseId}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;background:linear-gradient(135deg,#7b5cff,#00e5ff);color:#fff;font-weight:700;font-size:0.95rem;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">🛒 Purchase Course — ${priceLabel}</a>`
+        }
+        <a href="course-details.html?id=${courseId}" style="color:var(--muted);font-size:0.82rem;text-decoration:underline;">← Back to course details</a>
+      </div>`;
   }
 
   function navigateLecture(direction) {
