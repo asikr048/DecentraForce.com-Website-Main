@@ -822,7 +822,7 @@
 <div class="app-shell">
 
   <aside class="sidebar">
-    <a class="sidebar-logo" onclick="showPanel('profile')" style="cursor:pointer;" title="Go to My Profile">
+    <a href="index.html" class="sidebar-logo" title="Go to Home">
       <div class="logo-icon">DF</div>
       <div>
         <span class="logo-line">Decentra</span>
@@ -847,7 +847,7 @@
 
 
       <div class="nav-divider"></div>
-      <button class="nav-item active" onclick="showPanel('courses'); setTab('enrolled')">
+      <button class="nav-item" onclick="showPanel('courses'); setTab('enrolled')">
         <div class="nav-icon">🎓</div>
         Enrolled
       </button>
@@ -1432,19 +1432,40 @@
   window.showPanel = showPanel;
   window.setTab = setTab;
   window.addEventListener('DOMContentLoaded', () => {
-    // Restore panel + tab from URL hash or sessionStorage
-    const hash = window.location.hash; // e.g. #panel=courses&tab=premium
+    // Map incoming ?tab= values to internal tab names
+    const TAB_MAP = {
+      'nanodegree': 'premium',
+      'premium':    'premium',
+      'free':       'free',
+      'enrolled':   'enrolled',
+      'বাংলায়':    'free'
+    };
+
+    const qParams = new URLSearchParams(window.location.search);
+    const qTab = qParams.get('tab');
+
+    // If a ?tab= param is present in the URL, it takes full priority —
+    // clear any stale sessionStorage so it doesn't override the link intent
+    if (qTab) {
+      try { sessionStorage.removeItem('myCoursesPanel'); sessionStorage.removeItem('myCoursesTab'); } catch(e) {}
+    }
+
+    const hash = window.location.hash;
     const hashParams = new URLSearchParams(hash.replace('#', ''));
     const savedPanel = hashParams.get('panel') || sessionStorage.getItem('myCoursesPanel') || 'courses';
     const savedTab   = hashParams.get('tab')   || sessionStorage.getItem('myCoursesTab')   || 'enrolled';
 
-    // Also check legacy ?tab= query param
-    const qParams = new URLSearchParams(window.location.search);
-    const qTab = qParams.get('tab');
-
     const panel = ['courses','profile','rewards'].includes(savedPanel) ? savedPanel : 'courses';
-    const tab   = (qTab && ['enrolled','premium','free'].includes(qTab)) ? qTab
-                : (['enrolled','premium','free'].includes(savedTab) ? savedTab : 'enrolled');
+
+    // Resolve tab: URL query param first, then hash/session
+    let tab = 'enrolled';
+    if (qTab && TAB_MAP[qTab]) {
+      tab = TAB_MAP[qTab];
+    } else if (qTab && ['enrolled','premium','free'].includes(qTab)) {
+      tab = qTab;
+    } else if (['enrolled','premium','free'].includes(savedTab)) {
+      tab = savedTab;
+    }
 
     showPanel(panel);
     if (panel === 'courses') setTab(tab);
