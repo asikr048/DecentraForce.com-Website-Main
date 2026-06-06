@@ -446,6 +446,16 @@
         <div class="card-body" style="padding: 20px;">
           <div class="price-display" id="mobilePriceDisplay">৳0</div>
           <button class="btn-purchase" id="mobilePurchaseBtn" style="margin-top:12px;">Purchase Course</button>
+
+          <!-- Apply Coupon (mobile) -->
+          <div id="mobileCouponSection" style="margin-top:12px;">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="mobileCouponInput" placeholder="Coupon code" style="flex:1;padding:8px 11px;border-radius:9px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:0.82rem;outline:none;" />
+              <button onclick="applyCoupon(true)" style="padding:8px 12px;border-radius:9px;background:var(--surface3);border:1px solid var(--border);color:var(--accent);font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Apply</button>
+            </div>
+            <div id="mobileCouponMsg" style="margin-top:5px;font-size:0.76rem;min-height:16px;"></div>
+          </div>
+
           <div class="payment-methods" style="margin-top:16px; padding-top:14px;">
             <p>Secure payment methods:</p>
             <div class="pm-badges">
@@ -506,7 +516,16 @@
           <div class="price-display" id="cardPrice">৳0</div>
           
           <button class="btn-purchase" id="pagePurchaseBtn">Purchase Course</button>
-          
+
+          <!-- Apply Coupon -->
+          <div id="couponSection" style="margin-top:14px;">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="couponInput" placeholder="Enter coupon code" style="flex:1;padding:9px 12px;border-radius:9px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:0.85rem;outline:none;" />
+              <button onclick="applyCoupon()" style="padding:9px 14px;border-radius:9px;background:var(--surface3);border:1px solid var(--border);color:var(--accent);font-size:0.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Apply</button>
+            </div>
+            <div id="couponMsg" style="margin-top:6px;font-size:0.78rem;min-height:18px;"></div>
+          </div>
+
           <div class="payment-methods">
             <p>Secure payment methods accepted:</p>
             <div class="pm-badges">
@@ -837,7 +856,9 @@
       const regularPrice = parseFloat(activeCourse.price) || 0;
       const discountPrice = parseFloat(activeCourse.discount_price) || 0;
       // If a discount price is set, it becomes the actual price; regular price is shown crossed out
-      const priceVal = discountPrice > 0 ? discountPrice : regularPrice;
+      let priceVal = discountPrice > 0 ? discountPrice : regularPrice;
+      const basePrice = priceVal; // store original for coupon display
+      let appliedCouponCode = null;
       const priceText = priceVal === 0 ? 'Free' : `৳${priceVal}`;
       // Show crossed-out regular price only when a discount price exists and differs from regular price
       const originalPriceText = (discountPrice > 0 && regularPrice > 0 && regularPrice !== discountPrice)
@@ -852,6 +873,64 @@
       document.getElementById('mobilePriceDisplay').innerHTML = `${originalPriceText}${priceText}`;
       const mobilePurchaseBtn = document.getElementById('mobilePurchaseBtn');
       mobilePurchaseBtn.textContent = priceVal === 0 ? 'Enroll for Free' : 'Purchase Course';
+
+      // ── Coupon apply logic ──
+      async function applyCoupon(isMobile) {
+        const inputEl = isMobile ? document.getElementById('mobileCouponInput') : document.getElementById('couponInput');
+        // sync both inputs
+        if (isMobile) {
+          document.getElementById('couponInput').value = inputEl.value;
+        } else {
+          const mobileInput = document.getElementById('mobileCouponInput');
+          if (mobileInput) mobileInput.value = inputEl.value;
+        }
+        const code = inputEl.value.trim().toUpperCase();
+        const msgEl = document.getElementById(isMobile ? 'mobileCouponMsg' : 'couponMsg');
+        const msgEl2 = document.getElementById(isMobile ? 'couponMsg' : 'mobileCouponMsg');
+        if (!code) { msgEl.textContent = 'Please enter a coupon code.'; msgEl.style.color = 'var(--accent3)'; return; }
+        msgEl.textContent = 'Checking…'; msgEl.style.color = 'var(--muted)';
+        try {
+          const res = await fetch('/api/_public/verify-coupon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, course_id: activeCourse.id })
+          });
+          const data = await res.json();
+          if (!data.success) {
+            msgEl.textContent = data.error || 'Invalid coupon.';
+            msgEl.style.color = 'var(--accent3)';
+            if (msgEl2) { msgEl2.textContent = msgEl.textContent; msgEl2.style.color = msgEl.style.color; }
+            return;
+          }
+          // Calculate new price
+          let newPrice;
+          if (data.new_price !== null && data.new_price !== undefined) {
+            newPrice = parseFloat(data.new_price);
+          } else if (data.discount) {
+            newPrice = Math.round(basePrice * (1 - data.discount / 100));
+          } else {
+            newPrice = basePrice;
+          }
+          priceVal = newPrice;
+          appliedCouponCode = code;
+
+          // Update price displays
+          const basePriceStrike = basePrice > 0 ? `<span>৳${basePrice}</span>` : '';
+          const newPriceText = newPrice === 0 ? 'Free' : `৳${newPrice}`;
+          document.getElementById('cardPrice').innerHTML = `${basePriceStrike}${newPriceText}`;
+          document.getElementById('mobilePriceDisplay').innerHTML = `${basePriceStrike}${newPriceText}`;
+
+          const successMsg = data.new_price !== null && data.new_price !== undefined
+            ? `Coupon applied! New price: ৳${newPrice}`
+            : `Coupon applied! ${data.discount}% off → ৳${newPrice}`;
+          msgEl.textContent = successMsg; msgEl.style.color = '#00e599';
+          if (msgEl2) { msgEl2.textContent = successMsg; msgEl2.style.color = '#00e599'; }
+        } catch {
+          msgEl.textContent = 'Network error. Try again.';
+          msgEl.style.color = 'var(--accent3)';
+        }
+      }
+      window.applyCoupon = applyCoupon;
 
       if (activeCourse.thumbnail_url && activeCourse.thumbnail_url.length > 10) {
         const url = activeCourse.thumbnail_url;
@@ -1253,7 +1332,9 @@
         course_id: activeCourse.id,
         sender_number: senderNumber,
         transaction_id: transactionId,
-        payment_method: paymentMethod
+        payment_method: paymentMethod,
+        coupon_code: appliedCouponCode || undefined,
+        coupon_price: appliedCouponCode ? priceVal : undefined
       })
     })
     .then(function(res) { return res.json(); })

@@ -602,6 +602,12 @@
               <div>
                 <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Discount %</label>
                 <input type="number" id="couponDiscount" placeholder="e.g., 50" class="admin-input" min="1" max="100">
+                <p class="text-xs text-[#3d5070] mt-1">Leave empty if using a fixed new price instead</p>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">New Price (&#2547;)</label>
+                <input type="number" id="couponNewPrice" placeholder="e.g., 999" class="admin-input" min="0">
+                <p class="text-xs text-[#3d5070] mt-1">Fixed price after coupon &mdash; overrides discount % display</p>
               </div>
               <div>
                 <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Target Course</label>
@@ -627,7 +633,7 @@
               <div id="couponsList" class="space-y-3 max-h-80 overflow-y-auto">
                 <div class="text-center py-8 text-[#3d5070] text-sm">No coupons created yet.</div>
               </div>
-              <p class="text-xs text-[#3d5070] border-t border-[rgba(0,229,255,0.06)] pt-3 mt-4">Coupons are stored in localStorage.</p>
+              <p class="text-xs text-[#3d5070] border-t border-[rgba(0,229,255,0.06)] pt-3 mt-4">Coupons are stored in the database.</p>
             </div>
           </div>
         </div>
@@ -656,7 +662,7 @@
           <div class="overflow-x-auto">
             <table class="data-table">
               <thead><tr>
-                <th>Course</th><th>Sender</th><th>Transaction ID</th><th>Status</th><th>Date</th><th>Actions</th>
+                <th>Course</th><th>Sender</th><th>Transaction ID</th><th>Coupon</th><th>Status</th><th>Date</th><th>Actions</th>
               </tr></thead>
               <tbody id="purchasesTableBody">
                 <tr id="purchasesEmpty">
@@ -1981,49 +1987,64 @@ async function changePassword() {
 }
 
 /* ─── COUPONS ─── */
-function getCoupons() { try { return JSON.parse(localStorage.getItem('coupons')||'[]'); } catch { return []; } }
-function saveCoupons(c) { localStorage.setItem('coupons',JSON.stringify(c)); }
-
-function createCoupon() {
+async function createCoupon() {
   const code = document.getElementById('couponCode').value.trim().toUpperCase();
-  const disc = parseInt(document.getElementById('couponDiscount').value);
+  const disc = document.getElementById('couponDiscount').value;
+  const newPrice = document.getElementById('couponNewPrice').value;
   const cid  = document.getElementById('couponCourse').value;
   if(!code) return showToast('Code required','error');
-  if(isNaN(disc)||disc<1||disc>100) return showToast('Discount must be 1–100%','error');
-  const coupons = getCoupons();
-  if(coupons.some(c=>c.code===code)) return showToast(`"${code}" already exists`,'error');
-  coupons.push({ code, discount:disc, courseId:cid, created:new Date().toISOString(), id:Date.now().toString() });
-  saveCoupons(coupons);
-  document.getElementById('couponCode').value='';
-  document.getElementById('couponDiscount').value='';
-  showToast(`Coupon "${code}" created (${disc}% off)`,'success');
-  renderCouponsList();
+  if(!disc && !newPrice) return showToast('Enter Discount % or New Price','error');
+  if(disc && (isNaN(parseInt(disc))||parseInt(disc)<1||parseInt(disc)>100)) return showToast('Discount must be 1–100%','error');
+  try {
+    const res = await fetch('/api/admin/coupons',{
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ code, discount_percent: disc ? parseInt(disc) : null, new_price: newPrice ? parseFloat(newPrice) : null, course_id: cid })
+    });
+    const data = await res.json();
+    if(data.success) {
+      document.getElementById('couponCode').value='';
+      document.getElementById('couponDiscount').value='';
+      document.getElementById('couponNewPrice').value='';
+      showToast(`Coupon "${code}" created`,'success');
+      renderCouponsList();
+    } else showToast(data.error||'Failed to create coupon','error');
+  } catch { showToast('Network error','error'); }
 }
 
-function renderCouponsList() {
-  const c = getCoupons();
+async function renderCouponsList() {
   const el = document.getElementById('couponsList');
-  if(!c.length) { el.innerHTML='<div class="text-center py-6 text-[#3d5070] text-sm">No coupons yet.</div>'; return; }
-  el.innerHTML = c.map(x=>`
-    <div class="order-item justify-between">
-      <div>
-        <div class="flex items-center gap-2.5 mb-0.5">
-          <span class="font-black text-white text-sm">${esc(x.code)}</span>
-          <span class="badge badge-green">${x.discount}% OFF</span>
-          <span class="badge badge-blue">${x.courseId==='all'||!x.courseId?'All Courses':'Specific'}</span>
+  el.innerHTML='<div class="text-center py-6 text-[#3d5070] text-sm">Loading…</div>';
+  try {
+    const res = await fetch('/api/admin/coupons',{credentials:'include'});
+    const data = await res.json();
+    if(!data.success) { el.innerHTML='<div class="text-center py-6 text-accent3 text-sm">Failed to load.</div>'; return; }
+    const c = data.coupons||[];
+    if(!c.length) { el.innerHTML='<div class="text-center py-6 text-[#3d5070] text-sm">No coupons yet.</div>'; return; }
+    el.innerHTML = c.map(x=>`
+      <div class="order-item justify-between">
+        <div>
+          <div class="flex items-center gap-2.5 mb-0.5">
+            <span class="font-black text-white text-sm">${esc(x.code)}</span>
+            ${x.discount_percent ? `<span class="badge badge-green">${x.discount_percent}% OFF</span>` : ''}
+            ${x.new_price ? `<span class="badge badge-blue">&#2547;${x.new_price} NEW</span>` : ''}
+            <span class="badge badge-gray">${x.course_id ? (esc(x.course_title||'Course #'+x.course_id)) : 'All Courses'}</span>
+          </div>
+          <p class="text-xs text-[#3d5070]">Created ${fmtDate(x.created_at)}</p>
         </div>
-        <p class="text-xs text-[#3d5070]">Created ${fmtDate(x.created)}</p>
-      </div>
-      <button onclick="deleteCoupon('${x.id}')" class="text-accent3 hover:text-red-300 text-xs font-bold transition-colors">Delete</button>
-    </div>`).join('');
+        <button onclick="deleteCoupon(${x.id})" class="text-accent3 hover:text-red-300 text-xs font-bold transition-colors">Delete</button>
+      </div>`).join('');
+  } catch { el.innerHTML='<div class="text-center py-6 text-accent3 text-sm">Network error.</div>'; }
 }
 
-function deleteCoupon(id) {
+async function deleteCoupon(id) {
   if(!confirm('Delete this coupon?')) return;
-  const filtered = getCoupons().filter(c=>c.id!==id);
-  saveCoupons(filtered);
-  showToast('Coupon deleted','success');
-  renderCouponsList();
+  try {
+    const res = await fetch('/api/admin/coupons',{method:'DELETE',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+    const data = await res.json();
+    if(data.success) { showToast('Coupon deleted','success'); renderCouponsList(); }
+    else showToast(data.error||'Failed','error');
+  } catch { showToast('Network error','error'); }
 }
 
 function refreshCoupons() { renderCouponsList(); }
@@ -2063,6 +2084,9 @@ function renderPurchasesList() {
       <td>
         <div class="font-mono text-sm text-accent">${esc(p.transaction_id||'N/A')}</div>
         <div class="text-xs text-[#3d5070]">${esc(p.payment_method||'')}</div>
+      </td>
+      <td>
+        ${p.coupon_code ? `<div class="font-mono text-xs text-green-400 font-bold">${esc(p.coupon_code)}</div><div class="text-xs text-[#3d5070]">&#2547;${p.coupon_price||'&#8212;'}</div>` : '<div class="text-xs text-[#3d5070]">&#8212;</div>'}
       </td>
       <td><span class="badge ${p.status==='approved'?'badge-green':p.status==='rejected'?'badge-gray':'badge-blue'}">${(p.status||'pending').toUpperCase()}</span></td>
       <td class="text-[#4a6080] text-sm">${fmtDate(p.created_at)}</td>

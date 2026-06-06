@@ -77,10 +77,56 @@ async function publicCourses(req, res) {
 // ── PUBLIC: POST /api/_public/verify-coupon ───────────────────────────────────
 async function verifyCoupon(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
-  const { code } = req.body || {};
-  const r = await query('SELECT discount_percent FROM coupons WHERE code=$1', [(code||'').toUpperCase().trim()]);
-  if (r.rows.length) return res.status(200).json({ success: true, discount: r.rows[0].discount_percent });
-  return res.status(400).json({ success: false, error: 'Invalid or expired coupon' });
+  const { code, course_id } = req.body || {};
+  const r = await query(
+    'SELECT id, discount_percent, new_price, course_id FROM coupons WHERE code=$1',
+    [(code||'').toUpperCase().trim()]
+  );
+  if (!r.rows.length) return res.status(400).json({ success: false, error: 'Invalid or expired coupon' });
+  const coupon = r.rows[0];
+  if (coupon.course_id && course_id && coupon.course_id !== parseInt(course_id)) {
+    return res.status(400).json({ success: false, error: 'Coupon not valid for this course' });
+  }
+  return res.status(200).json({ success: true, discount: coupon.discount_percent, new_price: coupon.new_price });
+}
+
+// ── ADMIN: GET/POST/DELETE /api/admin/coupons ────────────────────────────────
+async function adminCoupons(req, res) {
+  const admin = await requireStaff(req, res); if (!admin) return;
+
+  if (req.method === 'GET') {
+    const r = await query(`
+      SELECT c.*, co.title AS course_title
+      FROM coupons c LEFT JOIN courses co ON c.course_id = co.id
+      ORDER BY c.created_at DESC
+    `);
+    return res.status(200).json({ success: true, coupons: r.rows });
+  }
+
+  if (req.method === 'POST') {
+    const { code, discount_percent, new_price, course_id } = req.body || {};
+    if (!code) return res.status(400).json({ success: false, error: 'Code required' });
+    if (!discount_percent && !new_price) return res.status(400).json({ success: false, error: 'Discount % or new price required' });
+    const upperCode = (code).toUpperCase().trim();
+    const existing = await query('SELECT id FROM coupons WHERE code=$1', [upperCode]);
+    if (existing.rows.length) return res.status(400).json({ success: false, error: 'Coupon code already exists' });
+    const r = await query(
+      `INSERT INTO coupons (code, discount_percent, new_price, course_id, created_at)
+       VALUES ($1, $2, $3, $4, NOW()) RETURNING *`,
+      [upperCode, discount_percent || null, new_price || null,
+       course_id && course_id !== 'all' ? parseInt(course_id) : null]
+    );
+    return res.status(201).json({ success: true, coupon: r.rows[0] });
+  }
+
+  if (req.method === 'DELETE') {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ success: false, error: 'ID required' });
+    await query('DELETE FROM coupons WHERE id=$1', [id]);
+    return res.status(200).json({ success: true, message: 'Coupon deleted' });
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
 }
 
 // ── PUBLIC: POST /api/purchases ─────────────────────────────────────
@@ -98,7 +144,7 @@ async function createPurchase(req, res) {
   if (!userResult.rows.length) return res.status(401).json({ success: false, error: 'Invalid or expired session' });
   
   const user = userResult.rows[0];
-  const { course_id, sender_number, transaction_id, payment_method } = req.body || {};
+  const { course_id, sender_number, transaction_id, payment_method, coupon_code, coupon_price } = req.body || {};
   
   if (!course_id) return res.status(400).json({ success: false, error: 'Course ID required' });
   if (!sender_number) return res.status(400).json({ success: false, error: 'Sender number required' });
@@ -108,12 +154,12 @@ async function createPurchase(req, res) {
   const courseResult = await query('SELECT id FROM courses WHERE id=$1', [course_id]);
   if (!courseResult.rows.length) return res.status(404).json({ success: false, error: 'Course not found' });
 
-
-  // Insert purchase with pending status
+  // Insert purchase with pending status, including optional coupon info
   const result = await query(
-    `INSERT INTO purchases (user_id, course_id, sender_number, transaction_id, payment_method, status)
-     VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING *`,
-    [user.id, course_id, sender_number, transaction_id, payment_method || 'unknown']
+    `INSERT INTO purchases (user_id, course_id, sender_number, transaction_id, payment_method, status, coupon_code, coupon_price)
+     VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7) RETURNING *`,
+    [user.id, course_id, sender_number, transaction_id, payment_method || 'unknown',
+     coupon_code ? coupon_code.toUpperCase().trim() : null, coupon_price || null]
   );
   
   return res.status(201).json({ success: true, purchase: result.rows[0] });
@@ -1174,8 +1220,13 @@ async function runBootMigration() {
     )`);
     await query(`CREATE TABLE IF NOT EXISTS coupons (
       id SERIAL PRIMARY KEY, code VARCHAR(50) UNIQUE,
-      discount_percent INT, created_at TIMESTAMP DEFAULT NOW()
+      discount_percent INT, new_price NUMERIC(10,2), course_id INTEGER,
+      created_at TIMESTAMP DEFAULT NOW()
     )`);
+    await query(`ALTER TABLE coupons ADD COLUMN IF NOT EXISTS new_price NUMERIC(10,2)`);
+    await query(`ALTER TABLE coupons ADD COLUMN IF NOT EXISTS course_id INTEGER`);
+    await query(`ALTER TABLE purchases ADD COLUMN IF NOT EXISTS coupon_code VARCHAR(50)`);
+    await query(`ALTER TABLE purchases ADD COLUMN IF NOT EXISTS coupon_price NUMERIC(10,2)`);
   } catch (e) {
     // Non-fatal — log and continue; tables likely already exist
     console.warn('Boot migration warning:', e.message);
@@ -1204,6 +1255,7 @@ export default async function handler(req, res) {
 
     // IMPORTANT: specific routes checked before generic /purchases to avoid endsWith overlap
     if (path.endsWith('/admin/purchases'))     return await adminPurchases(req, res);
+    if (path.endsWith('/admin/coupons'))       return await adminCoupons(req, res);
     if (path.endsWith('/user/purchases'))      return await userPurchases(req, res);
     if (path.endsWith('/purchases'))           return await createPurchase(req, res);
 
