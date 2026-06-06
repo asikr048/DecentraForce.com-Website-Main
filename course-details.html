@@ -1217,6 +1217,55 @@
         assignContainer.innerHTML = assignHTML || assignContainer.innerHTML;
       }
 
+      // ── Payment submit handler (inside DOMContentLoaded to close over priceVal & appliedCouponCode) ──
+      function handlePaymentSubmit(e) {
+        e.preventDefault();
+        const btn = document.getElementById('modalConfirm');
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const senderNumber = document.getElementById('senderNumber').value.trim();
+        const transactionId = document.getElementById('transactionId').value.trim();
+
+        if (!paymentMethod || !senderNumber || !transactionId) {
+          alert('Please fill in all fields: Payment Method, Sender Number, and Transaction ID.');
+          return;
+        }
+
+        btn.textContent = 'Processing...';
+        btn.disabled = true;
+
+        fetch('/api/purchases', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            course_id: activeCourse.id,
+            sender_number: senderNumber,
+            transaction_id: transactionId,
+            payment_method: paymentMethod,
+            coupon_code: appliedCouponCode || undefined,
+            coupon_price: appliedCouponCode ? priceVal : undefined
+          })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.success) {
+            if (activeCourse.whatsapp) window.open(activeCourse.whatsapp, '_blank');
+            showPendingSuccess();
+          } else {
+            alert('Error: ' + (data.error || 'Payment failed. Try again.'));
+            btn.textContent = 'Submit Payment ✓';
+            btn.disabled = false;
+          }
+        })
+        .catch(function(err) {
+          console.error('Purchase error:', err);
+          alert('Network error. Please check your connection and try again.');
+          btn.textContent = 'Submit Payment ✓';
+          btn.disabled = false;
+        });
+      }
+      window._handlePaymentSubmit = handlePaymentSubmit;
+
       // 5. Attach Purchase Action
       purchaseBtn.addEventListener('click', () => {
         // Check if user is logged in
@@ -1288,7 +1337,7 @@
     var confirmBtn = document.getElementById('modalConfirm');
     if (confirmBtn) {
       confirmBtn.replaceWith(confirmBtn.cloneNode(true));
-      document.getElementById('modalConfirm').addEventListener('click', handlePaymentSubmit);
+      document.getElementById('modalConfirm').addEventListener('click', function(e){ if(window._handlePaymentSubmit) window._handlePaymentSubmit(e); });
     }
     var cancelBtn = document.getElementById('modalCancel2');
     if (cancelBtn) cancelBtn.addEventListener('click', closeCheckoutModal);
@@ -1309,53 +1358,7 @@
   document.getElementById('modalClose').addEventListener('click', closeCheckoutModal);
   document.getElementById('modalCancel2').addEventListener('click', closeCheckoutModal);
 
-  function handlePaymentSubmit(e) {
-    e.preventDefault();
-    const btn = document.getElementById('modalConfirm');
-    const paymentMethod = document.getElementById('paymentMethod').value;
-    const senderNumber = document.getElementById('senderNumber').value.trim();
-    const transactionId = document.getElementById('transactionId').value.trim();
-
-    if (!paymentMethod || !senderNumber || !transactionId) {
-      alert('Please fill in all fields: Payment Method, Sender Number, and Transaction ID.');
-      return;
-    }
-
-    btn.textContent = 'Processing...';
-    btn.disabled = true;
-
-    fetch('/api/purchases', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        course_id: activeCourse.id,
-        sender_number: senderNumber,
-        transaction_id: transactionId,
-        payment_method: paymentMethod,
-        coupon_code: appliedCouponCode || undefined,
-        coupon_price: appliedCouponCode ? priceVal : undefined
-      })
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      if (data.success) {
-        if (activeCourse.whatsapp) window.open(activeCourse.whatsapp, '_blank');
-        showPendingSuccess();
-      } else {
-        alert('Error: ' + (data.error || 'Payment failed. Try again.'));
-        btn.textContent = 'Submit Payment ✓';
-        btn.disabled = false;
-      }
-    })
-    .catch(function(err) {
-      console.error('Purchase error:', err);
-      alert('Network error. Please check your connection and try again.');
-      btn.textContent = 'Submit Payment ✓';
-      btn.disabled = false;
-    });
-  }
-  document.getElementById('modalConfirm').addEventListener('click', handlePaymentSubmit);
+  // handlePaymentSubmit is defined inside DOMContentLoaded and exposed as window._handlePaymentSubmit
 
 
 // === CURRICULUM ACCORDION ===
