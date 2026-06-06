@@ -1320,38 +1320,47 @@
 
   // ── INIT ───────────────────────────────────────────────────────────────
   async function initApp() {
+    const params   = new URLSearchParams(window.location.search);
+    const courseId = params.get('id');
+    isPreviewMode  = params.get('preview') === '1';
+    if (!courseId) { showError('No course ID provided.'); return; }
+
+    // Try to verify auth — but don't hard-redirect if we're in preview mode
     try {
       const res  = await fetch('/api/auth/verify', { credentials: 'include' });
       const data = await res.json();
       if (data.success && data.user) {
         currentUser = data.user;
         const initials = currentUser.username.substring(0,2).toUpperCase();
-        document.getElementById('navAvatar').textContent      = initials;
-        document.getElementById('dropName').textContent       = currentUser.username;
-        document.getElementById('dropEmail').textContent      = currentUser.email;
+        document.getElementById('navAvatar').textContent       = initials;
+        document.getElementById('dropName').textContent        = currentUser.username;
+        document.getElementById('dropEmail').textContent       = currentUser.email;
         document.getElementById('topbarStudentId').textContent = `DF-${currentUser.id.toString().padStart(6,'0')}`;
-      } else {
+      } else if (!isPreviewMode) {
         window.location.href = 'login.html'; return;
+      } else {
+        // Guest in preview mode — show minimal UI
+        document.getElementById('navAvatar').textContent       = '👤';
+        document.getElementById('topbarStudentId').textContent = 'Preview';
       }
     } catch(e) {
-      window.location.href = 'login.html'; return;
+      if (!isPreviewMode) { window.location.href = 'login.html'; return; }
+      document.getElementById('navAvatar').textContent       = '👤';
+      document.getElementById('topbarStudentId').textContent = 'Preview';
     }
 
-    const params   = new URLSearchParams(window.location.search);
-    const courseId = params.get('id');
-    isPreviewMode  = params.get('preview') === '1';
-    if (!courseId) { showError('No course ID provided.'); return; }
-
-    // Check if user is enrolled (approved purchase)
-    try {
-      const pRes  = await fetch('/api/user/purchases', { credentials: 'include' });
-      const pData = await pRes.json();
-      if (pData.purchases) {
-        isEnrolledUser = pData.purchases.some(p =>
-          String(p.courseId || p.course_id) === String(courseId) && p.status === 'approved'
-        );
-      }
-    } catch(e) { /* treat as not enrolled */ }
+    // Check enrollment only if logged in
+    if (currentUser) {
+      try {
+        const pRes  = await fetch('/api/user/purchases', { credentials: 'include' });
+        const pData = await pRes.json();
+        if (pData.purchases) {
+          isEnrolledUser = pData.purchases.some(p =>
+            String(p.courseId || p.course_id) === String(courseId) && p.status === 'approved'
+          );
+        }
+      } catch(e) { /* treat as not enrolled */ }
+    }
 
     try {
       const res  = await fetch('/api/_public/courses');
@@ -1389,6 +1398,13 @@
     document.getElementById('headerLectures').textContent   = lectures;
     document.getElementById('headerExercises').textContent  = exercises;
 
+    // Update status chip for preview vs enrolled
+    const headerStatus = document.getElementById('headerStatus');
+    if (!isEnrolledUser && isPreviewMode) {
+      headerStatus.textContent  = '👁 Preview Mode';
+      headerStatus.className    = 'status-chip ongoing';
+    }
+
     const statusChip = document.getElementById('courseStatusChip');
     if (status && status !== 'ongoing') {
       statusChip.textContent   = status.charAt(0).toUpperCase() + status.slice(1);
@@ -1399,6 +1415,29 @@
     document.getElementById('pageLoader').style.display   = 'none';
     document.getElementById('courseHeader').style.display = '';
     document.getElementById('tabNav').style.display       = '';
+
+    // Show a sticky purchase/enroll banner for non-enrolled preview visitors
+    if (!isEnrolledUser) {
+      const price = parseFloat(activeCourse.price) || 0;
+      const discountPrice = parseFloat(activeCourse.discount_price) || 0;
+      const hasDiscount = discountPrice > 0 && discountPrice < price;
+      const priceLabel = price === 0 ? 'Free'
+        : hasDiscount ? `<s style="opacity:0.5;font-size:0.82rem">৳${price}</s> ৳${discountPrice}`
+        : `৳${price}`;
+      const btnLabel = price === 0 ? '🎓 Enroll for Free' : `🛒 Purchase — ${priceLabel}`;
+      const banner = document.createElement('div');
+      banner.id = 'previewBanner';
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:999;background:linear-gradient(135deg,#0d1630,#111d3a);border-top:1px solid rgba(0,229,255,0.2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;';
+      banner.innerHTML = `
+        <div style="font-size:0.88rem;color:var(--muted);">
+          👁 You're watching a <strong style="color:var(--accent)">free preview</strong> — 
+          ${price === 0 ? 'enroll to access all lectures.' : 'purchase to unlock all lectures.'}
+        </div>
+        <a href="course-details.html?id=${activeCourse.id}" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:9px;background:linear-gradient(135deg,${price===0?'#00e599,#00e5ff':'#7b5cff,#00e5ff'});color:${price===0?'#111':'#fff'};font-weight:700;font-size:0.88rem;text-decoration:none;white-space:nowrap;">${btnLabel}</a>`;
+      document.body.appendChild(banner);
+      // Add bottom padding so content isn't hidden behind banner
+      document.querySelector('.page-body').style.paddingBottom = '70px';
+    }
 
     document.getElementById('statLectures').textContent    = lectures    || '—';
     document.getElementById('statExercises').textContent   = exercises   || '—';
