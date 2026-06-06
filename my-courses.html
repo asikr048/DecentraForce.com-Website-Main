@@ -1440,6 +1440,11 @@
       'enrolled':   'enrolled',
       'বাংলায়':    'free'
     };
+    // These ?tab= values switch the panel instead of the course tab
+    const PANEL_MAP = {
+      'profile': 'profile',
+      'rewards': 'rewards'
+    };
 
     const qParams = new URLSearchParams(window.location.search);
     const qTab = qParams.get('tab');
@@ -1454,6 +1459,12 @@
     const hashParams = new URLSearchParams(hash.replace('#', ''));
     const savedPanel = hashParams.get('panel') || sessionStorage.getItem('myCoursesPanel') || 'courses';
     const savedTab   = hashParams.get('tab')   || sessionStorage.getItem('myCoursesTab')   || 'enrolled';
+
+    // Check if the ?tab= is actually a panel switch (e.g. ?tab=profile)
+    if (qTab && PANEL_MAP[qTab]) {
+      showPanel(PANEL_MAP[qTab]);
+      return;
+    }
 
     const panel = ['courses','profile','rewards'].includes(savedPanel) ? savedPanel : 'courses';
 
