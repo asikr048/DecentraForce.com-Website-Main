@@ -885,12 +885,18 @@
         </div>
       </div>
       <div class="topbar-right">
-        <div class="student-id-badge">
+        <!-- Guest buttons (shown when not logged in) -->
+        <div id="guestNavBtns" style="display:none;gap:8px;align-items:center;">
+          <a href="login.html" style="padding:8px 18px;border-radius:9px;border:1px solid var(--border);color:var(--text);font-size:0.85rem;font-weight:600;text-decoration:none;background:var(--surface2);transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Log In</a>
+          <a href="register.html" style="padding:8px 18px;border-radius:9px;border:none;color:#fff;font-size:0.85rem;font-weight:600;text-decoration:none;background:linear-gradient(135deg,var(--accent2),var(--accent));transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Sign Up</a>
+        </div>
+
+        <div class="student-id-badge" id="studentIdBadge">
           <span class="label">Student ID:</span>
           <span class="id" id="topbarStudentId">DF-LOADING</span>
         </div>
 
-        <div class="avatar-wrapper">
+        <div class="avatar-wrapper" id="avatarWrapper">
           <div class="avatar-btn" id="navAvatar" onclick="toggleDropdown(event)">...</div>
           
           <div class="user-dropdown" id="userMenu">
@@ -1024,6 +1030,24 @@
   </main>
 </div>
 
+<div class="modal-overlay" id="loginPromptModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:420px;width:90%;background:var(--surface);border-radius:16px;padding:0;overflow:hidden;">
+    <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border);">
+      <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;color:var(--text);margin:0;">Login Required</h3>
+      <button id="loginPromptClose" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.3rem;line-height:1;">&times;</button>
+    </div>
+    <div style="text-align:center;padding:32px 24px;">
+      <div style="font-size:3.5rem;margin-bottom:16px;">🔒</div>
+      <h4 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.2rem;color:var(--text);margin-bottom:12px;">Login to Continue</h4>
+      <p style="color:var(--muted);font-size:0.92rem;line-height:1.6;margin-bottom:24px;">You need to log in or create an account to purchase or enroll in this course.</p>
+      <div style="display:flex;gap:12px;">
+        <button id="loginPromptCancel" style="flex:1;padding:12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:0.9rem;font-weight:600;cursor:pointer;">Cancel</button>
+        <button id="loginPromptRedirect" style="flex:1;padding:12px;border-radius:10px;background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer;">Log In / Sign Up</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { getCourses, refreshCourses, getCacheStatus } from './scripts/course-cache.js';
   
@@ -1043,9 +1067,6 @@
       if (data.success && data.user) {
         currentUser = data.user;
         
-        // Load courses after authentication
-        loadAllCourses();
-        
         // Populate Dropdown
         document.getElementById('dropName').textContent = currentUser.username;
         document.getElementById('dropEmail').textContent = currentUser.email;
@@ -1055,23 +1076,34 @@
         document.getElementById('profileBigId').textContent = `Student ID: DF-${currentUser.id.toString().padStart(6, '0')}`;
         document.getElementById('profileBigEmail').textContent = currentUser.email;
         document.getElementById('topbarStudentId').textContent = `DF-${currentUser.id.toString().padStart(6, '0')}`;
-        
         document.getElementById('editUsername').value = currentUser.username;
         document.getElementById('editEmail').value = currentUser.email;
         
-        // Set initials for avatars
         const initials = currentUser.username.substring(0, 2).toUpperCase();
         document.getElementById('navAvatar').textContent = initials;
         document.getElementById('profileBigAvatar').textContent = initials;
-        
+
+        // Show avatar, hide guest buttons
+        document.getElementById('guestNavBtns').style.display = 'none';
+        document.getElementById('avatarWrapper').style.display = '';
+        document.getElementById('studentIdBadge').style.display = '';
+
       } else {
-        // If not logged in, redirect to login
-        window.location.href = 'login.html';
+        // Guest mode — show courses but hide user-specific UI
+        currentUser = null;
+        document.getElementById('guestNavBtns').style.display = 'flex';
+        document.getElementById('avatarWrapper').style.display = 'none';
+        document.getElementById('studentIdBadge').style.display = 'none';
       }
     } catch(e) {
       console.error('Auth verify failed:', e);
-      window.location.href = 'login.html';
+      currentUser = null;
+      document.getElementById('guestNavBtns').style.display = 'flex';
+      document.getElementById('avatarWrapper').style.display = 'none';
+      document.getElementById('studentIdBadge').style.display = 'none';
     }
+    // Always load courses regardless of auth state
+    loadAllCourses();
   }
   
   document.addEventListener('DOMContentLoaded', initApp);
@@ -1099,6 +1131,26 @@
       console.error('Logout error', e);
     }
   }
+
+  // ── Login prompt modal ──
+  function showLoginPrompt() {
+    const modal = document.getElementById('loginPromptModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function hideLoginPrompt() {
+    document.getElementById('loginPromptModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  document.getElementById('loginPromptClose').addEventListener('click', hideLoginPrompt);
+  document.getElementById('loginPromptCancel').addEventListener('click', hideLoginPrompt);
+  document.getElementById('loginPromptModal').addEventListener('click', function(e) {
+    if (e.target.id === 'loginPromptModal') hideLoginPrompt();
+  });
+  document.getElementById('loginPromptRedirect').addEventListener('click', function() {
+    window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+  });
+  window.showLoginPrompt = showLoginPrompt;
 
   /* ────────────────────────────────────────────────────────
      PROFILE EDIT LOGIC
@@ -1275,6 +1327,7 @@
 
   // Load purchases from database (API) and merge with localStorage (for free enrollments)
   async function loadPurchases() {
+    if (!currentUser) return []; // guest — no purchases
     let dbPurchases = [];
     try {
       const res = await fetch('/api/user/purchases', { credentials: 'include' });
@@ -1385,7 +1438,12 @@ async function renderCourses() {
       return price === 0 && !enrolledCourseIds.includes(c.id?.toString());
     });
 
-    renderCourseGrid('enrolled-courses', enrolledCourses, 'Enrolled', pendingCourseIds);
+    if (!currentUser) {
+      document.getElementById('enrolled-courses').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">🔒</div><h3>Not logged in</h3><p>Please <a href="login.html" style="color:var(--accent);text-decoration:underline;">log in</a> to see your enrolled courses.</p></div>';
+    } else {
+      renderCourseGrid('enrolled-courses', enrolledCourses, 'Enrolled', pendingCourseIds);
+    }
     renderCourseGrid('premium-courses',  premiumCourses,  'Premium',  pendingCourseIds);
     renderCourseGrid('free-courses',     freeCourses,     'Free',     pendingCourseIds);
   }
@@ -1495,8 +1553,8 @@ async function renderCourses() {
       container.querySelectorAll('.buy-now-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
+          if (!currentUser) { showLoginPrompt(); return; }
           const courseId = this.dataset.courseId;
-          // Navigate to course details page instead of opening modal directly
           window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
         });
       });
@@ -1519,6 +1577,7 @@ async function renderCourses() {
       container.querySelectorAll('.enroll-free-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
+          if (!currentUser) { showLoginPrompt(); return; }
           const courseId = this.dataset.courseId;
           const course = courses.find(c => (c.id || '').toString() === courseId.toString());
           if (course) enrollFreeCourse(courseId, course.title);
