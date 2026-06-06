@@ -533,7 +533,6 @@
     .tab-nav { padding: 0 16px; top: 60px; }
     .content-area { padding: 20px 16px 50px; }
     .stat-cards { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .resources-grid { grid-template-columns: 1fr; }
     .topbar { padding: 0 14px; height: 56px; }
     .student-id-badge { display: none; }
   }
@@ -867,9 +866,9 @@
       width: 100%;
     }
     .video-player-area {
-      border-radius: 0;
-      margin: 0 -20px 16px;
-      width: calc(100% + 40px);
+      border-radius: 10px;
+      margin: 0 0 16px;
+      width: 100%;
     }
   }
 
@@ -879,17 +878,18 @@
     .course-header h1 { font-size: 1.05rem; }
     .tab-nav { padding: 0 12px; gap: 16px; }
     .tab-btn { font-size: 0.82rem; padding: 10px 0; }
-    .content-area { padding: 18px 0 50px; }
+    .content-area { padding: 18px 14px 50px; }
     .stat-cards { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .stat-card { padding: 14px; }
     .stat-value { font-size: 1.4rem; }
-    .video-sidebar { gap: 12px; padding: 0 14px; }
+    .video-sidebar { gap: 12px; padding: 0; }
     .lesson-item { padding: 10px 12px; }
     .video-player-area {
-      margin: 0 -14px 16px;
-      width: calc(100% + 28px);
+      margin: 0 0 16px;
+      width: 100%;
+      border-radius: 10px;
     }
-    .mob-module-toggle-bar { margin: 0 14px 12px; }
+    .mob-module-toggle-bar { margin: 0 0 12px; }
   }
   @media (max-width: 768px) {
   /* ── Prevent iOS Safari auto-zoom on any input/select/textarea focus ── */
