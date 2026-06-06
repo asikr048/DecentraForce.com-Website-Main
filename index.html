@@ -423,7 +423,15 @@
   .card-body h3 * { font-size: inherit !important; line-height: inherit !important; font-weight: inherit !important; }
   .card-body p { font-size: .85rem; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
 
-  .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--border); }
+  .card-footer { display: flex; flex-direction: column; gap: 12px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .card-footer-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+  .card-action-btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 18px; border-radius: 8px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; width: 100%; }
+  .card-btn-purchase { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; }
+  .card-btn-purchase:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(123,92,255,0.45); }
+  .card-btn-enroll { background: rgba(0,229,153,0.15); color: #00e599; border: 1px solid rgba(0,229,153,0.35) !important; }
+  .card-btn-enroll:hover { background: rgba(0,229,153,0.28); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,229,153,0.25); }
+  .card-btn-enrolled { background: rgba(0,229,153,0.1); color: #00e599; border: 1px solid rgba(0,229,153,0.2) !important; cursor: default; }
+  .card-btn-pending { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25) !important; cursor: default; }
   .rating { display: flex; align-items: center; gap: 5px; font-size: .8rem; color: var(--muted); }
   .rating .stars { color: #fbbf24; letter-spacing: -2px; }
   .price { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--accent); }
@@ -1471,14 +1479,22 @@ window.addEventListener('storage', (e) => {
         const badge = course.badge || badges[index % badges.length];
         
         const priceValue = parseFloat(course.price);
+        const discountValue = parseFloat(course.discount_price);
         const isFree = isNaN(priceValue) || priceValue === 0 || course.price === null || course.price === '0';
-        
-        const price = isFree ? 'Free' : `৳${priceValue || course.price || '2,500'}`;
-        const originalPrice = isFree ? '' : `৳${Math.round((priceValue || 2500) * 1.5)}`;
+        const hasDiscount = !isFree && !isNaN(discountValue) && discountValue > 0 && discountValue < priceValue;
+
         const ratingVal = course.rating || 4.8;
         const reviewsVal = course.reviews ? (course.reviews >= 1000 ? (course.reviews/1000).toFixed(1)+'k' : course.reviews) : '500+';
-        
-        const priceDisplay = isFree ? '<span style="color:var(--accent);font-weight:700">Free</span>' : `<div class="price"><span>${originalPrice}</span>${price}</div>`;
+
+        // Price display: show discount_price as the real price, regular price struck through if discounted
+        let priceDisplay;
+        if (isFree) {
+          priceDisplay = '<span style="color:#00e599;font-weight:700;font-size:1rem;">Free</span>';
+        } else if (hasDiscount) {
+          priceDisplay = `<div class="price"><span>৳${priceValue}</span>৳${discountValue}</div>`;
+        } else {
+          priceDisplay = `<div class="price">৳${priceValue}</div>`;
+        }
         const status = course.status || 'upcoming';
 
         // Determine enrollment status
@@ -1535,26 +1551,47 @@ window.addEventListener('storage', (e) => {
             <h3>${(course.title||'Untitled Course').replace(/<style[\s\S]*?<\/style>/gi,'').trim()}</h3>
             <p>${course.description ? (course.description.length > 100 ? course.description.substring(0, 100) + '...' : course.description) : 'Learn essential skills in this comprehensive course.'}</p>
             <div class="card-footer">
-              <div class="rating"><span class="stars">★★★★★</span> ${ratingVal} (${reviewsVal})</div>
-              ${priceDisplay}
+              <div class="card-footer-row">
+                <div class="rating"><span class="stars">★★★★★</span> ${ratingVal} (${reviewsVal})</div>
+                ${priceDisplay}
+              </div>
+              ${isEnrolled
+                ? `<button class="card-action-btn card-btn-enrolled" disabled>✅ Already Enrolled</button>`
+                : isPending
+                  ? `<button class="card-action-btn card-btn-pending" disabled>⏳ Pending Approval</button>`
+                  : isFree
+                    ? `<button class="card-action-btn card-btn-enroll" data-id="${course.id}">🎓 Enroll for Free</button>`
+                    : `<button class="card-action-btn card-btn-purchase" data-id="${course.id}">🛒 Purchase Course</button>`
+              }
             </div>
           </div>
         `;
         container.appendChild(card);
 
-      // Make the card itself open the appropriate page based on enrollment status
-        card.addEventListener('click', function() {
+      // Card click navigates to details/content (but not when button is clicked)
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('.card-action-btn')) return; // let button handle it
           if (isEnrolled) {
-            // If enrolled, go directly to course content
             window.location.href = `course-view.html?id=${course.id}`;
-          } else if (isPending) {
-            // If pending, still show details but maybe with a message
-            window.location.href = `course-details.html?id=${course.id}`;
           } else {
-            // Not enrolled, go to details page
             window.location.href = `course-details.html?id=${course.id}`;
           }
         });
+
+        // Purchase / Enroll button click
+        const actionBtn = card.querySelector('.card-action-btn[data-id]');
+        if (actionBtn) {
+          actionBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (isFree) {
+              // Go to course details for free enroll flow
+              window.location.href = `course-details.html?id=${course.id}`;
+            } else {
+              // Open checkout modal for paid courses
+              openCheckoutModal(course);
+            }
+          });
+        }
       });
     }// Modal functions
     let activeCourse = null; 
