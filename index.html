@@ -1561,6 +1561,13 @@ window.addEventListener('storage', (e) => {
     let basePrice = 0; // Tracks the final price (discounted or regular)
 
     function openCheckoutModal(course) {
+      // Require login before purchasing
+      if (!window.auth || !window.auth.isLoggedIn) {
+        activeCourse = course;
+        document.getElementById('loginPromptModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        return;
+      }
       activeCourse = course; 
       
       // Determine correct price
@@ -1606,6 +1613,20 @@ window.addEventListener('storage', (e) => {
       document.body.style.overflow = '';
       activeCourse = null;
     }
+
+    function closeLoginPromptModal() {
+      document.getElementById('loginPromptModal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('loginPromptClose').addEventListener('click', closeLoginPromptModal);
+    document.getElementById('loginPromptCancel').addEventListener('click', closeLoginPromptModal);
+    document.getElementById('loginPromptModal').addEventListener('click', function(e) {
+      if (e.target.id === 'loginPromptModal') closeLoginPromptModal();
+    });
+    document.getElementById('loginPromptRedirect').addEventListener('click', function() {
+      window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+    });
 
     // Event Listeners
     if (document.getElementById('modalClose')) document.getElementById('modalClose').addEventListener('click', closeCheckoutModal);
@@ -1661,6 +1682,7 @@ window.addEventListener('storage', (e) => {
         // Send to API
         fetch('/api/purchases', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(purchaseData)
         })
@@ -1873,6 +1895,26 @@ window.addEventListener('storage', (e) => {
     buildMarquee();
   });
 </script>
+
+<div class="modal-overlay" id="loginPromptModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Login Required</h3>
+      <button class="modal-close" id="loginPromptClose">&times;</button>
+    </div>
+    <div class="modal-body" style="text-align:center;padding:32px 24px;">
+      <div style="font-size:3.5rem;margin-bottom:16px;">🔒</div>
+      <h4 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.3rem;color:var(--text);margin-bottom:12px;">Login to Purchase</h4>
+      <p style="color:var(--muted);font-size:0.95rem;line-height:1.6;margin-bottom:24px;">
+        You need to log in or create an account to purchase this course and track your progress.
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="loginPromptCancel">Cancel</button>
+        <button class="btn" id="loginPromptRedirect" style="background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Log In / Sign Up</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="checkoutModal">
   <div class="modal">
