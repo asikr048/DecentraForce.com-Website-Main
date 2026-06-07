@@ -780,6 +780,15 @@
   .nav-btn:hover:not(:disabled) { background: var(--surface3); border-color: var(--accent); color: var(--accent); }
   .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  /* Mark-complete toggle */
+  .lesson-complete-btn { border-color: rgba(0,229,153,.35); color: #00e599; }
+  .lesson-complete-btn:hover:not(:disabled) { background: rgba(0,229,153,.12); border-color: #00e599; color: #00e599; }
+  .lesson-complete-btn.is-done {
+    background: linear-gradient(135deg, #00e599, #00cc88); color: #06210f;
+    border-color: transparent; font-weight: 700;
+  }
+  .lesson-complete-btn.is-done:hover:not(:disabled) { filter: brightness(1.05); color: #06210f; }
+
   .description-tab {
     padding: 20px; border-radius: 12px; background: var(--surface);
     border: 1px solid var(--border2);
@@ -824,6 +833,11 @@
   .acc-lecture-item.active { background: rgba(0,229,255,0.1); border-left: 3px solid var(--accent); padding-left: 21px; }
   .acc-lecture-icon { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
   .acc-lecture-item.active .acc-lecture-icon { color: var(--accent); }
+  /* Completed lecture: green check + subtle tint */
+  .acc-lecture-item.completed .acc-lecture-icon::after { content: '✓'; color: #00e599; }
+  .acc-lecture-item.completed .acc-lecture-icon { font-size: 0; }
+  .acc-lecture-item.completed .acc-lecture-icon::after { font-size: 0.9rem; font-weight: 800; }
+  .acc-lecture-item.completed .acc-lecture-title { color: #8fb9a6; }
   .acc-lecture-info { flex: 1; }
   .acc-lecture-title { font-size: 0.85rem; color: var(--text); margin-bottom: 4px; line-height: 1.4; }
   .acc-lecture-item.active .acc-lecture-title { font-weight: 600; color: var(--accent); }
@@ -1179,6 +1193,7 @@
             <h2 class="lesson-title-main" id="displayLessonTitle">Select a lecture to begin</h2>
             <div class="video-navigation">
               <button class="nav-btn" id="btnPrevLec" onclick="navigateLecture(-1)" disabled>← Previous</button>
+              <button class="nav-btn lesson-complete-btn" id="btnMarkComplete" onclick="toggleLessonComplete()" style="display:none">✓ Mark as Complete</button>
               <button class="nav-btn" id="btnNextLec" onclick="navigateLecture(1)" disabled>Next →</button>
             </div>
 
@@ -1197,6 +1212,8 @@
               <div class="sidebar-progress-bar">
                 <div class="sidebar-progress-fill" id="sideModFill"></div>
               </div>
+              <div id="progressMeta" style="margin-top:8px;font-size:0.72rem;color:var(--muted);"></div>
+              <button id="certificateCta" onclick="claimCertificate()" style="display:none;margin-top:12px;width:100%;padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,#fbbf24,#ff4d8d);color:#111;font-weight:800;font-size:0.82rem;cursor:pointer;letter-spacing:.3px;">🎓 Get Your Certificate</button>
             </div>
             <div class="module-accordion-list" id="accordionList"></div>
           </div>
@@ -1309,6 +1326,8 @@
   let courseModules = {};
   let flatLectures  = [];
   let currentLectureIndex = -1;
+  let completedLessons = new Set();  // flat indices the user has marked complete
+  let certIssued = false;            // guards against repeat certificate prompts
   let isEnrolledUser = false;  // true if user has an approved purchase for this course
   let isPreviewMode  = false;  // true when coming from course-details public preview
 
@@ -1360,6 +1379,17 @@
           );
         }
       } catch(e) { /* treat as not enrolled */ }
+
+      // Load saved lesson progress for enrolled learners
+      if (isEnrolledUser) {
+        try {
+          const prRes  = await fetch(`/api/user/progress?course_id=${courseId}`, { credentials: 'include' });
+          const prData = await prRes.json();
+          if (prData.success && Array.isArray(prData.completed)) {
+            completedLessons = new Set(prData.completed);
+          }
+        } catch(e) { /* progress optional */ }
+      }
     }
 
     try {
@@ -1547,7 +1577,12 @@
       const targetIdx = flatLectures.findIndex(l => l.url === previewUrl && !l.isLocked);
       if (targetIdx >= 0) { loadLecture(targetIdx); return; }
     }
-    if (flatLectures.length > 0) loadLecture(flatLectures.findIndex(l => !l.isLocked) ?? 0);
+    if (flatLectures.length > 0) {
+      // Resume at the first unlocked lecture the learner hasn't completed yet
+      let resumeIdx = flatLectures.findIndex(l => !l.isLocked && !completedLessons.has(l.flatIdx));
+      if (resumeIdx < 0) resumeIdx = flatLectures.findIndex(l => !l.isLocked);
+      loadLecture(resumeIdx < 0 ? 0 : resumeIdx);
+    }
   }
 
   function toggleAccordion(mIdx) {
@@ -1606,17 +1641,13 @@
     document.getElementById('btnPrevLec').disabled = (flatIdx === 0);
     document.getElementById('btnNextLec').disabled = (flatIdx === flatLectures.length - 1);
 
-    const pct = Math.round(((flatIdx + 1) / flatLectures.length) * 100);
-    document.getElementById('sideModPct').textContent = `${pct}%`;
-    document.getElementById('sideModFill').style.width = `${pct}%`;
-    const hPct = document.getElementById('headerPct');
-    const hFill = document.getElementById('headerFill');
-    const hWrap = document.getElementById('headerProgressWrap');
-    if (hPct && hFill && hWrap) {
-      hPct.textContent = `${pct}%`;
-      hFill.style.width = `${pct}%`;
-      hWrap.style.display = '';
+    // Mark-complete button reflects this lecture's state (enrolled learners only)
+    const mcBtn = document.getElementById('btnMarkComplete');
+    if (mcBtn) {
+      if (isEnrolledUser) { mcBtn.style.display = ''; setMarkCompleteBtn(completedLessons.has(flatIdx)); }
+      else { mcBtn.style.display = 'none'; }
     }
+    updateProgressUI();
 
     // Reset: remove has-started so big play button shows again for new video
     const ytContainer = document.getElementById('yt-container');
@@ -1657,6 +1688,91 @@
 
   function navigateLecture(direction) {
     loadLecture(currentLectureIndex + direction);
+  }
+
+  // ── PROGRESS TRACKING ──────────────────────────────────────────────────
+  function setMarkCompleteBtn(done) {
+    const btn = document.getElementById('btnMarkComplete');
+    if (!btn) return;
+    btn.classList.toggle('is-done', done);
+    btn.textContent = done ? '✓ Completed' : '✓ Mark as Complete';
+  }
+
+  function updateProgressUI() {
+    const total = flatLectures.length || 0;
+    const done  = completedLessons.size;
+    const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
+
+    const sp = document.getElementById('sideModPct');  if (sp) sp.textContent = `${pct}%`;
+    const sf = document.getElementById('sideModFill'); if (sf) sf.style.width = `${pct}%`;
+    const hPct = document.getElementById('headerPct');
+    const hFill = document.getElementById('headerFill');
+    const hWrap = document.getElementById('headerProgressWrap');
+    if (hPct && hFill && hWrap) { hPct.textContent = `${pct}%`; hFill.style.width = `${pct}%`; hWrap.style.display = ''; }
+
+    const meta = document.getElementById('progressMeta');
+    if (meta) meta.textContent = total ? `${done} of ${total} lessons complete` : '';
+
+    flatLectures.forEach(l => {
+      const item = document.getElementById(`lec-item-${l.flatIdx}`);
+      if (item) item.classList.toggle('completed', completedLessons.has(l.flatIdx));
+    });
+
+    const cta = document.getElementById('certificateCta');
+    if (cta) cta.style.display = (isEnrolledUser && total > 0 && done >= total) ? '' : 'none';
+  }
+
+  async function toggleLessonComplete() {
+    if (!isEnrolledUser || currentLectureIndex < 0) return;
+    const idx = currentLectureIndex;
+    const lec = flatLectures[idx];
+    const courseId = activeCourse?.id;
+    if (!courseId) return;
+    const willComplete = !completedLessons.has(idx);
+
+    // Optimistic update
+    if (willComplete) completedLessons.add(idx); else completedLessons.delete(idx);
+    setMarkCompleteBtn(willComplete);
+    updateProgressUI();
+
+    try {
+      const res = await fetch('/api/user/progress', {
+        method: willComplete ? 'POST' : 'DELETE',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ course_id: courseId, lesson_index: idx, lesson_title: lec?.title || '' })
+      });
+      if (!res.ok) throw new Error('save failed');
+    } catch(e) {
+      // Roll back on failure
+      if (willComplete) completedLessons.delete(idx); else completedLessons.add(idx);
+      setMarkCompleteBtn(completedLessons.has(idx));
+      updateProgressUI();
+    }
+  }
+
+  async function claimCertificate() {
+    const courseId = activeCourse?.id;
+    if (!courseId) return;
+    const cta = document.getElementById('certificateCta');
+    if (cta) { cta.disabled = true; cta.textContent = 'Issuing…'; }
+    try {
+      const res  = await fetch('/api/user/certificates', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ course_id: courseId })
+      });
+      const data = await res.json();
+      if (data.success && data.certificate) {
+        window.location.href = `certificate.html?code=${encodeURIComponent(data.certificate.cert_code)}`;
+      } else {
+        alert(data.error || 'Could not issue certificate yet.');
+        if (cta) { cta.disabled = false; cta.textContent = '🎓 Get Your Certificate'; }
+      }
+    } catch(e) {
+      alert('Network error issuing certificate.');
+      if (cta) { cta.disabled = false; cta.textContent = '🎓 Get Your Certificate'; }
+    }
   }
 
   function initOrUpdatePlayer(url) {

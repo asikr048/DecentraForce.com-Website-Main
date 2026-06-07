@@ -58,6 +58,25 @@ async function requireStaff(req, res) {
   return r.rows[0];
 }
 
+// Resolve the logged-in user (any role) from the session cookie. Returns null on failure
+// and writes a 401 response. Used by progress / reviews / certificate endpoints.
+async function requireUser(req, res) {
+  const token = req.cookies?.session_token;
+  if (!token) { res.status(401).json({ success: false, error: 'Not authenticated' }); return null; }
+  const r = await query(
+    `SELECT id, username, email FROM users WHERE session_token=$1 AND session_expires>NOW()`,
+    [token]
+  );
+  if (!r.rows.length) { res.status(401).json({ success: false, error: 'Invalid or expired session' }); return null; }
+  return r.rows[0];
+}
+
+// True when the user has been granted access to the course (enrolled).
+async function isEnrolled(userId, courseId) {
+  const r = await query('SELECT 1 FROM user_courses WHERE user_id=$1 AND course_id=$2', [userId, courseId]);
+  return r.rows.length > 0;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // ROUTE HANDLERS
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -66,10 +85,17 @@ async function requireStaff(req, res) {
 async function publicCourses(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
   const r = await query(`
-    SELECT id, title, description,
-      CASE WHEN length(thumbnail_url)>2000000 THEN '' ELSE thumbnail_url END AS thumbnail_url,
-      modules, created_at, price, discount_price, whatsapp, status, sequence_order
-    FROM courses WHERE is_active=TRUE ORDER BY COALESCE(sequence_order,9999), created_at DESC
+    SELECT c.id, c.title, c.description,
+      CASE WHEN length(c.thumbnail_url)>2000000 THEN '' ELSE c.thumbnail_url END AS thumbnail_url,
+      c.modules, c.created_at, c.price, c.discount_price, c.whatsapp, c.status, c.sequence_order,
+      COALESCE(c.category,'General') AS category,
+      COALESCE(ROUND(AVG(r.rating)::numeric,1),0) AS avg_rating,
+      COUNT(r.id)::int AS review_count
+    FROM courses c
+    LEFT JOIN course_reviews r ON r.course_id = c.id
+    WHERE c.is_active=TRUE
+    GROUP BY c.id
+    ORDER BY COALESCE(c.sequence_order,9999), c.created_at DESC
   `);
   return res.status(200).json({ success: true, courses: r.rows });
 }
@@ -494,7 +520,7 @@ async function adminCourses(req, res) {
     // 500KB (enough for the admin preview) and return URLs as-is.
     const r = await query(`
       SELECT c.id,c.title,c.description,c.video_url,c.modules,c.is_active,c.created_at,
-        c.price,c.discount_price,c.whatsapp,c.status,c.sequence_order,
+        c.price,c.discount_price,c.whatsapp,c.status,c.sequence_order,COALESCE(c.category,'General') AS category,
         CASE
           WHEN left(c.thumbnail_url,5)='data:' THEN left(c.thumbnail_url,500000)
           ELSE c.thumbnail_url
@@ -505,24 +531,24 @@ async function adminCourses(req, res) {
     return res.status(200).json({ success: true, courses: r.rows });
   }
   if (req.method === 'POST') {
-    const { title,description,thumbnail_url,video_url,price,discount_price,whatsapp,modules,is_active,status,sequence_order } = req.body||{};
+    const { title,description,thumbnail_url,video_url,price,discount_price,whatsapp,modules,is_active,status,sequence_order,category } = req.body||{};
     if (!title) return res.status(400).json({ success: false, error: 'Title required' });
     if (price==null) return res.status(400).json({ success: false, error: 'Price required' });
     if (!whatsapp) return res.status(400).json({ success: false, error: 'WhatsApp link required' });
     const r = await query(
-      `INSERT INTO courses (title,description,thumbnail_url,video_url,price,discount_price,whatsapp,modules,is_active,status,sequence_order)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11) RETURNING *`,
-      [title,description||'',thumbnail_url||'',video_url||'',price,discount_price||null,whatsapp,modules||'{}',is_active!==false,status||'upcoming',sequence_order??9999]
+      `INSERT INTO courses (title,description,thumbnail_url,video_url,price,discount_price,whatsapp,modules,is_active,status,sequence_order,category)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11,$12) RETURNING *`,
+      [title,description||'',thumbnail_url||'',video_url||'',price,discount_price||null,whatsapp,modules||'{}',is_active!==false,status||'upcoming',sequence_order??9999,(category||'General').trim()||'General']
     );
     return res.status(201).json({ success: true, course: r.rows[0] });
   }
   if (req.method === 'PUT') {
-    const { id,title,description,thumbnail_url,video_url,price,discount_price,whatsapp,modules,is_active,status,sequence_order } = req.body||{};
+    const { id,title,description,thumbnail_url,video_url,price,discount_price,whatsapp,modules,is_active,status,sequence_order,category } = req.body||{};
     if (!id) return res.status(400).json({ success: false, error: 'ID required' });
     const r = await query(
       `UPDATE courses SET title=$1,description=$2,thumbnail_url=$3,video_url=$4,price=$5,discount_price=$6,whatsapp=$7,
-       modules=$8::jsonb,is_active=$9,status=$10,sequence_order=$11 WHERE id=$12 RETURNING *`,
-      [title,description,thumbnail_url,video_url,price,discount_price||null,whatsapp,modules,is_active,status||'upcoming',sequence_order??9999,id]
+       modules=$8::jsonb,is_active=$9,status=$10,sequence_order=$11,category=$12 WHERE id=$13 RETURNING *`,
+      [title,description,thumbnail_url,video_url,price,discount_price||null,whatsapp,modules,is_active,status||'upcoming',sequence_order??9999,(category||'General').trim()||'General',id]
     );
     return res.status(200).json({ success: true, course: r.rows[0] });
   }
@@ -1227,11 +1253,222 @@ async function runBootMigration() {
     await query(`ALTER TABLE coupons ADD COLUMN IF NOT EXISTS course_id INTEGER`);
     await query(`ALTER TABLE purchases ADD COLUMN IF NOT EXISTS coupon_code VARCHAR(50)`);
     await query(`ALTER TABLE purchases ADD COLUMN IF NOT EXISTS coupon_price NUMERIC(10,2)`);
+
+    // ── Feature additions: categories, progress, certificates, reviews ──────────
+    await query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS category VARCHAR(60) DEFAULT 'General'`);
+
+    // Per-lesson completion tracking. lesson_index = flat index within course curriculum.
+    await query(`CREATE TABLE IF NOT EXISTS lesson_progress (
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+      lesson_index INTEGER NOT NULL,
+      lesson_title TEXT,
+      completed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      PRIMARY KEY (user_id, course_id, lesson_index)
+    )`);
+
+    // Course reviews — one per user per course.
+    await query(`CREATE TABLE IF NOT EXISTS course_reviews (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+      rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+      comment TEXT DEFAULT '',
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      UNIQUE (user_id, course_id)
+    )`);
+
+    // Issued certificates — cert_code is the public verification handle.
+    await query(`CREATE TABLE IF NOT EXISTS certificates (
+      id SERIAL PRIMARY KEY,
+      cert_code VARCHAR(40) UNIQUE NOT NULL,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+      recipient_name TEXT,
+      course_title TEXT,
+      issued_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      UNIQUE (user_id, course_id)
+    )`);
   } catch (e) {
     // Non-fatal — log and continue; tables likely already exist
     console.warn('Boot migration warning:', e.message);
     _bootMigrationDone = false; // allow retry on next request if it failed
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LEARNER FEATURES: progress · reviews · certificates
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Count total lectures in a course's modules JSON (authoritative for completion %).
+function countCourseLessons(modules) {
+  let mods = modules;
+  if (typeof mods === 'string') { try { mods = JSON.parse(mods); } catch { mods = {}; } }
+  if (!mods || typeof mods !== 'object') return 0;
+  const curriculum = Array.isArray(mods.curriculum) ? mods.curriculum : [];
+  return curriculum.reduce((sum, m) => sum + (Array.isArray(m.lectures) ? m.lectures.length : 0), 0);
+}
+
+// ── USER: GET/POST/DELETE /api/user/progress ──────────────────────────────────
+// GET  ?course_id=  → { completed:[indices], total, percent }
+// POST { course_id, lesson_index, lesson_title } → mark a lesson complete
+// DELETE { course_id, lesson_index } → mark incomplete
+async function userProgress(req, res) {
+  const user = await requireUser(req, res); if (!user) return;
+
+  if (req.method === 'GET') {
+    const courseId = parseInt((req.query?.course_id) || (req.url.split('course_id=')[1] || '').split('&')[0]);
+    if (!courseId) return res.status(400).json({ success: false, error: 'course_id required' });
+    const rows = await query(
+      'SELECT lesson_index FROM lesson_progress WHERE user_id=$1 AND course_id=$2 ORDER BY lesson_index',
+      [user.id, courseId]
+    );
+    const courseR = await query('SELECT modules FROM courses WHERE id=$1', [courseId]);
+    const total = courseR.rows.length ? countCourseLessons(courseR.rows[0].modules) : 0;
+    const completed = rows.rows.map(r => r.lesson_index);
+    const percent = total > 0 ? Math.round((completed.length / total) * 100) : 0;
+    return res.status(200).json({ success: true, completed, total, percent });
+  }
+
+  if (req.method === 'POST') {
+    const { course_id, lesson_index, lesson_title } = req.body || {};
+    if (!course_id || lesson_index == null) return res.status(400).json({ success: false, error: 'course_id and lesson_index required' });
+    if (!(await isEnrolled(user.id, course_id))) return res.status(403).json({ success: false, error: 'Not enrolled in this course' });
+    await query(
+      `INSERT INTO lesson_progress (user_id, course_id, lesson_index, lesson_title)
+       VALUES ($1,$2,$3,$4) ON CONFLICT (user_id, course_id, lesson_index) DO NOTHING`,
+      [user.id, course_id, lesson_index, (lesson_title || '').slice(0, 300)]
+    );
+    return res.status(200).json({ success: true });
+  }
+
+  if (req.method === 'DELETE') {
+    const { course_id, lesson_index } = req.body || {};
+    if (!course_id || lesson_index == null) return res.status(400).json({ success: false, error: 'course_id and lesson_index required' });
+    await query('DELETE FROM lesson_progress WHERE user_id=$1 AND course_id=$2 AND lesson_index=$3', [user.id, course_id, lesson_index]);
+    return res.status(200).json({ success: true });
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
+}
+
+// ── PUBLIC: GET /api/_public/reviews?course_id= ───────────────────────────────
+async function publicReviews(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
+  const courseId = parseInt((req.query?.course_id) || (req.url.split('course_id=')[1] || '').split('&')[0]);
+  if (!courseId) return res.status(400).json({ success: false, error: 'course_id required' });
+  const r = await query(`
+    SELECT cr.id, cr.rating, cr.comment, cr.created_at, cr.updated_at, u.username
+    FROM course_reviews cr JOIN users u ON u.id = cr.user_id
+    WHERE cr.course_id=$1 ORDER BY cr.updated_at DESC
+  `, [courseId]);
+  const agg = await query(
+    'SELECT COALESCE(ROUND(AVG(rating)::numeric,1),0) AS avg_rating, COUNT(*)::int AS review_count FROM course_reviews WHERE course_id=$1',
+    [courseId]
+  );
+  return res.status(200).json({
+    success: true,
+    reviews: r.rows,
+    avg_rating: parseFloat(agg.rows[0].avg_rating),
+    review_count: agg.rows[0].review_count
+  });
+}
+
+// ── USER: GET/POST/DELETE /api/user/reviews ───────────────────────────────────
+// GET  ?course_id=  → this user's own review (or null)
+// POST { course_id, rating, comment } → create/update own review (must be enrolled)
+async function userReviews(req, res) {
+  const user = await requireUser(req, res); if (!user) return;
+
+  if (req.method === 'GET') {
+    const courseId = parseInt((req.query?.course_id) || (req.url.split('course_id=')[1] || '').split('&')[0]);
+    if (!courseId) return res.status(400).json({ success: false, error: 'course_id required' });
+    const r = await query('SELECT id, rating, comment, created_at, updated_at FROM course_reviews WHERE user_id=$1 AND course_id=$2', [user.id, courseId]);
+    return res.status(200).json({ success: true, review: r.rows[0] || null });
+  }
+
+  if (req.method === 'POST') {
+    const { course_id, rating, comment } = req.body || {};
+    const rt = parseInt(rating);
+    if (!course_id || !rt || rt < 1 || rt > 5) return res.status(400).json({ success: false, error: 'course_id and rating (1-5) required' });
+    if (!(await isEnrolled(user.id, course_id))) return res.status(403).json({ success: false, error: 'Only enrolled learners can review this course' });
+    const r = await query(`
+      INSERT INTO course_reviews (user_id, course_id, rating, comment, created_at, updated_at)
+      VALUES ($1,$2,$3,$4,NOW(),NOW())
+      ON CONFLICT (user_id, course_id) DO UPDATE
+        SET rating=EXCLUDED.rating, comment=EXCLUDED.comment, updated_at=NOW()
+      RETURNING id, rating, comment, created_at, updated_at
+    `, [user.id, course_id, rt, (comment || '').slice(0, 2000)]);
+    return res.status(200).json({ success: true, review: r.rows[0] });
+  }
+
+  if (req.method === 'DELETE') {
+    const { course_id } = req.body || {};
+    if (!course_id) return res.status(400).json({ success: false, error: 'course_id required' });
+    await query('DELETE FROM course_reviews WHERE user_id=$1 AND course_id=$2', [user.id, course_id]);
+    return res.status(200).json({ success: true });
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
+}
+
+// ── USER: GET/POST /api/user/certificates ─────────────────────────────────────
+// GET  → all certificates owned by the user
+// POST { course_id } → issue a certificate IF the user has completed 100% of lessons
+async function userCertificates(req, res) {
+  const user = await requireUser(req, res); if (!user) return;
+
+  if (req.method === 'GET') {
+    const r = await query(`
+      SELECT ce.cert_code, ce.course_id, ce.recipient_name, ce.course_title, ce.issued_at
+      FROM certificates ce WHERE ce.user_id=$1 ORDER BY ce.issued_at DESC
+    `, [user.id]);
+    return res.status(200).json({ success: true, certificates: r.rows });
+  }
+
+  if (req.method === 'POST') {
+    const { course_id } = req.body || {};
+    if (!course_id) return res.status(400).json({ success: false, error: 'course_id required' });
+    if (!(await isEnrolled(user.id, course_id))) return res.status(403).json({ success: false, error: 'Not enrolled in this course' });
+
+    const courseR = await query('SELECT id, title, modules FROM courses WHERE id=$1', [course_id]);
+    if (!courseR.rows.length) return res.status(404).json({ success: false, error: 'Course not found' });
+    const course = courseR.rows[0];
+    const total = countCourseLessons(course.modules);
+    if (total === 0) return res.status(400).json({ success: false, error: 'This course has no lessons to complete yet' });
+
+    const doneR = await query('SELECT COUNT(*)::int AS n FROM lesson_progress WHERE user_id=$1 AND course_id=$2', [user.id, course_id]);
+    if (doneR.rows[0].n < total) {
+      return res.status(403).json({ success: false, error: `Complete all lessons first (${doneR.rows[0].n}/${total})` });
+    }
+
+    // Return existing certificate if already issued (idempotent).
+    const existing = await query('SELECT cert_code, course_title, recipient_name, issued_at FROM certificates WHERE user_id=$1 AND course_id=$2', [user.id, course_id]);
+    if (existing.rows.length) return res.status(200).json({ success: true, certificate: existing.rows[0], alreadyIssued: true });
+
+    const certCode = 'DF-' + crypto.randomBytes(5).toString('hex').toUpperCase();
+    const r = await query(`
+      INSERT INTO certificates (cert_code, user_id, course_id, recipient_name, course_title)
+      VALUES ($1,$2,$3,$4,$5) RETURNING cert_code, course_title, recipient_name, issued_at
+    `, [certCode, user.id, course_id, user.username, course.title]);
+    return res.status(201).json({ success: true, certificate: r.rows[0] });
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
+}
+
+// ── PUBLIC: GET /api/_public/verify-certificate?code= ─────────────────────────
+async function verifyCertificate(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
+  const code = ((req.query?.code) || (req.url.split('code=')[1] || '').split('&')[0] || '').toUpperCase().trim();
+  if (!code) return res.status(400).json({ success: false, error: 'code required' });
+  const r = await query(
+    'SELECT cert_code, recipient_name, course_title, issued_at FROM certificates WHERE cert_code=$1',
+    [code]
+  );
+  if (!r.rows.length) return res.status(404).json({ success: false, valid: false, error: 'Certificate not found' });
+  return res.status(200).json({ success: true, valid: true, certificate: r.rows[0] });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1252,6 +1489,13 @@ export default async function handler(req, res) {
     if (path.endsWith('/_public/verify-coupon') || path.endsWith('/public/verify-coupon')) return await verifyCoupon(req, res);
     if (path.endsWith('/_public/mentors')       || path.endsWith('/public/mentors'))       return await publicMentors(req, res);
     if (path.endsWith('/_public/testimonials')  || path.endsWith('/public/testimonials'))  return await publicTestimonials(req, res);
+    if (path.endsWith('/_public/reviews')       || path.endsWith('/public/reviews'))       return await publicReviews(req, res);
+    if (path.endsWith('/_public/verify-certificate') || path.endsWith('/public/verify-certificate')) return await verifyCertificate(req, res);
+
+    // Learner features (require login)
+    if (path.endsWith('/user/progress'))       return await userProgress(req, res);
+    if (path.endsWith('/user/reviews'))        return await userReviews(req, res);
+    if (path.endsWith('/user/certificates'))   return await userCertificates(req, res);
 
     // IMPORTANT: specific routes checked before generic /purchases to avoid endsWith overlap
     if (path.endsWith('/admin/purchases'))     return await adminPurchases(req, res);

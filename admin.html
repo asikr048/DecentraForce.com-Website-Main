@@ -1837,6 +1837,7 @@ function openEditCourse(id) {
   document.getElementById('courseDiscountPrice').value = c.discount_price||'';
   document.getElementById('courseWhatsapp').value   = c.whatsapp||'';
   document.getElementById('courseStatus').value     = c.status||'';
+  document.getElementById('courseCategory').value   = (c.category && c.category!=='General') ? c.category : '';
 
   if(c.thumbnail_url) { document.getElementById('imagePreview').src=c.thumbnail_url; document.getElementById('imagePreviewContainer').classList.remove('hidden'); }
   else document.getElementById('imagePreviewContainer').classList.add('hidden');
@@ -1915,6 +1916,7 @@ async function saveCourse() {
     discount_price: document.getElementById('courseDiscountPrice').value,
     whatsapp:       document.getElementById('courseWhatsapp').value,
     status:         document.getElementById('courseStatus').value,
+    category:       document.getElementById('courseCategory').value.trim() || 'General',
     is_active:      document.getElementById('courseActive').checked,
   };
   if(id) body.id = parseInt(id);

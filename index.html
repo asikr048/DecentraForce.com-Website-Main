@@ -365,6 +365,44 @@
     gap: 22px;
   }
 
+  /* ── Catalog controls (search / filter / sort) ── */
+  .catalog-controls {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    max-width: 1100px; margin: 0 auto 30px; padding: 0 4px;
+  }
+  .catalog-search {
+    display: flex; align-items: center; gap: 10px; flex: 1 1 280px; min-width: 220px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 0 14px; height: 46px; transition: border-color .25s, box-shadow .25s;
+  }
+  .catalog-search:focus-within { border-color: rgba(0,229,255,.4); box-shadow: 0 0 0 3px rgba(0,229,255,.08); }
+  .catalog-search span { color: var(--muted); font-size: .95rem; }
+  .catalog-search input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text); font-family: inherit; font-size: .92rem;
+  }
+  .catalog-search input::placeholder { color: var(--muted); }
+  .catalog-sort {
+    height: 46px; padding: 0 14px; border-radius: 12px; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    font-family: inherit; font-size: .88rem; outline: none;
+  }
+  .catalog-sort:focus { border-color: rgba(0,229,255,.4); }
+  .catalog-filters {
+    display: flex; gap: 8px; flex-wrap: wrap; width: 100%; justify-content: center;
+  }
+  .cat-chip {
+    padding: 7px 16px; border-radius: 999px; cursor: pointer; user-select: none;
+    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+    font-size: .82rem; font-weight: 500; transition: all .2s;
+  }
+  .cat-chip:hover { color: var(--text); border-color: rgba(0,229,255,.3); }
+  .cat-chip.active {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff; border-color: transparent; box-shadow: 0 4px 16px rgba(123,92,255,.35);
+  }
+  .catalog-empty { grid-column: 1/-1; text-align: center; padding: 40px; color: var(--muted); }
+
   .course-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -1050,6 +1088,20 @@
     <h2>Explore <em>Top Courses</em></h2>
     <p>Master the skills that shape the decentralized economy — from DeFi to NFTs, smart contracts, and beyond.</p>
   </div>
+  <div class="catalog-controls" id="catalogControls">
+    <div class="catalog-search">
+      <span>🔍</span>
+      <input id="courseSearch" type="text" placeholder="Search courses by title or topic…" autocomplete="off">
+    </div>
+    <select id="courseSort" class="catalog-sort" aria-label="Sort courses">
+      <option value="default">Sort: Featured</option>
+      <option value="rating">Top Rated</option>
+      <option value="price-low">Price: Low → High</option>
+      <option value="price-high">Price: High → Low</option>
+      <option value="newest">Newest</option>
+    </select>
+    <div class="catalog-filters" id="categoryChips"></div>
+  </div>
   <div class="courses-grid">
     </div>
   <div style="text-align:center;margin-top:40px">
@@ -1483,8 +1535,17 @@ window.addEventListener('storage', (e) => {
         const isFree = isNaN(priceValue) || priceValue === 0 || course.price === null || course.price === '0';
         const hasDiscount = !isFree && !isNaN(discountValue) && discountValue > 0 && discountValue < priceValue;
 
-        const ratingVal = course.rating || 4.8;
-        const reviewsVal = course.reviews ? (course.reviews >= 1000 ? (course.reviews/1000).toFixed(1)+'k' : course.reviews) : '500+';
+        // Real ratings from the DB (avg_rating / review_count). Show "New" until a course has reviews.
+        const reviewCount = parseInt(course.review_count) || 0;
+        const hasReviews = reviewCount > 0;
+        const avgRating = parseFloat(course.avg_rating) || 0;
+        const ratingVal = hasReviews ? avgRating.toFixed(1) : 'New';
+        const reviewsVal = reviewCount >= 1000 ? (reviewCount/1000).toFixed(1)+'k' : reviewCount;
+        const filledStars = hasReviews ? Math.round(avgRating) : 0;
+        const starsStr = '★★★★★☆☆☆☆☆'.slice(5 - filledStars, 10 - filledStars);
+        const ratingHtml = hasReviews
+          ? `<div class="rating"><span class="stars">${starsStr}</span> ${ratingVal} (${reviewsVal})</div>`
+          : `<div class="rating"><span class="stars" style="opacity:.35">★★★★★</span> <span style="color:var(--muted)">New</span></div>`;
 
         // Price display: show discount_price as the real price, regular price struck through if discounted
         let priceDisplay;
@@ -1510,13 +1571,13 @@ window.addEventListener('storage', (e) => {
           enrollmentBadge = '<span class="tag tag-purple" style="background:rgba(255,191,36,0.15);color:#fbbf24;border:1px solid rgba(255,191,36,0.3);">⏳ Pending</span>';
         }
 
-        // Extract category if available in modules JSON
-        let categoryTag = 'Blockchain';
+        // Category: prefer the dedicated DB column, fall back to modules JSON, then default
+        let categoryTag = (course.category && course.category !== 'General') ? course.category : 'Blockchain';
         let levelTag = index % 3 === 0 ? 'Beginner' : index % 3 === 1 ? 'Intermediate' : 'Advanced';
         let moduleCount = 0;
         try {
           const modulesObj = typeof course.modules === 'string' ? JSON.parse(course.modules) : course.modules;
-          if (modulesObj && modulesObj.category) categoryTag = modulesObj.category;
+          if ((!course.category || course.category === 'General') && modulesObj && modulesObj.category) categoryTag = modulesObj.category;
           if (modulesObj && modulesObj.level) levelTag = modulesObj.level;
           // Prefer manually-entered "Total Lectures" field (admin explicitly sets this)
           if (modulesObj && parseInt(modulesObj.lectures) > 0) {
@@ -1552,7 +1613,7 @@ window.addEventListener('storage', (e) => {
             <p>${course.description ? (course.description.length > 100 ? course.description.substring(0, 100) + '...' : course.description) : 'Learn essential skills in this comprehensive course.'}</p>
             <div class="card-footer">
               <div class="card-footer-row">
-                <div class="rating"><span class="stars">★★★★★</span> ${ratingVal} (${reviewsVal})</div>
+                ${ratingHtml}
                 ${priceDisplay}
               </div>
               ${isEnrolled
@@ -1772,9 +1833,88 @@ window.addEventListener('storage', (e) => {
       console.error('Error fetching purchases for enrollment status:', error);
     }
     
-    // Render all courses to the main grid with enrollment status
-    renderCourseGrid('.courses-grid', courses, enrolledCourseIds, pendingCourseIds);
-    
+    // ── Catalog search / filter / sort ──────────────────────────────────────
+    // Resolve a display category for a course (mirrors the card rendering logic).
+    function courseCategory(course) {
+      if (course.category && course.category !== 'General') return course.category;
+      try {
+        const m = typeof course.modules === 'string' ? JSON.parse(course.modules) : course.modules;
+        if (m && m.category) return m.category;
+      } catch (e) {}
+      return 'Blockchain';
+    }
+
+    const catalogState = { search: '', category: 'All', sort: 'default' };
+
+    function applyCatalogFilters() {
+      let list = courses.slice();
+
+      // Text search across title, description and category
+      const q = catalogState.search.trim().toLowerCase();
+      if (q) {
+        list = list.filter(c =>
+          (c.title || '').toLowerCase().includes(q) ||
+          (c.description || '').toLowerCase().includes(q) ||
+          courseCategory(c).toLowerCase().includes(q)
+        );
+      }
+
+      // Category filter
+      if (catalogState.category !== 'All') {
+        list = list.filter(c => courseCategory(c) === catalogState.category);
+      }
+
+      // Sort
+      const priceOf = c => { const d = parseFloat(c.discount_price); const p = parseFloat(c.price); return (!isNaN(d) && d > 0) ? d : (isNaN(p) ? 0 : p); };
+      if (catalogState.sort === 'rating') {
+        list.sort((a, b) => (parseFloat(b.avg_rating) || 0) - (parseFloat(a.avg_rating) || 0));
+      } else if (catalogState.sort === 'price-low') {
+        list.sort((a, b) => priceOf(a) - priceOf(b));
+      } else if (catalogState.sort === 'price-high') {
+        list.sort((a, b) => priceOf(b) - priceOf(a));
+      } else if (catalogState.sort === 'newest') {
+        list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      }
+
+      renderCourseGrid('.courses-grid', list, enrolledCourseIds, pendingCourseIds);
+      const grid = document.querySelector('.courses-grid');
+      if (grid && list.length === 0) {
+        grid.innerHTML = '<div class="catalog-empty">No courses match your search. Try a different keyword or category.</div>';
+      }
+    }
+
+    // Build category chips from the available courses
+    (function buildCategoryChips() {
+      const chipBox = document.getElementById('categoryChips');
+      if (!chipBox) return;
+      const cats = ['All', ...Array.from(new Set(courses.map(courseCategory))).sort()];
+      chipBox.innerHTML = cats.map((c, i) =>
+        `<span class="cat-chip${i === 0 ? ' active' : ''}" data-cat="${c.replace(/"/g, '&quot;')}">${c}</span>`
+      ).join('');
+      chipBox.querySelectorAll('.cat-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          chipBox.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          catalogState.category = chip.dataset.cat;
+          applyCatalogFilters();
+        });
+      });
+    })();
+
+    const searchInput = document.getElementById('courseSearch');
+    if (searchInput) {
+      let t;
+      searchInput.addEventListener('input', e => {
+        clearTimeout(t);
+        t = setTimeout(() => { catalogState.search = e.target.value; applyCatalogFilters(); }, 180);
+      });
+    }
+    const sortSelect = document.getElementById('courseSort');
+    if (sortSelect) sortSelect.addEventListener('change', e => { catalogState.sort = e.target.value; applyCatalogFilters(); });
+
+    // Initial render of the main grid
+    applyCatalogFilters();
+
     // Filter and Render Free Courses (Price == 0)
     const freeCourses = courses.filter(course => {
       const p = parseFloat(course.price);

@@ -109,6 +109,33 @@
     .desc-section-title { font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
     .desc-section-title::after { content: ''; flex: 1; height: 1px; background: rgba(0,229,255,0.12); }
     .desc-section-body { font-size: 0.93rem; color: #a4b5d6; line-height: 1.75; }
+
+    /* ── Reviews ── */
+    .reviews-summary { display: flex; gap: 24px; align-items: center; margin-bottom: 24px; padding: 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; }
+    .rs-score { text-align: center; }
+    .rs-avg { font-family: 'Syne', sans-serif; font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--text); }
+    .rs-stars { color: #fbbf24; font-size: 1.05rem; letter-spacing: 2px; margin: 6px 0 4px; }
+    .rs-count { font-size: 0.8rem; color: var(--muted); }
+    .review-form { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; margin-bottom: 24px; }
+    .star-picker { display: inline-flex; gap: 4px; font-size: 1.8rem; cursor: pointer; margin: 4px 0 12px; }
+    .star-picker span { color: #3d5070; transition: color 0.15s, transform 0.1s; }
+    .star-picker span:hover { transform: scale(1.12); }
+    .star-picker span.on { color: #fbbf24; }
+    .review-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: inherit; font-size: 0.9rem; padding: 11px 13px; outline: none; resize: vertical; }
+    .review-textarea:focus { border-color: rgba(0,229,255,0.4); }
+    .btn-review-submit { padding: 10px 22px; border: none; border-radius: 9px; background: linear-gradient(135deg, var(--accent2, #7b5cff), var(--accent, #00e5ff)); color: #fff; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: filter 0.2s; }
+    .btn-review-submit:hover { filter: brightness(1.08); }
+    .btn-review-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .review-hint { padding: 14px 18px; background: var(--surface2); border: 1px dashed var(--border); border-radius: 12px; color: var(--muted); font-size: 0.88rem; margin-bottom: 24px; }
+    .reviews-list { display: flex; flex-direction: column; gap: 14px; }
+    .review-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 15px 18px; }
+    .review-head { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+    .review-avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 0.8rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, #7b5cff, #00e5ff); flex-shrink: 0; }
+    .review-name { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+    .review-stars { color: #fbbf24; font-size: 0.82rem; letter-spacing: 1px; }
+    .review-date { font-size: 0.72rem; color: var(--muted); margin-left: auto; }
+    .review-body { font-size: 0.88rem; color: #a4b5d6; line-height: 1.6; }
+    .review-mine { border-color: rgba(0,229,255,0.35); box-shadow: 0 0 0 1px rgba(0,229,255,0.12); }
     .desc-list { list-style: none; padding: 0; margin: 0 0 18px 0; display: flex; flex-direction: column; gap: 8px; }
     .desc-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.91rem; color: #b8c9e8; line-height: 1.5; }
     .desc-list li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 7px; }
@@ -488,6 +515,7 @@
         <div class="tab active" data-target="tab-overview">Overview</div>
         <div class="tab" data-target="tab-curriculum">Curriculum & Modules</div>
         <div class="tab" data-target="tab-assignments">Assignments & Exercises</div>
+        <div class="tab" data-target="tab-reviews">Reviews</div>
       </div>
 
       <div class="tab-content active" id="tab-overview">
@@ -517,6 +545,35 @@
               This course includes hands-on assignments to test your knowledge. Details will be unlocked upon enrollment.
             </div>
           </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-reviews">
+        <div id="reviewsSummary" class="reviews-summary">
+          <div class="rs-score">
+            <div class="rs-avg" id="rsAvg">—</div>
+            <div class="rs-stars" id="rsStars">☆☆☆☆☆</div>
+            <div class="rs-count" id="rsCount">No reviews yet</div>
+          </div>
+        </div>
+
+        <div id="reviewFormWrap" class="review-form" style="display:none;">
+          <div class="desc-section-title">Write a review</div>
+          <div class="star-picker" id="starPicker" role="radiogroup" aria-label="Your rating">
+            <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+          </div>
+          <textarea id="reviewComment" class="review-textarea" rows="3" maxlength="2000" placeholder="Share what you thought of this course…"></textarea>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
+            <button id="reviewSubmitBtn" class="btn-review-submit" onclick="submitReview()">Submit Review</button>
+            <span id="reviewMsg" style="font-size:0.82rem;color:var(--muted);"></span>
+          </div>
+        </div>
+        <div id="reviewLoginHint" class="review-hint" style="display:none;">
+          Enroll in this course to leave a review.
+        </div>
+
+        <div id="reviewsList" class="reviews-list">
+          <p style="color:var(--muted);font-size:0.9rem;">Loading reviews…</p>
         </div>
       </div>
     </div>
@@ -705,9 +762,129 @@
 <script>
   let activeCourse = null;
 
+  // ── Reviews state ──
+  let userEnrolled = false;   // set true once an approved purchase is found
+  let myRating = 0;           // current star selection in the review form
+  let myReviewLoaded = false;
+
   // Utility: HTML escape (defined at top level so renderDescription can call it)
   function escHTML(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── REVIEWS ────────────────────────────────────────────────────────────
+  function starString(n) {
+    n = Math.round(n || 0);
+    return '★★★★★☆☆☆☆☆'.slice(5 - n, 10 - n);
+  }
+
+  function updateReviewFormVisibility() {
+    const form = document.getElementById('reviewFormWrap');
+    const hint = document.getElementById('reviewLoginHint');
+    if (!form || !hint) return;
+    if (userEnrolled) { form.style.display = ''; hint.style.display = 'none'; }
+    else { form.style.display = 'none'; hint.style.display = ''; }
+  }
+
+  // Wire up the interactive star picker once
+  (function initStarPicker() {
+    document.addEventListener('DOMContentLoaded', () => {
+      const picker = document.getElementById('starPicker');
+      if (!picker) return;
+      const stars = Array.from(picker.querySelectorAll('span'));
+      const paint = v => stars.forEach(s => s.classList.toggle('on', parseInt(s.dataset.v) <= v));
+      stars.forEach(s => {
+        s.addEventListener('mouseenter', () => paint(parseInt(s.dataset.v)));
+        s.addEventListener('click', () => { myRating = parseInt(s.dataset.v); paint(myRating); });
+      });
+      picker.addEventListener('mouseleave', () => paint(myRating));
+    });
+  })();
+
+  async function loadReviews(courseId) {
+    try {
+      const res  = await fetch(`/api/_public/reviews?course_id=${courseId}`);
+      const data = await res.json();
+      if (!data.success) return;
+
+      const avg = parseFloat(data.avg_rating) || 0;
+      const count = data.review_count || 0;
+      document.getElementById('rsAvg').textContent   = count ? avg.toFixed(1) : '—';
+      document.getElementById('rsStars').textContent = count ? starString(avg) : '☆☆☆☆☆';
+      document.getElementById('rsStars').style.color = count ? '#fbbf24' : '#3d5070';
+      document.getElementById('rsCount').textContent = count
+        ? `${count} review${count === 1 ? '' : 's'}` : 'No reviews yet';
+
+      const list = document.getElementById('reviewsList');
+      if (!count) {
+        list.innerHTML = '<p style="color:var(--muted);font-size:0.9rem;">Be the first to review this course.</p>';
+      } else {
+        list.innerHTML = data.reviews.map(r => {
+          const initials = (r.username || '?').substring(0,2).toUpperCase();
+          const when = r.updated_at ? new Date(r.updated_at).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}) : '';
+          return `
+            <div class="review-item">
+              <div class="review-head">
+                <div class="review-avatar">${escHTML(initials)}</div>
+                <div>
+                  <div class="review-name">${escHTML(r.username || 'Learner')}</div>
+                  <div class="review-stars">${starString(r.rating)}</div>
+                </div>
+                <div class="review-date">${when}</div>
+              </div>
+              ${r.comment ? `<div class="review-body">${escHTML(r.comment)}</div>` : ''}
+            </div>`;
+        }).join('');
+      }
+    } catch(e) { /* reviews optional */ }
+  }
+
+  async function loadMyReview(courseId) {
+    if (myReviewLoaded || !window.auth || !window.auth.isLoggedIn) return;
+    myReviewLoaded = true;
+    try {
+      const res  = await fetch(`/api/user/reviews?course_id=${courseId}`, { credentials: 'include' });
+      const data = await res.json();
+      if (data.success && data.review) {
+        myRating = data.review.rating;
+        const picker = document.getElementById('starPicker');
+        if (picker) picker.querySelectorAll('span').forEach(s => s.classList.toggle('on', parseInt(s.dataset.v) <= myRating));
+        const ta = document.getElementById('reviewComment');
+        if (ta) ta.value = data.review.comment || '';
+        const btn = document.getElementById('reviewSubmitBtn');
+        if (btn) btn.textContent = 'Update Review';
+      }
+    } catch(e) { /* ignore */ }
+  }
+
+  async function submitReview() {
+    if (!userEnrolled) return;
+    const msg = document.getElementById('reviewMsg');
+    if (!myRating) { if (msg) { msg.textContent = 'Please pick a star rating.'; msg.style.color = '#ff4d8d'; } return; }
+    const comment = document.getElementById('reviewComment').value.trim();
+    const btn = document.getElementById('reviewSubmitBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    try {
+      const res  = await fetch('/api/user/reviews', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ course_id: activeCourse.id, rating: myRating, comment })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (msg) { msg.textContent = 'Thanks! Your review is live.'; msg.style.color = '#00e599'; }
+        if (btn) btn.textContent = 'Update Review';
+        loadReviews(activeCourse.id);
+      } else {
+        if (msg) { msg.textContent = data.error || 'Could not save review.'; msg.style.color = '#ff4d8d'; }
+        if (btn) btn.textContent = 'Submit Review';
+      }
+    } catch(e) {
+      if (msg) { msg.textContent = 'Network error. Try again.'; msg.style.color = '#ff4d8d'; }
+      if (btn) btn.textContent = 'Submit Review';
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   }
 
   // Tab Switching Logic
@@ -1325,6 +1502,11 @@
         checkPurchaseStatus(activeCourse.id);
       }
 
+      // 7. Load course reviews
+      if (activeCourse.id) {
+        loadReviews(activeCourse.id);
+      }
+
     } catch (err) {
       console.error(err);
       document.getElementById('heroTitle').textContent = 'Failed to load details.';
@@ -1461,6 +1643,9 @@
       if (!match) return;
       if (match.status === 'approved' || match.status === 'active' || match.status === 'enrolled') {
         setPurchaseBtnState('enrolled');
+        userEnrolled = true;
+        updateReviewFormVisibility();
+        if (activeCourse?.id) loadMyReview(activeCourse.id);
       } else if (match.status === 'pending') {
         setPurchaseBtnState('pending');
       }
