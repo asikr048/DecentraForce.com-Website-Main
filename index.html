@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="icon" type="image/png" href="/assets/favicon.png">
 <link rel="icon" type="image/png" href="/assets/favicon-16x16.png" sizes="16x16">
@@ -11,8 +16,6 @@
 <link rel="icon" type="image/png" href="/assets/favicon-256x256.png" sizes="256x256">
 <link rel="apple-touch-icon" href="/assets/favicon-180x180.png">
 <link rel="mask-icon" href="/assets/favicon.svg" color="#7b5cff">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DecentraForce — Your Web3 Career University</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
@@ -958,7 +961,7 @@
   .feedback-toast.show { opacity: 1; transform: translateY(0); }
   .feedback-toast.error { border-left-color: var(--accent3); }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 <script src="scripts/three-scene.js" defer></script>
 </head>
 <body>
@@ -1981,7 +1984,7 @@ window.addEventListener('storage', (e) => {
       const gradient = GRADIENTS[index % GRADIENTS.length];
       const hasRealImage = mentor.imageUrl && mentor.imageUrl !== 'https://via.placeholder.com/150' && !mentor.imageUrl.includes('ui-avatars.com');
       const avatarContent = hasRealImage
-        ? `<img src="${mentor.imageUrl}" alt="${mentor.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        ? `<img src="${mentor.imageUrl}" alt="${mentor.name}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
         : '';
       const initialsDiv = `<span style="position:${hasRealImage?'absolute':'relative'};${hasRealImage?'display:none;':''}inset:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;color:#fff;">${getInitials(mentor.name)}</span>`;
       

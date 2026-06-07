@@ -97,6 +97,8 @@ async function publicCourses(req, res) {
     GROUP BY c.id
     ORDER BY COALESCE(c.sequence_order,9999), c.created_at DESC
   `);
+  // Edge-cache for 60s (matches the frontend cache TTL) and serve stale while revalidating.
+  res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=60, stale-while-revalidate=300');
   return res.status(200).json({ success: true, courses: r.rows });
 }
 
@@ -694,6 +696,7 @@ async function publicMentors(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ success: false, error: 'Method not allowed' });
   try {
     const result = await query(`SELECT * FROM mentors WHERE is_active = TRUE ORDER BY sort_order ASC, id ASC`);
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=600');
     return res.status(200).json({ success: true, mentors: result.rows });
   } catch (error) {
     console.error('Public Mentors API Error:', error);
@@ -708,6 +711,7 @@ async function publicTestimonials(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ success: false, error: 'Method not allowed' });
   try {
     const result = await query(`SELECT * FROM testimonials WHERE is_active = TRUE ORDER BY sort_order ASC, id ASC`);
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=600');
     return res.status(200).json({ success: true, testimonials: result.rows });
   } catch (error) {
     console.error('Public Testimonials API Error:', error);
