@@ -1752,6 +1752,9 @@ function renderCoursesGrid() {
           <button onclick="openManageMarks(${c.id},'${plainTitle(c.title)}')" class="flex-1 bg-[rgba(0,229,255,0.06)] border border-[rgba(0,229,255,0.2)] text-accent py-2 rounded-lg text-xs font-bold hover:bg-[rgba(0,229,255,0.12)] transition-colors">📊 MARKS</button>
           <button onclick="openManageResources(${c.id},'${plainTitle(c.title)}')" class="flex-1 bg-[rgba(255,200,0,0.06)] border border-[rgba(255,200,0,0.2)] text-yellow-400 py-2 rounded-lg text-xs font-bold hover:bg-[rgba(255,200,0,0.12)] transition-colors">🔗 RESOURCES</button>
         </div>
+        <div class="flex gap-2 mt-1.5">
+          <button onclick="openSubmissions(${c.id},'${plainTitle(c.title)}')" class="flex-1 bg-[rgba(0,229,153,0.06)] border border-[rgba(0,229,153,0.2)] text-[#00e599] py-2 rounded-lg text-xs font-bold hover:bg-[rgba(0,229,153,0.12)] transition-colors">📥 SUBMISSIONS</button>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -2708,7 +2711,7 @@ function fmtDate(iso) {
           <div>
             <label style="display:block;font-size:.75rem;font-weight:700;color:#6a80a0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Exam Type</label>
             <select id="examType" onchange="toggleExamType()" style="width:100%;background:#050a18;border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:10px 14px;color:#e8eeff;font-size:.88rem;outline:none;">
-              <option value="mcq">MCQ (Auto-graded)</option>
+              <option value="mcq">Quiz (Auto-graded · mixed types)</option>
               <option value="link">External Link</option>
             </select>
           </div>
@@ -2723,6 +2726,30 @@ function fmtDate(iso) {
             <input id="examDuration" type="number" placeholder="60" value="60" min="1" style="width:100%;background:#050a18;border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:10px 14px;color:#e8eeff;font-size:.88rem;outline:none;">
           </div>
         </div>
+        <!-- Advanced config (MCQ exams) -->
+        <div id="examConfigArea" style="background:#0a1228;border:1px solid rgba(0,229,255,.08);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+          <div style="font-size:.72rem;font-weight:700;color:#6a80a0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Exam Rules</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="display:block;font-size:.7rem;color:#6a80a0;margin-bottom:5px;">Pass Marks</label>
+              <input id="examPassMarks" type="number" min="0" placeholder="optional" style="width:100%;background:#050a18;border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:8px 10px;color:#e8eeff;font-size:.85rem;outline:none;">
+            </div>
+            <div>
+              <label style="display:block;font-size:.7rem;color:#6a80a0;margin-bottom:5px;">Max Attempts</label>
+              <input id="examMaxAttempts" type="number" min="0" value="1" placeholder="0 = unlimited" style="width:100%;background:#050a18;border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:8px 10px;color:#e8eeff;font-size:.85rem;outline:none;">
+            </div>
+            <div>
+              <label style="display:block;font-size:.7rem;color:#6a80a0;margin-bottom:5px;">Questions / Attempt</label>
+              <input id="examQuestionsPer" type="number" min="0" placeholder="blank = all" style="width:100%;background:#050a18;border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:8px 10px;color:#e8eeff;font-size:.85rem;outline:none;">
+            </div>
+          </div>
+          <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:.8rem;color:#b8c9e8;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="examShuffleQ" style="accent-color:#00e5ff;"> Shuffle questions</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="examShuffleO" style="accent-color:#00e5ff;"> Shuffle options</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" id="examShowAnswers" checked style="accent-color:#00e5ff;"> Reveal answers after submit</label>
+          </div>
+        </div>
+
         <!-- Link URL (shown for link type) -->
         <div id="examLinkArea" style="display:none;margin-bottom:16px;">
           <label style="display:block;font-size:.75rem;font-weight:700;color:#6a80a0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">External Exam URL</label>
@@ -2740,6 +2767,22 @@ function fmtDate(iso) {
         </div>
         <button onclick="saveExam()" style="width:100%;background:linear-gradient(135deg,#7b5cff,#00e5ff);border:none;color:#fff;padding:14px;border-radius:10px;font-weight:700;font-size:.95rem;cursor:pointer;letter-spacing:.04em;">SAVE EXAM</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SUBMISSIONS REVIEW MODAL ════════════════════════════════════════════ -->
+<div id="submissionsModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);overflow-y:auto;">
+  <div style="max-width:860px;margin:40px auto;padding:20px;">
+    <div style="background:#0d1630;border:1px solid rgba(0,229,255,.15);border-radius:18px;padding:32px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:#e8eeff;">Assignment Submissions</h2>
+          <p id="submissionsCourseName" style="color:#7d8fb3;font-size:.85rem;margin-top:2px;"></p>
+        </div>
+        <button onclick="closeSubmissions()" style="background:rgba(255,255,255,.06);border:none;color:#7d8fb3;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:1.1rem;">✕</button>
+      </div>
+      <div id="submissionsList"><div style="text-align:center;padding:30px;color:#3d5070;">Loading…</div></div>
     </div>
   </div>
 </div>
@@ -2872,6 +2915,12 @@ function editExistingExam() {
   document.getElementById('examTotalMarks').value = exam.total_marks;
   document.getElementById('examDuration').value = exam.duration_minutes;
   document.getElementById('examLinkUrl').value = exam.link_url || '';
+  document.getElementById('examPassMarks').value    = exam.pass_marks ?? '';
+  document.getElementById('examMaxAttempts').value  = exam.max_attempts ?? 1;
+  document.getElementById('examQuestionsPer').value = exam.questions_per_attempt ?? '';
+  document.getElementById('examShuffleQ').checked   = !!exam.shuffle_questions;
+  document.getElementById('examShuffleO').checked   = !!exam.shuffle_options;
+  document.getElementById('examShowAnswers').checked = exam.show_answers !== false;
   toggleExamType();
   const questions = Array.isArray(exam.questions) ? exam.questions : JSON.parse(exam.questions || '[]');
   const container = document.getElementById('questionsContainer');
@@ -2897,16 +2946,20 @@ function toggleExamType() {
   const t = document.getElementById('examType').value;
   document.getElementById('examLinkArea').style.display = t === 'link' ? 'block' : 'none';
   document.getElementById('examMcqArea').style.display  = t === 'mcq'  ? 'block' : 'none';
+  document.getElementById('examConfigArea').style.display = t === 'mcq' ? 'block' : 'none';
 }
 
 let qCounter = 0;
+const QTYPES = [['mcq','Multiple choice (one answer)'],['multi','Multiple select'],['truefalse','True / False'],['short','Short answer'],['fill','Fill in the blanks'],['code','Code (JS · auto-run)']];
+const inpStyle = 'background:#0a1228;border:1px solid rgba(0,229,255,.1);border-radius:8px;padding:8px 10px;color:#e8eeff;font-size:.83rem;outline:none;';
+
 function addQuestion(existing) {
   qCounter++;
   const qId = existing ? existing.id : `q${Date.now()}_${qCounter}`;
-  const opts = existing ? (Array.isArray(existing.options) ? existing.options : ['', '', '', '']) : ['', '', '', ''];
-  const correctIdx = existing ? (existing.correct_answer !== undefined ? parseInt(existing.correct_answer) : 0) : 0;
+  const type = existing ? (existing.type || 'mcq') : 'mcq';
   const marks = existing ? (existing.marks || 1) : 1;
   const qText = existing ? (existing.question || '') : '';
+  const expl  = existing ? (existing.explanation || '') : '';
 
   const container = document.getElementById('questionsContainer');
   const p = container.querySelector('p');
@@ -2915,37 +2968,127 @@ function addQuestion(existing) {
   const div = document.createElement('div');
   div.style.cssText = 'background:#050a18;border:1px solid rgba(0,229,255,.1);border-radius:12px;padding:18px;position:relative;';
   div.dataset.qid = qId;
+  div.dataset.qtype = type;
   div.innerHTML = `
-    <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center;">
-      <input type="text" placeholder="Question text…" value="${escAdm(qText)}" data-field="question"
-        style="flex:1;background:#0a1228;border:1px solid rgba(0,229,255,.1);border-radius:8px;padding:9px 12px;color:#e8eeff;font-size:.88rem;outline:none;">
-      <input type="number" placeholder="Marks" value="${marks}" min="1" data-field="marks"
-        style="width:72px;background:#0a1228;border:1px solid rgba(0,229,255,.1);border-radius:8px;padding:9px 10px;color:#00e5ff;font-size:.85rem;outline:none;text-align:center;">
+    <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">
+      <select data-field="type" onchange="changeQuestionType(this)" style="${inpStyle}width:200px;">
+        ${QTYPES.map(([v,l]) => `<option value="${v}" ${v===type?'selected':''}>${l}</option>`).join('')}
+      </select>
+      <input type="number" placeholder="Marks" value="${marks}" min="1" data-field="marks" title="Marks"
+        style="${inpStyle}width:70px;color:#00e5ff;text-align:center;">
+      <span style="flex:1;"></span>
       <button onclick="this.closest('[data-qid]').remove()" style="background:rgba(255,77,141,.08);border:1px solid rgba(255,77,141,.2);color:#ff4d8d;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.8rem;">✕</button>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-      ${opts.map((o, i) => `
-        <div style="display:flex;align-items:center;gap:6px;">
-          <input type="radio" name="correct_${qId}" value="${i}" ${i===correctIdx?'checked':''} style="accent-color:#00e5ff;width:15px;height:15px;flex-shrink:0;" title="Mark as correct answer">
-          <input type="text" placeholder="Option ${i+1}" value="${escAdm(o)}" data-opt="${i}"
-            style="flex:1;background:#0a1228;border:1px solid rgba(0,229,255,.06);border-radius:8px;padding:8px 10px;color:#e8eeff;font-size:.83rem;outline:none;">
-        </div>`).join('')}
-    </div>
-    <div style="font-size:.7rem;color:#3d5070;">● Select the radio button next to the correct answer</div>`;
+    <input type="text" placeholder="Question text…" value="${escAdm(qText)}" data-field="question"
+      style="${inpStyle}width:100%;font-size:.88rem;margin-bottom:10px;">
+    <div data-body></div>
+    <input type="text" placeholder="Explanation shown after submit (optional)" value="${escAdm(expl)}" data-field="explanation"
+      style="${inpStyle}width:100%;margin-top:10px;color:#9fb4d8;font-style:italic;">`;
   container.appendChild(div);
+  renderQuestionBody(div, type, existing);
+}
+
+function changeQuestionType(sel) {
+  const div = sel.closest('[data-qid]');
+  const type = sel.value;
+  div.dataset.qtype = type;
+  renderQuestionBody(div, type, null);
+}
+
+function optionRow(qId, type, text, checked) {
+  const control = type === 'multi'
+    ? `<input type="checkbox" data-correct ${checked?'checked':''} style="accent-color:#00e5ff;width:15px;height:15px;flex-shrink:0;" title="Correct">`
+    : `<input type="radio" name="correct_${qId}" data-correct ${checked?'checked':''} style="accent-color:#00e5ff;width:15px;height:15px;flex-shrink:0;" title="Correct">`;
+  return `<div data-opt-row style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+    ${control}
+    <input type="text" placeholder="Option" value="${escAdm(text||'')}" data-opt style="${inpStyle}flex:1;">
+    <button onclick="this.closest('[data-opt-row]').remove()" style="background:rgba(255,77,141,.06);border:1px solid rgba(255,77,141,.18);color:#ff4d8d;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:.75rem;">✕</button>
+  </div>`;
+}
+
+function renderQuestionBody(div, type, existing) {
+  const qId = div.dataset.qid;
+  const body = div.querySelector('[data-body]');
+  const hint = t => `<div style="font-size:.7rem;color:#3d5070;margin-top:4px;">${t}</div>`;
+
+  if (type === 'mcq' || type === 'multi') {
+    const opts = existing && Array.isArray(existing.options) ? existing.options : ['', '', '', ''];
+    const correctSet = new Set(type === 'multi'
+      ? (existing && Array.isArray(existing.correct_answers) ? existing.correct_answers.map(Number) : [])
+      : (existing && existing.correct_answer != null ? [Number(existing.correct_answer)] : [0]));
+    body.innerHTML = `<div data-opts>${opts.map((o,i)=>optionRow(qId, type, o, correctSet.has(i))).join('')}</div>
+      <button onclick="addOptionTo(this)" style="background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.18);color:#00e5ff;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:.75rem;margin-top:4px;">+ Option</button>
+      ${hint(type==='multi' ? '● Tick every correct option (all required for full marks)' : '● Select the one correct option')}`;
+  } else if (type === 'truefalse') {
+    const correct = existing && existing.correct_answer != null ? Number(existing.correct_answer) : 0;
+    body.innerHTML = `<div style="display:flex;gap:18px;">
+      <label style="display:flex;align-items:center;gap:6px;color:#b8c9e8;font-size:.85rem;"><input type="radio" name="correct_${qId}" data-tf="0" ${correct===0?'checked':''} style="accent-color:#00e5ff;"> True</label>
+      <label style="display:flex;align-items:center;gap:6px;color:#b8c9e8;font-size:.85rem;"><input type="radio" name="correct_${qId}" data-tf="1" ${correct===1?'checked':''} style="accent-color:#00e5ff;"> False</label>
+    </div>`;
+  } else if (type === 'short') {
+    const acc = existing && Array.isArray(existing.accepted) ? existing.accepted.join('\n') : '';
+    body.innerHTML = `<textarea data-accepted placeholder="Accepted answers — one per line (case-insensitive)" style="${inpStyle}width:100%;min-height:64px;resize:vertical;">${escAdm(acc)}</textarea>${hint('Any line that matches the learner answer earns full marks.')}`;
+  } else if (type === 'fill') {
+    const acc = existing && Array.isArray(existing.accepted) ? existing.accepted.join('\n') : '';
+    body.innerHTML = `<textarea data-accepted placeholder="One blank per line. Use a|b for alternatives." style="${inpStyle}width:100%;min-height:64px;resize:vertical;">${escAdm(acc)}</textarea>${hint('Write ___ in the question for each blank. Each line = one blank (partial credit per blank).')}`;
+  } else if (type === 'code') {
+    const starter = existing ? (existing.starter_code || 'function solve(input) {\n  // your code\n  return input;\n}') : 'function solve(input) {\n  // your code\n  return input;\n}';
+    const tests = existing && Array.isArray(existing.tests) ? existing.tests : [{input:'',expected:''}];
+    body.innerHTML = `
+      <textarea data-starter spellcheck="false" placeholder="Starter code" style="${inpStyle}width:100%;min-height:90px;font-family:monospace;resize:vertical;">${escAdm(starter)}</textarea>
+      <div style="font-size:.7rem;color:#6a80a0;margin:8px 0 6px;">Test cases — runner calls <code style="color:#00e5ff;">solve(input)</code> and compares the result to expected:</div>
+      <div data-tests>${tests.map(t=>testRow(t)).join('')}</div>
+      <button onclick="addTestTo(this)" style="background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.18);color:#00e5ff;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:.75rem;margin-top:4px;">+ Test</button>`;
+  }
+}
+
+function testRow(t) {
+  return `<div data-test-row style="display:flex;gap:6px;margin-bottom:6px;">
+    <input type="text" placeholder="input" value="${escAdm(t.input||'')}" data-test-input style="${inpStyle}flex:1;font-family:monospace;">
+    <input type="text" placeholder="expected" value="${escAdm(t.expected||'')}" data-test-expected style="${inpStyle}flex:1;font-family:monospace;">
+    <button onclick="this.closest('[data-test-row]').remove()" style="background:rgba(255,77,141,.06);border:1px solid rgba(255,77,141,.18);color:#ff4d8d;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:.75rem;">✕</button>
+  </div>`;
+}
+function addOptionTo(btn) {
+  const div = btn.closest('[data-qid]');
+  div.querySelector('[data-opts]').insertAdjacentHTML('beforeend', optionRow(div.dataset.qid, div.dataset.qtype, '', false));
+}
+function addTestTo(btn) {
+  btn.closest('[data-qid]').querySelector('[data-tests]').insertAdjacentHTML('beforeend', testRow({input:'',expected:''}));
 }
 
 function collectQuestions() {
   const questions = [];
   document.querySelectorAll('#questionsContainer [data-qid]').forEach(div => {
-    const qId = div.dataset.qid;
+    const qId      = div.dataset.qid;
+    const type     = div.querySelector('[data-field="type"]').value;
     const question = div.querySelector('[data-field="question"]').value.trim();
     const marks    = parseInt(div.querySelector('[data-field="marks"]').value) || 1;
-    const options  = [];
-    div.querySelectorAll('[data-opt]').forEach(inp => options.push(inp.value.trim()));
-    const correctRadio = div.querySelector(`input[name="correct_${qId}"]:checked`);
-    const correct_answer = correctRadio ? correctRadio.value : '0';
-    if (question) questions.push({ id: qId, question, options, correct_answer, marks });
+    const explanation = (div.querySelector('[data-field="explanation"]').value || '').trim();
+    if (!question) return;
+    const q = { id: qId, type, question, marks, explanation };
+
+    if (type === 'mcq' || type === 'multi') {
+      const rows = Array.from(div.querySelectorAll('[data-opt-row]'));
+      q.options = rows.map(r => r.querySelector('[data-opt]').value.trim());
+      const correctIdx = rows.map((r,i)=> r.querySelector('[data-correct]').checked ? i : -1).filter(i=>i>=0);
+      if (type === 'multi') q.correct_answers = correctIdx;
+      else q.correct_answer = correctIdx.length ? correctIdx[0] : 0;
+    } else if (type === 'truefalse') {
+      q.options = ['True','False'];
+      const checked = div.querySelector('[data-tf]:checked');
+      q.correct_answer = checked ? parseInt(checked.dataset.tf) : 0;
+    } else if (type === 'short' || type === 'fill') {
+      q.accepted = (div.querySelector('[data-accepted]').value || '').split('\n').map(s=>s.trim()).filter(Boolean);
+    } else if (type === 'code') {
+      q.language = 'javascript';
+      q.starter_code = div.querySelector('[data-starter]').value;
+      q.tests = Array.from(div.querySelectorAll('[data-test-row]')).map(r => ({
+        input: r.querySelector('[data-test-input]').value,
+        expected: r.querySelector('[data-test-expected]').value
+      })).filter(t => t.input !== '' || t.expected !== '');
+    }
+    questions.push(q);
   });
   return questions;
 }
@@ -2957,6 +3100,12 @@ function resetExamForm() {
   document.getElementById('examTotalMarks').value = '100';
   document.getElementById('examDuration').value = '60';
   document.getElementById('examLinkUrl').value = '';
+  document.getElementById('examPassMarks').value = '';
+  document.getElementById('examMaxAttempts').value = '1';
+  document.getElementById('examQuestionsPer').value = '';
+  document.getElementById('examShuffleQ').checked = false;
+  document.getElementById('examShuffleO').checked = false;
+  document.getElementById('examShowAnswers').checked = true;
   document.getElementById('questionsContainer').innerHTML = '<p style="color:#3d5070;font-size:.8rem;text-align:center;padding:16px;">No questions yet. Click "Add Question" to start.</p>';
   toggleExamType();
 }
@@ -2971,7 +3120,16 @@ async function saveExam() {
   if (!title) { showAdminToast('Exam title is required', 'error'); return; }
   if (type === 'link' && !link) { showAdminToast('External URL is required for link type', 'error'); return; }
   const questions = type === 'mcq' ? collectQuestions() : [];
-  const body = { course_id: currentExamState.courseId, title, type, link_url: link || null, total_marks: total, duration_minutes: dur, questions };
+  const body = {
+    course_id: currentExamState.courseId, title, type, link_url: link || null,
+    total_marks: total, duration_minutes: dur, questions,
+    pass_marks: document.getElementById('examPassMarks').value !== '' ? parseInt(document.getElementById('examPassMarks').value) : null,
+    max_attempts: parseInt(document.getElementById('examMaxAttempts').value) || 0,
+    questions_per_attempt: document.getElementById('examQuestionsPer').value !== '' ? parseInt(document.getElementById('examQuestionsPer').value) : null,
+    shuffle_questions: document.getElementById('examShuffleQ').checked,
+    shuffle_options: document.getElementById('examShuffleO').checked,
+    show_answers: document.getElementById('examShowAnswers').checked
+  };
   if (id) body.id = parseInt(id);
   const method = id ? 'PUT' : 'POST';
   const res  = await fetch('/api/admin/exams', { method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -2983,6 +3141,72 @@ async function saveExam() {
     document.getElementById('examFormArea').style.display = 'none';
     document.getElementById('existingExamArea').style.display = 'block';
   } else showAdminToast(data.error || 'Save failed', 'error');
+}
+
+// ═══════════════════════════════════════════════════════════
+// ASSIGNMENT SUBMISSIONS REVIEW
+// ═══════════════════════════════════════════════════════════
+async function openSubmissions(courseId, courseTitle) {
+  document.getElementById('submissionsCourseName').textContent = courseTitle;
+  document.getElementById('submissionsModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  await loadSubmissions(courseId);
+}
+function closeSubmissions() {
+  document.getElementById('submissionsModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+async function loadSubmissions(courseId) {
+  const box = document.getElementById('submissionsList');
+  box.innerHTML = '<div style="text-align:center;padding:30px;color:#3d5070;">Loading…</div>';
+  try {
+    const res  = await fetch(`/api/admin/submissions?course_id=${courseId}`, { credentials: 'include' });
+    const data = await res.json();
+    const subs = (data && data.submissions) || [];
+    if (!subs.length) {
+      box.innerHTML = '<div style="text-align:center;padding:30px;color:#3d5070;">No submissions yet.</div>';
+      return;
+    }
+    box.innerHTML = subs.map(s => {
+      const graded = s.status === 'graded';
+      const fileLink = s.file_data
+        ? `<a href="${s.file_data}" download="${escAdm(s.file_name||'file')}" style="color:#00e5ff;">⬇ ${escAdm(s.file_name||'file')}</a>` : '';
+      const urlLink = s.submission_url ? `<a href="${escAdm(s.submission_url)}" target="_blank" style="color:#00e5ff;">🔗 ${escAdm(s.submission_url)}</a>` : '';
+      const when = s.submitted_at ? new Date(s.submitted_at).toLocaleString() : '';
+      return `<div style="background:#0a1228;border:1px solid ${graded?'rgba(0,229,153,.2)':'rgba(0,229,255,.12)'};border-radius:12px;padding:16px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+          <div>
+            <span style="font-weight:700;color:#e8eeff;">${escAdm(s.username||'User')}</span>
+            <span style="color:#7d8fb3;font-size:.8rem;"> · ${escAdm(s.assignment_title||'Assignment')}</span>
+          </div>
+          <span style="font-size:.72rem;padding:3px 10px;border-radius:20px;${graded?'background:rgba(0,229,153,.12);color:#00e599;':'background:rgba(255,191,36,.12);color:#fbbf24;'}">${graded?`GRADED ${s.marks_obtained}/${s.max_marks??'—'}`:'PENDING'}</span>
+        </div>
+        ${s.submission_text ? `<div style="color:#b8c9e8;font-size:.85rem;white-space:pre-wrap;background:#050a18;border-radius:8px;padding:10px;margin-bottom:8px;">${escAdm(s.submission_text)}</div>` : ''}
+        <div style="font-size:.82rem;margin-bottom:10px;display:flex;gap:14px;flex-wrap:wrap;">${urlLink}${fileLink}<span style="color:#3d5070;">${when}</span></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="number" id="grade-${s.id}" min="0" value="${s.marks_obtained ?? ''}" placeholder="Marks${s.max_marks?` / ${s.max_marks}`:''}" style="width:120px;background:#050a18;border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:8px 10px;color:#e8eeff;font-size:.85rem;outline:none;">
+          <input type="text" id="fb-${s.id}" value="${escAdm(s.feedback||'')}" placeholder="Feedback (optional)" style="flex:1;min-width:160px;background:#050a18;border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:8px 10px;color:#e8eeff;font-size:.85rem;outline:none;">
+          <button onclick="gradeSubmission(${s.id}, ${courseId})" style="background:linear-gradient(135deg,#00e599,#00cc88);border:none;color:#06210f;padding:8px 16px;border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;">${graded?'Update':'Grade'}</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    box.innerHTML = '<div style="text-align:center;padding:30px;color:#ff4d8d;">Could not load submissions.</div>';
+  }
+}
+async function gradeSubmission(id, courseId) {
+  const marks = document.getElementById(`grade-${id}`).value;
+  if (marks === '') { showAdminToast('Enter marks', 'error'); return; }
+  const feedback = document.getElementById(`fb-${id}`).value;
+  try {
+    const res  = await fetch('/api/admin/submissions', {
+      method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, marks_obtained: parseFloat(marks), feedback })
+    });
+    const data = await res.json();
+    if (data.success) { showAdminToast('Graded', 'success'); loadSubmissions(courseId); }
+    else showAdminToast(data.error || 'Failed', 'error');
+  } catch(e) { showAdminToast('Network error', 'error'); }
 }
 
 // ═══════════════════════════════════════════════════════════

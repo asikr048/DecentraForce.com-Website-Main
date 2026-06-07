@@ -327,6 +327,21 @@
   .badge-open { background: rgba(0,229,255,.1); color: var(--accent); border: 1px solid rgba(0,229,255,.15); }
   .badge-done { background: rgba(0,229,153,.1); color: #00e599; border: 1px solid rgba(0,229,153,.15); }
   .assignment-desc { color: var(--muted); font-size: .88rem; line-height: 1.6; }
+  /* Assignment submission */
+  .asgn-sub { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border2); }
+  .asgn-sub textarea, .asgn-sub input[type="url"] { width:100%; background:var(--surface); border:1px solid var(--border2); border-radius:9px; padding:10px 12px; color:var(--text); font-family:inherit; font-size:.86rem; outline:none; margin-bottom:8px; }
+  .asgn-sub textarea:focus, .asgn-sub input[type="url"]:focus { border-color:rgba(0,229,255,.4); }
+  .asgn-sub textarea { min-height:64px; resize:vertical; }
+  .asgn-file-label { display:inline-block; font-size:.8rem; color:var(--accent); cursor:pointer; padding:7px 12px; border:1px dashed var(--border2); border-radius:8px; }
+  .asgn-file-label:hover { border-color:var(--accent); }
+  .asgn-submit-btn { background:linear-gradient(135deg,var(--accent2),var(--accent)); color:#fff; border:none; padding:9px 20px; border-radius:9px; font-weight:700; font-size:.84rem; cursor:pointer; }
+  .asgn-submit-btn:hover { filter:brightness(1.08); }
+  .asgn-submit-btn:disabled { opacity:.5; cursor:not-allowed; }
+  .asgn-status { display:inline-block; padding:3px 11px; border-radius:20px; font-size:.72rem; font-weight:700; }
+  .asgn-status.submitted { background:rgba(251,191,36,.12); color:#fbbf24; }
+  .asgn-status.graded { background:rgba(0,229,153,.12); color:#00e599; }
+  .asgn-grade-box { margin-top:12px; padding:12px 14px; background:rgba(0,229,153,.06); border:1px solid rgba(0,229,153,.2); border-radius:10px; }
+  .asgn-grade-box .g-score { font-family:'Syne',sans-serif; font-weight:800; color:#00e599; font-size:1.1rem; }
 
   .resources-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
   .resource-card {
@@ -443,6 +458,32 @@
   .exam-result-score { font-family: "Syne",sans-serif; font-weight: 800; font-size: 3rem; color: var(--accent); }
   .exam-result-label { color: var(--muted); font-size: .9rem; margin-top: 4px; }
   .exam-result-pct { font-size: 1.1rem; color: var(--text); margin-top: 8px; }
+  .exam-pass-badge { display:inline-block; margin-top:12px; padding:6px 18px; border-radius:20px; font-weight:800; font-size:.85rem; letter-spacing:.05em; }
+  .exam-pass-badge.pass { background:rgba(34,197,94,.15); color:#22c55e; border:1px solid rgba(34,197,94,.4); }
+  .exam-pass-badge.fail { background:rgba(255,77,141,.12); color:var(--accent3); border:1px solid rgba(255,77,141,.4); }
+  /* Countdown timer */
+  .exam-timer { position: sticky; top: 8px; z-index: 5; display:flex; align-items:center; justify-content:center; gap:10px;
+    background: var(--surface2); border:1px solid var(--border); border-radius: 12px; padding: 10px 18px; margin-bottom: 18px;
+    font-family:"Syne",sans-serif; font-weight:800; }
+  .exam-timer .t-clock { font-size: 1.3rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .exam-timer .t-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; color: var(--muted); font-weight:700; }
+  .exam-timer.danger .t-clock { color: var(--accent3); animation: pulseT 1s infinite; }
+  @keyframes pulseT { 0%,100%{opacity:1;} 50%{opacity:.5;} }
+  /* Free-text / fill answers */
+  .exam-text-input { width:100%; background:var(--surface); border:1.5px solid var(--border2); border-radius:10px; padding:11px 14px; color:var(--text); font-family:inherit; font-size:.92rem; outline:none; }
+  .exam-text-input:focus { border-color: rgba(0,229,255,.4); }
+  .exam-fill-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .exam-fill-row .fnum { font-size:.72rem; color:var(--muted); min-width:54px; }
+  /* Code editor */
+  .code-editor { width:100%; min-height:150px; background:#070b16; border:1px solid var(--border2); border-radius:10px; padding:12px 14px; color:#cfe3ff; font-family:'Courier New',monospace; font-size:.86rem; line-height:1.5; outline:none; resize:vertical; tab-size:2; }
+  .code-run-btn { background:var(--surface3); border:1px solid var(--border2); color:var(--accent); padding:8px 18px; border-radius:8px; font-weight:700; font-size:.82rem; cursor:pointer; margin-top:8px; }
+  .code-run-btn:hover { border-color:var(--accent); }
+  .code-results { margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+  .code-test { font-size:.8rem; padding:8px 12px; border-radius:8px; font-family:'Courier New',monospace; }
+  .code-test.pass { background:rgba(34,197,94,.08); border:1px solid rgba(34,197,94,.25); color:#7fe0a0; }
+  .code-test.fail { background:rgba(255,77,141,.06); border:1px solid rgba(255,77,141,.22); color:#ff9bb9; }
+  .exam-explain { margin-top:12px; padding:10px 14px; background:rgba(123,92,255,.07); border-left:3px solid var(--accent2); border-radius:6px; font-size:.85rem; color:#c9bdf5; }
+  .mcq-option.correct-key { border-color:#22c55e; }
   /* ─── LEADERBOARD STYLES ─── */
   .lb-table-wrap { border-radius: 14px; overflow: hidden; border: 1px solid var(--border); }
   .lb-table { width: 100%; border-collapse: collapse; }
@@ -1990,7 +2031,10 @@
   function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
   // ── OTHER TABS ─────────────────────────────────────────────────────────
-  function renderAssignments(count, content, curriculum) {
+  let mySubmissions = {};      // assignment_id → submission row
+  const asgnFiles = {};        // assignment_id → { data, name } pending upload
+
+  async function renderAssignments(count, content, curriculum) {
     // Load assignments from DB (stored in modules.assignments_list)
     const container = document.getElementById('assignmentsList');
     const dbAssignments = Array.isArray(courseModules.assignments_list) ? courseModules.assignments_list : [];
@@ -1999,16 +2043,99 @@
       container.innerHTML = `<div class="lb-coming-soon"><div class="empty-icon">📝</div><h3>No Assignments Yet</h3><p>Your instructor hasn't posted any assignments yet.</p></div>`;
       return;
     }
+
+    // Fetch this learner's submissions for the course
+    mySubmissions = {};
+    if (isEnrolledUser && activeCourse?.id) {
+      try {
+        const res  = await fetch(`/api/user/submissions?course_id=${activeCourse.id}`, { credentials: 'include' });
+        const data = await res.json();
+        if (data.success) (data.submissions || []).forEach(s => { mySubmissions[String(s.assignment_id)] = s; });
+      } catch(e) { /* submissions optional */ }
+    }
+
     container.innerHTML = dbAssignments.map((a, i) => {
       const due = a.due_date ? `Due: <strong>${new Date(a.due_date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</strong>` : '';
+      const sub = mySubmissions[String(a.id)];
+      const graded = sub && sub.status === 'graded';
+      const statusPill = sub
+        ? `<span class="asgn-status ${graded?'graded':'submitted'}">${graded?`Graded ${sub.marks_obtained}/${sub.max_marks ?? a.max_marks}`:'Submitted'}</span>`
+        : '';
+
+      let subArea = '';
+      if (!isEnrolledUser) {
+        subArea = `<div class="asgn-sub" style="color:var(--muted);font-size:.84rem;">Enroll in this course to submit your work.</div>`;
+      } else {
+        const gradeBox = graded ? `<div class="asgn-grade-box">
+            <div class="g-score">Score: ${sub.marks_obtained} / ${sub.max_marks ?? a.max_marks}</div>
+            ${sub.feedback ? `<div style="color:#b8c9e8;font-size:.85rem;margin-top:6px;">${escapeHtml(sub.feedback)}</div>` : ''}
+          </div>` : '';
+        const fileName = (asgnFiles[a.id]?.name) || (sub?.file_name) || '';
+        subArea = `${gradeBox}
+          <div class="asgn-sub">
+            <textarea id="asub-text-${a.id}" placeholder="Write your answer or notes…">${escapeHtml(sub?.submission_text || '')}</textarea>
+            <input type="url" id="asub-url-${a.id}" placeholder="Link to your work (GitHub, Drive, etc.)" value="${escapeHtml(sub?.submission_url || '')}">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <label class="asgn-file-label">📎 ${fileName ? escapeHtml(fileName) : 'Attach file (≤2 MB)'}
+                <input type="file" style="display:none" onchange="handleAssignFile(this,'${a.id}')"></label>
+              <button class="asgn-submit-btn" onclick="submitAssignment('${a.id}')">${sub ? 'Update Submission' : 'Submit'}</button>
+              <span id="asub-msg-${a.id}" style="font-size:.8rem;color:var(--muted);"></span>
+            </div>
+          </div>`;
+      }
+
       return `<div class="assignment-card" style="animation-delay:${i*.05}s">
         <div class="assignment-card-header">
-          <div class="assignment-title">${escapeHtml(a.title)}</div>
+          <div class="assignment-title">${escapeHtml(a.title)} ${statusPill}</div>
           <span class="assignment-badge badge-open">${a.max_marks} Marks</span>
         </div>
         <div class="assignment-desc">${escapeHtml(a.description || '')}${due ? `<span style="margin-left:10px;color:var(--muted);font-size:.8rem;">${due}</span>` : ''}</div>
+        ${subArea}
       </div>`;
     }).join('');
+  }
+
+  function handleAssignFile(input, assignmentId) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { alert('File too large (max 2 MB). Please share a link instead.'); input.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      asgnFiles[assignmentId] = { data: reader.result, name: file.name };
+      const label = input.closest('.asgn-file-label');
+      if (label) label.childNodes[0].nodeValue = `📎 ${file.name} `;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function submitAssignment(assignmentId) {
+    if (!isEnrolledUser || !activeCourse?.id) return;
+    const text = document.getElementById(`asub-text-${assignmentId}`).value.trim();
+    const url  = document.getElementById(`asub-url-${assignmentId}`).value.trim();
+    const file = asgnFiles[assignmentId];
+    const msg  = document.getElementById(`asub-msg-${assignmentId}`);
+    if (!text && !url && !file) { if (msg) { msg.style.color = 'var(--accent3)'; msg.textContent = 'Add text, a link, or a file.'; } return; }
+
+    const btn = event?.target;
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+    try {
+      const res  = await fetch('/api/user/submissions', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ course_id: activeCourse.id, assignment_id: assignmentId, submission_text: text, submission_url: url, file_data: file?.data || null, file_name: file?.name || null })
+      });
+      const data = await res.json();
+      if (data.success) {
+        delete asgnFiles[assignmentId];
+        if (msg) { msg.style.color = '#00e599'; msg.textContent = '✓ Submitted!'; }
+        renderAssignments();   // refresh status
+      } else {
+        if (msg) { msg.style.color = 'var(--accent3)'; msg.textContent = data.error || 'Failed.'; }
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit'; }
+      }
+    } catch(e) {
+      if (msg) { msg.style.color = 'var(--accent3)'; msg.textContent = 'Network error.'; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Submit'; }
+    }
   }
 
   function renderResources() {
@@ -2091,11 +2218,13 @@
   let examData = null;
   let examAnswers = {};
   let examSubmitted = false;
+  let examTimerInt = null;
 
   async function loadExam() {
     const courseId = new URLSearchParams(window.location.search).get('id');
     const container = document.getElementById('examContent');
     if (!container || !courseId) return;
+    examAnswers = {}; examSubmitted = false; clearExamTimer();
     try {
       const res  = await fetch(`/api/_public/exam?course_id=${courseId}`, { credentials: 'include' });
       const data = await res.json();
@@ -2118,19 +2247,31 @@
     }
   }
 
+  // Normalize options whether they arrived as strings or {text, idx} (shuffled).
+  function examOptList(q) {
+    const opts = Array.isArray(q.options) ? q.options : [];
+    return opts.map((o, i) => (o && typeof o === 'object') ? { text: o.text, val: Number(o.idx) } : { text: o, val: i });
+  }
+
   function renderExam(container) {
     if (!examData) return;
+    clearExamTimer();
     const e = examData;
     const questions = Array.isArray(e.questions) ? e.questions : [];
+    const maxA = e.max_attempts ?? 1;
+    const used = e.attempts_used || 0;
+    const attemptsTxt = (maxA && maxA > 0) ? `${Math.min(used + (examSubmitted?0:1), maxA)} / ${maxA}` : '∞';
+
     let html = `<div class="exam-panel-wrap">
       <div class="exam-info-card">
-        <div class="exam-info-icon">${e.type === 'link' ? '🔗' : '📝'}</div>
+        <div class="exam-info-icon">${e.type === 'link' ? '🔗' : '🧪'}</div>
         <div>
           <div class="exam-info-title">${escapeHtml(e.title)}</div>
           <div class="exam-meta-row">
             <div class="exam-meta-chip">Total Marks: <span>${e.total_marks}</span></div>
             ${e.duration_minutes ? `<div class="exam-meta-chip">Duration: <span>${e.duration_minutes} min</span></div>` : ''}
-            <div class="exam-meta-chip">Type: <span>${e.type === 'link' ? 'External Exam' : 'MCQ'}</span></div>
+            ${e.pass_marks != null ? `<div class="exam-meta-chip">Pass: <span>${e.pass_marks}</span></div>` : ''}
+            ${e.type !== 'link' ? `<div class="exam-meta-chip">Attempt: <span>${attemptsTxt}</span></div>` : ''}
           </div>
         </div>
       </div>`;
@@ -2144,54 +2285,147 @@
       html += `<div class="lb-coming-soon"><div class="empty-icon">📝</div><h3>No questions added yet</h3></div>`;
     } else if (examSubmitted) {
       html += renderExamResult();
+    } else if (maxA && maxA > 0 && used >= maxA) {
+      html += `<div class="lb-coming-soon"><div class="empty-icon">🔒</div><h3>No attempts left</h3><p>You have used all ${maxA} attempt(s) for this exam.</p></div>`;
     } else {
+      if (e.duration_minutes) {
+        html += `<div class="exam-timer" id="examTimer"><span class="t-label">Time left</span><span class="t-clock" id="examClock">--:--</span></div>`;
+      }
       html += `<div class="mcq-form" id="mcqForm">`;
-      questions.forEach((q, i) => {
-        const opts = Array.isArray(q.options) ? q.options : [];
-        html += `<div class="mcq-question-card" id="qcard-${q.id}">
-          <div class="mcq-q-num">Question ${i+1} <span class="mcq-marks-chip">${q.marks || 1} mark${(q.marks||1)>1?'s':''}</span></div>
-          <div class="mcq-q-text">${escapeHtml(q.question)}</div>
-          <div class="mcq-options">
-            ${opts.map((opt, oi) => `
-              <label class="mcq-option" id="opt-${q.id}-${oi}" onclick="selectOption('${q.id}','${oi}')">
-                <input type="radio" name="q_${q.id}" value="${oi}"> ${escapeHtml(opt)}
-              </label>`).join('')}
-          </div>
-        </div>`;
-      });
+      questions.forEach((q, i) => html += renderQuestionInput(q, i));
       html += `</div>
-        <div class="exam-submit-wrap"><button class="exam-submit-btn" id="examSubmitBtn" onclick="submitMCQ()">Submit Exam</button></div>`;
+        <div class="exam-submit-wrap"><button class="exam-submit-btn" id="examSubmitBtn" onclick="submitExamAnswers(false)">Submit Exam</button></div>`;
     }
     html += `</div>`;
     container.innerHTML = html;
-  }
 
-  function selectOption(qId, optIdx) {
-    examAnswers[qId] = optIdx.toString();
-    const card = document.getElementById(`qcard-${qId}`);
-    if (card) card.classList.add('answered');
-    document.querySelectorAll(`[id^="opt-${qId}-"]`).forEach(el => el.classList.remove('selected'));
-    const sel = document.getElementById(`opt-${qId}-${optIdx}`);
-    if (sel) sel.classList.add('selected');
-  }
-
-  async function submitMCQ() {
-    if (!examData) return;
-    const questions = Array.isArray(examData.questions) ? examData.questions : [];
-    const unanswered = questions.filter(q => examAnswers[q.id] === undefined);
-    if (unanswered.length > 0) {
-      if (!confirm(`You have ${unanswered.length} unanswered question(s). Submit anyway?`)) return;
+    if (!examSubmitted && e.type !== 'link' && questions.length && e.duration_minutes && !(maxA>0 && used>=maxA)) {
+      startExamTimer(e.duration_minutes);
     }
+  }
+
+  function renderQuestionInput(q, i) {
+    const type = q.type || 'mcq';
+    const head = `<div class="mcq-q-num">Question ${i+1} <span class="mcq-marks-chip">${q.marks || 1} mark${(q.marks||1)>1?'s':''}</span></div>
+      <div class="mcq-q-text">${escapeHtml(q.question)}</div>`;
+    let body = '';
+
+    if (type === 'mcq' || type === 'truefalse') {
+      body = `<div class="mcq-options">${examOptList(q).map(o => `
+        <label class="mcq-option" data-opt="${q.id}-${o.val}" onclick="examPickOne('${q.id}',${o.val})">
+          <input type="radio" name="q_${q.id}"> ${escapeHtml(o.text)}
+        </label>`).join('')}</div>`;
+    } else if (type === 'multi') {
+      body = `<div class="mcq-options">${examOptList(q).map(o => `
+        <label class="mcq-option" data-opt="${q.id}-${o.val}" onclick="examToggleMulti('${q.id}',${o.val},this)">
+          <input type="checkbox" name="q_${q.id}" style="accent-color:var(--accent);width:16px;height:16px;"> ${escapeHtml(o.text)}
+        </label>`).join('')}</div>`;
+    } else if (type === 'short') {
+      body = `<input type="text" class="exam-text-input" placeholder="Type your answer…" oninput="examSetText('${q.id}',this.value)">`;
+    } else if (type === 'fill') {
+      const n = q.blanks || 1;
+      body = Array.from({length:n}).map((_,bi) => `<div class="exam-fill-row"><span class="fnum">Blank ${bi+1}</span><input type="text" class="exam-text-input" placeholder="Answer ${bi+1}" oninput="examSetFill('${q.id}',${bi},this.value)"></div>`).join('');
+    } else if (type === 'code') {
+      const tests = Array.isArray(q.tests) ? q.tests : [];
+      body = `<textarea class="code-editor" id="code-${q.id}" spellcheck="false">${escapeHtml(q.starter_code || 'function solve(input) {\n  return input;\n}')}</textarea>
+        <button class="code-run-btn" onclick="examRunCode('${q.id}')">▶ Run ${tests.length} test${tests.length!==1?'s':''}</button>
+        <div class="code-results" id="coderes-${q.id}"></div>`;
+    }
+
+    return `<div class="mcq-question-card" id="qcard-${q.id}">${head}${body}</div>`;
+  }
+
+  // ── Answer handlers ──
+  function examPickOne(qId, val) {
+    examAnswers[qId] = val;
+    document.querySelectorAll(`[data-opt^="${qId}-"]`).forEach(el => el.classList.remove('selected'));
+    const sel = document.querySelector(`[data-opt="${qId}-${val}"]`);
+    if (sel) sel.classList.add('selected');
+    document.getElementById(`qcard-${qId}`)?.classList.add('answered');
+  }
+  function examToggleMulti(qId, val, el) {
+    const arr = Array.isArray(examAnswers[qId]) ? examAnswers[qId] : [];
+    const idx = arr.indexOf(val);
+    if (idx >= 0) { arr.splice(idx, 1); el.classList.remove('selected'); }
+    else { arr.push(val); el.classList.add('selected'); }
+    const cb = el.querySelector('input'); if (cb) cb.checked = idx < 0;
+    examAnswers[qId] = arr;
+    document.getElementById(`qcard-${qId}`)?.classList.toggle('answered', arr.length > 0);
+  }
+  function examSetText(qId, value) { examAnswers[qId] = value; document.getElementById(`qcard-${qId}`)?.classList.toggle('answered', !!value.trim()); }
+  function examSetFill(qId, bi, value) {
+    const a = Array.isArray(examAnswers[qId]) ? examAnswers[qId] : [];
+    a[bi] = value; examAnswers[qId] = a;
+    document.getElementById(`qcard-${qId}`)?.classList.add('answered');
+  }
+
+  // ── Code runner (sandboxed Web Worker, 3s timeout) ──
+  function examRunCode(qId) {
+    const q = (examData.questions || []).find(x => String(x.id) === String(qId));
+    if (!q) return;
+    const code = document.getElementById(`code-${qId}`).value;
+    const tests = Array.isArray(q.tests) ? q.tests : [];
+    const out = document.getElementById(`coderes-${qId}`);
+    out.innerHTML = '<div style="color:var(--muted);font-size:.8rem;">Running…</div>';
+
+    const workerSrc = `self.onmessage=function(e){var code=e.data.code,tests=e.data.tests,results=[];try{var solve=new Function(code+'\\nreturn typeof solve==="function"?solve:null;')();if(!solve){self.postMessage({error:'Define a function named solve(input).'});return;}for(var i=0;i<tests.length;i++){var t=tests[i],arg,got,err=null;try{arg=t.input===''?undefined:eval('('+t.input+')');}catch(x){arg=t.input;}try{got=solve(arg);}catch(x){err=x.message;}var g=err?('Error: '+err):String(got).trim();results.push({input:t.input,expected:String(t.expected).trim(),got:g,ok:err===null&&g===String(t.expected).trim()});}self.postMessage({results:results});}catch(x){self.postMessage({error:x.message});}};`;
+    let worker;
+    try { worker = new Worker(URL.createObjectURL(new Blob([workerSrc], { type: 'application/javascript' }))); }
+    catch(e) { out.innerHTML = '<div class="code-test fail">Code runner unavailable in this browser.</div>'; return; }
+
+    const kill = setTimeout(() => { worker.terminate(); out.innerHTML = '<div class="code-test fail">⏱ Timed out (possible infinite loop).</div>'; examAnswers[qId] = { passed:0, total:tests.length }; }, 3000);
+    worker.onmessage = (ev) => {
+      clearTimeout(kill); worker.terminate();
+      const d = ev.data;
+      if (d.error) { out.innerHTML = `<div class="code-test fail">⚠ ${escapeHtml(d.error)}</div>`; examAnswers[qId] = { passed:0, total:tests.length }; return; }
+      const passed = d.results.filter(r => r.ok).length;
+      examAnswers[qId] = { passed, total: tests.length };
+      out.innerHTML = d.results.map((r,i) => `<div class="code-test ${r.ok?'pass':'fail'}">${r.ok?'✓':'✗'} Test ${i+1}: solve(${escapeHtml(r.input||'∅')}) → ${escapeHtml(r.got)} ${r.ok?'':`(expected ${escapeHtml(r.expected)})`}</div>`).join('')
+        + `<div style="font-size:.8rem;color:var(--muted);margin-top:4px;">${passed}/${tests.length} passing</div>`;
+      document.getElementById(`qcard-${qId}`)?.classList.add('answered');
+    };
+    worker.postMessage({ code, tests });
+  }
+
+  // ── Timer ──
+  function startExamTimer(minutes) {
+    clearExamTimer();
+    let remaining = minutes * 60;
+    const clock = document.getElementById('examClock');
+    const wrap  = document.getElementById('examTimer');
+    const tick = () => {
+      const m = Math.floor(remaining / 60), s = remaining % 60;
+      if (clock) clock.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      if (wrap) wrap.classList.toggle('danger', remaining <= 30);
+      if (remaining <= 0) { clearExamTimer(); submitExamAnswers(true); return; }
+      remaining--;
+    };
+    tick();
+    examTimerInt = setInterval(tick, 1000);
+  }
+  function clearExamTimer() { if (examTimerInt) { clearInterval(examTimerInt); examTimerInt = null; } }
+
+  async function submitExamAnswers(auto) {
+    if (!examData || examSubmitted) return;
+    const questions = Array.isArray(examData.questions) ? examData.questions : [];
+    if (!auto) {
+      const answeredIds = Object.keys(examAnswers);
+      const unanswered = questions.filter(q => !answeredIds.includes(String(q.id)));
+      if (unanswered.length > 0 && !confirm(`You have ${unanswered.length} unanswered question(s). Submit anyway?`)) return;
+    }
+    clearExamTimer();
     const btn = document.getElementById('examSubmitBtn');
     if (btn) { btn.textContent = 'Submitting…'; btn.disabled = true; }
     try {
-      const res  = await fetch('/api/exam/submit', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ exam_id: examData.id, answers: examAnswers }) });
+      const res  = await fetch('/api/exam/submit', {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exam_id: examData.id, answers: examAnswers, question_ids: questions.map(q => q.id) })
+      });
       const data = await res.json();
       if (data.success) {
         examSubmitted = true;
         examData._result = data;
-        const container = document.getElementById('examContent');
-        renderExam(container);
+        renderExam(document.getElementById('examContent'));
         loadUserMarks();
         loadLeaderboard();
       } else {
@@ -2204,6 +2438,11 @@
     }
   }
 
+  function retakeExam() {
+    examSubmitted = false; examAnswers = {}; examData = null;
+    loadExam();
+  }
+
   function renderExamResult() {
     const r = examData._result || {};
     const score   = r.score || 0;
@@ -2211,33 +2450,69 @@
     const pct     = total ? Math.round((score / total) * 100) : 0;
     const color   = pct >= 80 ? '#22c55e' : pct >= 50 ? 'var(--accent)' : 'var(--accent3)';
     const feedback = Array.isArray(r.feedback) ? r.feedback : [];
+    const showAns  = r.show_answers !== false;
     const questions = Array.isArray(examData.questions) ? examData.questions : [];
+
+    let passBadge = '';
+    if (r.passed === true)  passBadge = `<div class="exam-pass-badge pass">✓ PASSED</div>`;
+    if (r.passed === false) passBadge = `<div class="exam-pass-badge fail">✗ Below pass mark (${r.pass_marks})</div>`;
+
+    const canRetake = r.attempts_left == null || r.attempts_left > 0;
+    const retakeBtn = canRetake
+      ? `<div class="exam-submit-wrap" style="margin-top:20px;"><button class="exam-submit-btn" onclick="retakeExam()">🔄 Retake${r.attempts_left!=null?` (${r.attempts_left} left)`:''}</button></div>`
+      : `<div style="text-align:center;color:var(--muted);font-size:.85rem;margin-top:16px;">No attempts remaining.</div>`;
+
     let html = `<div class="exam-result-banner">
       <div class="exam-result-score" style="color:${color}">${score} / ${total}</div>
       <div class="exam-result-label">Your Score</div>
       <div class="exam-result-pct" style="color:${color}">${pct}% — ${pct>=80?'Excellent! 🎉':pct>=50?'Good Job! 👍':'Keep Practicing 💪'}</div>
-    </div>
-    <div class="mcq-form">`;
+      ${passBadge}
+    </div>`;
+
+    if (!showAns) {
+      html += `<div class="lb-coming-soon" style="padding:30px;"><div class="empty-icon">🔒</div><h3>Answers hidden</h3><p>Your instructor has chosen not to reveal the answer key for this exam.</p></div>`;
+      return html + retakeBtn;
+    }
+
+    html += `<div class="mcq-form">`;
     questions.forEach((q, i) => {
-      const opts = Array.isArray(q.options) ? q.options : [];
-      const fb   = feedback.find(f => f.id === q.id) || {};
-      const userAns = fb.user_answer !== undefined ? parseInt(fb.user_answer) : -1;
-      const corrAns = fb.correct_answer !== undefined ? parseInt(fb.correct_answer) : -1;
+      const type = q.type || 'mcq';
+      const fb   = feedback.find(f => String(f.id) === String(q.id)) || {};
+      const mark = fb.earned != null ? `${fb.earned}/${fb.marks ?? q.marks ?? 1}` : '';
+      let detail = '';
+
+      if (type === 'mcq' || type === 'truefalse' || type === 'multi') {
+        const corr = type === 'multi'
+          ? (Array.isArray(fb.correct_answers) ? fb.correct_answers.map(Number) : [])
+          : (fb.correct_answer != null ? [Number(fb.correct_answer)] : []);
+        const user = type === 'multi'
+          ? (Array.isArray(fb.user_answer) ? fb.user_answer.map(Number) : [])
+          : (fb.user_answer != null ? [Number(fb.user_answer)] : []);
+        detail = `<div class="mcq-options">${examOptList(q).map(o => {
+          let cls = 'mcq-option';
+          if (corr.includes(o.val)) cls += ' correct';
+          else if (user.includes(o.val)) cls += ' wrong';
+          return `<label class="${cls}">${corr.includes(o.val)?'✓ ':user.includes(o.val)?'✗ ':''}${escapeHtml(o.text)}</label>`;
+        }).join('')}</div>`;
+      } else if (type === 'short' || type === 'fill') {
+        const accepted = Array.isArray(fb.accepted) ? fb.accepted.join(', ') : '';
+        const ua = Array.isArray(fb.user_answer) ? fb.user_answer.join(' | ') : (fb.user_answer || '—');
+        detail = `<div style="font-size:.88rem;color:var(--text);">Your answer: <strong>${escapeHtml(ua)}</strong></div>
+          ${accepted?`<div style="font-size:.82rem;color:#7fe0a0;margin-top:4px;">Accepted: ${escapeHtml(accepted)}</div>`:''}`;
+      } else if (type === 'code') {
+        const ua = fb.user_answer || {};
+        detail = `<div style="font-size:.88rem;color:var(--text);">Tests passed: <strong>${ua.passed ?? 0}/${ua.total ?? (q.tests?q.tests.length:0)}</strong></div>`;
+      }
+
       html += `<div class="mcq-question-card answered">
-        <div class="mcq-q-num">Question ${i+1} ${fb.correct ? '✅' : '❌'} <span class="mcq-marks-chip">${q.marks||1} mark${(q.marks||1)>1?'s':''}</span></div>
+        <div class="mcq-q-num">Question ${i+1} ${fb.correct ? '✅' : '❌'} <span class="mcq-marks-chip">${mark||((q.marks||1)+' marks')}</span></div>
         <div class="mcq-q-text">${escapeHtml(q.question)}</div>
-        <div class="mcq-options">
-          ${opts.map((opt, oi) => {
-            let cls = 'mcq-option';
-            if (oi === corrAns) cls += ' correct';
-            else if (oi === userAns && oi !== corrAns) cls += ' wrong';
-            return `<label class="${cls}"><input type="radio" disabled ${oi===userAns?'checked':''}> ${escapeHtml(opt)}</label>`;
-          }).join('')}
-        </div>
+        ${detail}
+        ${fb.explanation ? `<div class="exam-explain">💡 ${escapeHtml(fb.explanation)}</div>` : ''}
       </div>`;
     });
     html += `</div>`;
-    return html;
+    return html + retakeBtn;
   }
 
   // ── LOAD LEADERBOARD ─────────────────────────────────────────────────

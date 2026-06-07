@@ -845,23 +845,29 @@ async function adminExams(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { course_id, title, type, link_url, total_marks, duration_minutes, questions } = req.body || {};
+    const { course_id, title, type, link_url, total_marks, duration_minutes, questions,
+            pass_marks, max_attempts, shuffle_questions, shuffle_options, questions_per_attempt, show_answers } = req.body || {};
     if (!course_id || !title) return res.status(400).json({ success: false, error: 'course_id and title required' });
     const r = await query(
-      `INSERT INTO exams (course_id, title, type, link_url, total_marks, duration_minutes, questions)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-      [course_id, title, type||'mcq', link_url||null, total_marks||100, duration_minutes||60, JSON.stringify(questions||[])]
+      `INSERT INTO exams (course_id, title, type, link_url, total_marks, duration_minutes, questions,
+         pass_marks, max_attempts, shuffle_questions, shuffle_options, questions_per_attempt, show_answers)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+      [course_id, title, type||'mcq', link_url||null, total_marks||100, duration_minutes||60, JSON.stringify(questions||[]),
+       pass_marks ?? null, max_attempts ?? 1, !!shuffle_questions, !!shuffle_options, questions_per_attempt || null, show_answers !== false]
     );
     return res.status(200).json({ success: true, exam: r.rows[0] });
   }
 
   if (req.method === 'PUT') {
-    const { id, title, type, link_url, total_marks, duration_minutes, questions, is_active } = req.body || {};
+    const { id, title, type, link_url, total_marks, duration_minutes, questions, is_active,
+            pass_marks, max_attempts, shuffle_questions, shuffle_options, questions_per_attempt, show_answers } = req.body || {};
     if (!id) return res.status(400).json({ success: false, error: 'id required' });
     const r = await query(
-      `UPDATE exams SET title=$1, type=$2, link_url=$3, total_marks=$4, duration_minutes=$5, questions=$6, is_active=$7
-       WHERE id=$8 RETURNING *`,
-      [title, type||'mcq', link_url||null, total_marks||100, duration_minutes||60, JSON.stringify(questions||[]), is_active!==false, id]
+      `UPDATE exams SET title=$1, type=$2, link_url=$3, total_marks=$4, duration_minutes=$5, questions=$6, is_active=$7,
+         pass_marks=$8, max_attempts=$9, shuffle_questions=$10, shuffle_options=$11, questions_per_attempt=$12, show_answers=$13
+       WHERE id=$14 RETURNING *`,
+      [title, type||'mcq', link_url||null, total_marks||100, duration_minutes||60, JSON.stringify(questions||[]), is_active!==false,
+       pass_marks ?? null, max_attempts ?? 1, !!shuffle_questions, !!shuffle_options, questions_per_attempt || null, show_answers !== false, id]
     );
     return res.status(200).json({ success: true, exam: r.rows[0] });
   }
@@ -879,24 +885,79 @@ async function adminExams(req, res) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // PUBLIC: GET exam for a course (without answers)
 // ═══════════════════════════════════════════════════════════════════════════════
+// Fisher-Yates shuffle (returns a new array).
+function shuffled(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Strip a stored question down to what the learner is allowed to see (no answers).
+function sanitizeQuestion(q) {
+  const out = { id: q.id, type: q.type || 'mcq', question: q.question, marks: q.marks || 1 };
+  if (['mcq', 'multi', 'truefalse'].includes(out.type)) {
+    out.options = Array.isArray(q.options) ? q.options : [];
+  }
+  if (out.type === 'fill') out.blanks = Array.isArray(q.accepted) ? q.accepted.length : 1;
+  if (out.type === 'code') {
+    out.language = q.language || 'javascript';
+    out.starter_code = q.starter_code || '';
+    // Visible tests so the learner can run them; the grader re-checks server-side too.
+    out.tests = (Array.isArray(q.tests) ? q.tests : []).map(t => ({ input: t.input ?? '', expected: t.expected ?? '' }));
+  }
+  return out;
+}
+
 async function publicExam(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
   const { course_id } = req.query || {};
   if (!course_id) return res.status(400).json({ success: false, error: 'course_id required' });
 
   const r = await query(
-    `SELECT id, course_id, title, type, link_url, total_marks, duration_minutes,
-       CASE WHEN type='mcq' THEN
-         (SELECT jsonb_agg(jsonb_build_object(
-           'id', q->>'id', 'question', q->>'question',
-           'options', q->'options', 'marks', q->'marks'
-         )) FROM jsonb_array_elements(questions) q)
-       ELSE '[]'::jsonb END AS questions
-     FROM exams WHERE course_id=$1 AND is_active=TRUE ORDER BY created_at DESC LIMIT 1`,
+    `SELECT * FROM exams WHERE course_id=$1 AND is_active=TRUE ORDER BY created_at DESC LIMIT 1`,
     [course_id]
   );
   if (!r.rows.length) return res.status(200).json({ success: true, exam: null });
-  return res.status(200).json({ success: true, exam: r.rows[0] });
+  const e = r.rows[0];
+
+  let questions = [];
+  if (e.type !== 'link') {
+    let all = Array.isArray(e.questions) ? e.questions : JSON.parse(e.questions || '[]');
+    if (e.shuffle_questions) all = shuffled(all);
+    if (e.questions_per_attempt && e.questions_per_attempt > 0 && e.questions_per_attempt < all.length) {
+      all = (e.shuffle_questions ? all : shuffled(all)).slice(0, e.questions_per_attempt);
+    }
+    questions = all.map(sanitizeQuestion);
+    if (e.shuffle_options) {
+      questions = questions.map(q => q.options
+        ? { ...q, options: q.options.map((text, idx) => ({ text, idx })) } // keep original index as value
+        : q);
+    }
+  }
+
+  // If the request carries a valid session, report how many attempts this user has used.
+  let attemptsUsed = 0;
+  const token = req.cookies?.session_token;
+  if (token) {
+    try {
+      const ur = await query(`SELECT id FROM users WHERE session_token=$1 AND session_expires>NOW()`, [token]);
+      if (ur.rows.length) {
+        const ar = await query(`SELECT COUNT(*)::int AS n FROM exam_attempts WHERE user_id=$1 AND exam_id=$2`, [ur.rows[0].id, e.id]);
+        attemptsUsed = ar.rows[0].n;
+      }
+    } catch(_) { /* exam_attempts may not exist yet on first boot */ }
+  }
+
+  return res.status(200).json({ success: true, exam: {
+    id: e.id, course_id: e.course_id, title: e.title, type: e.type, link_url: e.link_url,
+    total_marks: e.total_marks, duration_minutes: e.duration_minutes,
+    pass_marks: e.pass_marks, max_attempts: e.max_attempts ?? 1, attempts_used: attemptsUsed,
+    shuffle_options: !!e.shuffle_options, show_answers: e.show_answers !== false,
+    questions
+  }});
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -932,39 +993,131 @@ async function submitExam(req, res) {
     await query(`ALTER TABLE user_marks DROP CONSTRAINT IF EXISTS user_marks_user_id_course_id_label_type_key`);
   } catch(e) { /* ignore */ }
 
+  await query(`CREATE TABLE IF NOT EXISTS exam_attempts (
+    id SERIAL PRIMARY KEY, user_id INTEGER, exam_id INTEGER, course_id INTEGER,
+    attempt_no INTEGER NOT NULL DEFAULT 1, score NUMERIC(8,2) NOT NULL DEFAULT 0,
+    total NUMERIC(8,2) NOT NULL DEFAULT 0, passed BOOLEAN DEFAULT FALSE,
+    answers JSONB DEFAULT '{}'::jsonb, created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  )`);
+
   const examResult = await query(`SELECT * FROM exams WHERE id=$1`, [exam_id]);
   if (!examResult.rows.length) return res.status(404).json({ success: false, error: 'Exam not found' });
   const exam = examResult.rows[0];
-  const questions = Array.isArray(exam.questions) ? exam.questions : JSON.parse(exam.questions || '[]');
+  const allQuestions = Array.isArray(exam.questions) ? exam.questions : JSON.parse(exam.questions || '[]');
 
-  let score = 0;
+  // Enforce attempt limit (0 / null = unlimited)
+  const maxAttempts = exam.max_attempts ?? 1;
+  const priorR = await query(`SELECT COUNT(*)::int AS n FROM exam_attempts WHERE user_id=$1 AND exam_id=$2`, [user.id, exam_id]);
+  const priorCount = priorR.rows[0].n;
+  if (maxAttempts && maxAttempts > 0 && priorCount >= maxAttempts) {
+    return res.status(403).json({ success: false, error: `No attempts remaining (used ${priorCount} of ${maxAttempts}).` });
+  }
+
+  // Grade only the questions that were presented to this learner.
+  const presentedIds = Array.isArray(req.body.question_ids) && req.body.question_ids.length
+    ? req.body.question_ids.map(String)
+    : allQuestions.map(q => String(q.id));
+  const graded = allQuestions.filter(q => presentedIds.includes(String(q.id)));
+
+  const norm = s => String(s == null ? '' : s).trim().toLowerCase().replace(/\s+/g, ' ');
+  let score = 0, totalPossible = 0;
   const feedback = [];
-  questions.forEach(q => {
-    const userAnswer = answers[q.id];
-    const correct = userAnswer === q.correct_answer;
-    if (correct) score += (q.marks || 1);
-    feedback.push({ id: q.id, correct, correct_answer: q.correct_answer, user_answer: userAnswer });
+
+  graded.forEach(q => {
+    const marks = q.marks || 1;
+    totalPossible += marks;
+    const ua = answers[q.id];
+    let earned = 0, correct = false;
+
+    switch (q.type || 'mcq') {
+      case 'mcq':
+      case 'truefalse':
+        correct = ua != null && Number(ua) === Number(q.correct_answer);
+        if (correct) earned = marks;
+        break;
+      case 'multi': {
+        const want = (Array.isArray(q.correct_answers) ? q.correct_answers : []).map(Number).sort();
+        const got  = (Array.isArray(ua) ? ua : []).map(Number).sort();
+        correct = want.length > 0 && want.length === got.length && want.every((v, i) => v === got[i]);
+        if (correct) earned = marks;
+        break;
+      }
+      case 'short': {
+        const accepted = (Array.isArray(q.accepted) ? q.accepted : []).map(norm);
+        correct = accepted.includes(norm(ua));
+        if (correct) earned = marks;
+        break;
+      }
+      case 'fill': {
+        const accepted = Array.isArray(q.accepted) ? q.accepted : [];
+        const arr = Array.isArray(ua) ? ua : [ua];
+        let hit = 0;
+        accepted.forEach((acc, i) => {
+          const allowed = String(acc).split('|').map(norm); // "a|b" = either accepted
+          if (allowed.includes(norm(arr[i]))) hit++;
+        });
+        earned = accepted.length ? marks * (hit / accepted.length) : 0;
+        correct = accepted.length > 0 && hit === accepted.length;
+        break;
+      }
+      case 'code': {
+        // Client runs the JS tests in a sandboxed worker and reports pass/total.
+        const passed = Math.max(0, parseInt(ua?.passed) || 0);
+        const tot    = Math.max(passed, parseInt(ua?.total) || (Array.isArray(q.tests) ? q.tests.length : 0));
+        earned = tot ? marks * (passed / tot) : 0;
+        correct = tot > 0 && passed === tot;
+        break;
+      }
+    }
+
+    earned = Math.round(earned * 100) / 100;
+    score += earned;
+    feedback.push({
+      id: q.id, type: q.type || 'mcq', correct, earned, marks,
+      // Only reveal answer keys when the exam allows it
+      ...(exam.show_answers !== false ? {
+        correct_answer: q.correct_answer, correct_answers: q.correct_answers,
+        accepted: q.accepted, explanation: q.explanation || ''
+      } : {}),
+      user_answer: ua
+    });
   });
 
-  // Update existing exam submission or insert new one
+  score = Math.round(score * 100) / 100;
+  const passMark = exam.pass_marks ?? null;
+  const passed = passMark != null ? score >= passMark : null;
+  const attemptNo = priorCount + 1;
+
+  await query(
+    `INSERT INTO exam_attempts (user_id, exam_id, course_id, attempt_no, score, total, passed, answers)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+    [user.id, exam_id, exam.course_id, attemptNo, score, totalPossible, !!passed, JSON.stringify(answers || {})]
+  );
+
+  // Keep the BEST attempt in user_marks (drives the leaderboard).
   const existing = await query(
-    `SELECT id FROM user_marks WHERE user_id=$1 AND exam_id=$2 AND type='exam'`,
+    `SELECT id, marks_obtained FROM user_marks WHERE user_id=$1 AND exam_id=$2 AND type='exam'`,
     [user.id, exam_id]
   );
   if (existing.rows.length > 0) {
-    await query(
-      `UPDATE user_marks SET marks_obtained=$1, submitted_at=NOW() WHERE id=$2`,
-      [score, existing.rows[0].id]
-    );
+    if (score > parseFloat(existing.rows[0].marks_obtained)) {
+      await query(`UPDATE user_marks SET marks_obtained=$1, total_marks=$2, submitted_at=NOW() WHERE id=$3`,
+        [score, totalPossible, existing.rows[0].id]);
+    }
   } else {
     await query(
       `INSERT INTO user_marks (user_id, course_id, exam_id, type, label, marks_obtained, total_marks)
        VALUES ($1,$2,$3,'exam',$4,$5,$6)`,
-      [user.id, exam.course_id, exam_id, exam.title, score, exam.total_marks]
+      [user.id, exam.course_id, exam_id, exam.title, score, totalPossible]
     );
   }
 
-  return res.status(200).json({ success: true, score, total: exam.total_marks, feedback });
+  const attemptsLeft = (maxAttempts && maxAttempts > 0) ? Math.max(0, maxAttempts - attemptNo) : null;
+  return res.status(200).json({
+    success: true, score, total: totalPossible, feedback,
+    passed, pass_marks: passMark, attempt_no: attemptNo, attempts_left: attemptsLeft,
+    show_answers: exam.show_answers !== false
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1082,6 +1235,119 @@ async function adminAssignmentsCrud(req, res) {
     mods.assignments_list = mods.assignments_list.filter(a => a.id !== assignment_id);
     await query(`UPDATE courses SET modules=$1::jsonb WHERE id=$2`, [JSON.stringify(mods), course_id]);
     return res.status(200).json({ success: true, assignments: mods.assignments_list });
+  }
+
+  return res.status(405).json({ success: false, error: 'Method not allowed' });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// USER: ASSIGNMENT SUBMISSIONS — GET own / POST submit
+// ═══════════════════════════════════════════════════════════════════════════════
+async function userSubmissions(req, res) {
+  const user = await requireUser(req, res); if (!user) return;
+
+  if (req.method === 'GET') {
+    const courseId = parseInt((req.query?.course_id) || (req.url.split('course_id=')[1] || '').split('&')[0]);
+    if (!courseId) return res.status(400).json({ success: false, error: 'course_id required' });
+    const r = await query(
+      `SELECT id, assignment_id, assignment_title, submission_text, submission_url, file_name,
+              status, marks_obtained, max_marks, feedback, submitted_at, graded_at
+       FROM assignment_submissions WHERE user_id=$1 AND course_id=$2`,
+      [user.id, courseId]
+    );
+    return res.status(200).json({ success: true, submissions: r.rows });
+  }
+
+  if (req.method === 'POST') {
+    const { course_id, assignment_id, submission_text, submission_url, file_data, file_name } = req.body || {};
+    if (!course_id || !assignment_id) return res.status(400).json({ success: false, error: 'course_id and assignment_id required' });
+    if (!(await isEnrolled(user.id, course_id))) return res.status(403).json({ success: false, error: 'Not enrolled in this course' });
+    if (!(submission_text || '').trim() && !(submission_url || '').trim() && !file_data) {
+      return res.status(400).json({ success: false, error: 'Provide text, a link, or a file' });
+    }
+    if (file_data && file_data.length > 2_800_000) { // ~2MB after base64 overhead
+      return res.status(413).json({ success: false, error: 'File too large (max ~2 MB). Please upload a link instead.' });
+    }
+
+    // Look up the assignment title / max marks from the course modules.
+    let title = '', maxMarks = null;
+    const cr = await query(`SELECT modules FROM courses WHERE id=$1`, [course_id]);
+    if (cr.rows.length) {
+      let mods = {};
+      try { mods = typeof cr.rows[0].modules === 'string' ? JSON.parse(cr.rows[0].modules) : (cr.rows[0].modules || {}); } catch(e) {}
+      const a = (Array.isArray(mods.assignments_list) ? mods.assignments_list : []).find(x => String(x.id) === String(assignment_id));
+      if (a) { title = a.title || ''; maxMarks = a.max_marks ?? null; }
+    }
+
+    // Resubmission resets grading status.
+    const r = await query(`
+      INSERT INTO assignment_submissions
+        (user_id, course_id, assignment_id, assignment_title, submission_text, submission_url, file_data, file_name, max_marks, status, submitted_at)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'submitted',NOW())
+      ON CONFLICT (user_id, assignment_id) DO UPDATE SET
+        submission_text=EXCLUDED.submission_text, submission_url=EXCLUDED.submission_url,
+        file_data=EXCLUDED.file_data, file_name=EXCLUDED.file_name,
+        status='submitted', submitted_at=NOW(), marks_obtained=NULL, graded_at=NULL
+      RETURNING id, assignment_id, status, submitted_at
+    `, [user.id, course_id, assignment_id, title, (submission_text||'').slice(0,10000), (submission_url||'').slice(0,1000),
+        file_data || null, (file_name||'').slice(0,200), maxMarks]);
+    return res.status(200).json({ success: true, submission: r.rows[0] });
+  }
+
+  return res.status(405).json({ success: false, error: 'Method not allowed' });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ADMIN: SUBMISSIONS REVIEW QUEUE — GET list / PUT grade
+// ═══════════════════════════════════════════════════════════════════════════════
+async function adminSubmissions(req, res) {
+  const admin = await requireStaff(req, res); if (!admin) return;
+
+  if (req.method === 'GET') {
+    const { course_id } = req.query || {};
+    const params = [];
+    let where = '';
+    if (course_id) { params.push(course_id); where = `WHERE s.course_id=$1`; }
+    const r = await query(`
+      SELECT s.id, s.user_id, s.course_id, s.assignment_id, s.assignment_title,
+             s.submission_text, s.submission_url, s.file_data, s.file_name,
+             s.status, s.marks_obtained, s.max_marks, s.feedback, s.submitted_at, s.graded_at,
+             u.username, u.email, c.title AS course_title
+      FROM assignment_submissions s
+      JOIN users u ON u.id = s.user_id
+      JOIN courses c ON c.id = s.course_id
+      ${where} ORDER BY (s.status='submitted') DESC, s.submitted_at DESC`, params);
+    return res.status(200).json({ success: true, submissions: r.rows });
+  }
+
+  if (req.method === 'PUT') {
+    const { id, marks_obtained, feedback } = req.body || {};
+    if (!id || marks_obtained == null) return res.status(400).json({ success: false, error: 'id and marks_obtained required' });
+    const sr = await query(`SELECT * FROM assignment_submissions WHERE id=$1`, [id]);
+    if (!sr.rows.length) return res.status(404).json({ success: false, error: 'Submission not found' });
+    const sub = sr.rows[0];
+    const max = sub.max_marks ?? marks_obtained;
+
+    await query(
+      `UPDATE assignment_submissions SET marks_obtained=$1, feedback=$2, status='graded', graded_at=NOW() WHERE id=$3`,
+      [marks_obtained, (feedback||'').slice(0,2000), id]
+    );
+
+    // Mirror the grade into user_marks so it counts on the leaderboard / marks view.
+    const label = sub.assignment_title || 'Assignment';
+    const ex = await query(
+      `SELECT id FROM user_marks WHERE user_id=$1 AND course_id=$2 AND type='assignment' AND label=$3`,
+      [sub.user_id, sub.course_id, label]
+    );
+    if (ex.rows.length) {
+      await query(`UPDATE user_marks SET marks_obtained=$1, total_marks=$2, notes=$3, submitted_at=NOW() WHERE id=$4`,
+        [marks_obtained, max, (feedback||'').slice(0,500), ex.rows[0].id]);
+    } else {
+      await query(`INSERT INTO user_marks (user_id, course_id, type, label, marks_obtained, total_marks, notes)
+        VALUES ($1,$2,'assignment',$3,$4,$5,$6)`,
+        [sub.user_id, sub.course_id, label, marks_obtained, max, (feedback||'').slice(0,500)]);
+    }
+    return res.status(200).json({ success: true });
   }
 
   return res.status(405).json({ success: false, error: 'Method not allowed' });
@@ -1290,6 +1556,49 @@ async function runBootMigration() {
       issued_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       UNIQUE (user_id, course_id)
     )`);
+
+    // ── Advanced exams: config columns on the existing exams table ──────────────
+    await query(`ALTER TABLE exams ADD COLUMN IF NOT EXISTS pass_marks INTEGER`);
+    await query(`ALTER TABLE exams ADD COLUMN IF NOT EXISTS max_attempts INTEGER DEFAULT 1`);
+    await query(`ALTER TABLE exams ADD COLUMN IF NOT EXISTS shuffle_questions BOOLEAN DEFAULT FALSE`);
+    await query(`ALTER TABLE exams ADD COLUMN IF NOT EXISTS shuffle_options BOOLEAN DEFAULT FALSE`);
+    await query(`ALTER TABLE exams ADD COLUMN IF NOT EXISTS questions_per_attempt INTEGER`);
+    await query(`ALTER TABLE exams ADD COLUMN IF NOT EXISTS show_answers BOOLEAN DEFAULT TRUE`);
+
+    // One row per exam attempt. user_marks still holds the BEST score for the leaderboard.
+    await query(`CREATE TABLE IF NOT EXISTS exam_attempts (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      exam_id INTEGER REFERENCES exams(id) ON DELETE CASCADE,
+      course_id INTEGER,
+      attempt_no INTEGER NOT NULL DEFAULT 1,
+      score NUMERIC(8,2) NOT NULL DEFAULT 0,
+      total NUMERIC(8,2) NOT NULL DEFAULT 0,
+      passed BOOLEAN DEFAULT FALSE,
+      answers JSONB DEFAULT '{}'::jsonb,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`);
+
+    // Student assignment submissions — the missing learner-side submit flow.
+    // assignment_id references modules.assignments_list[].id (a string).
+    await query(`CREATE TABLE IF NOT EXISTS assignment_submissions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
+      assignment_id VARCHAR(40) NOT NULL,
+      assignment_title TEXT,
+      submission_text TEXT DEFAULT '',
+      submission_url TEXT DEFAULT '',
+      file_data TEXT,
+      file_name TEXT,
+      status VARCHAR(20) NOT NULL DEFAULT 'submitted',
+      marks_obtained NUMERIC(8,2),
+      max_marks NUMERIC(8,2),
+      feedback TEXT DEFAULT '',
+      submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      graded_at TIMESTAMP WITH TIME ZONE,
+      UNIQUE (user_id, assignment_id)
+    )`);
   } catch (e) {
     // Non-fatal — log and continue; tables likely already exist
     console.warn('Boot migration warning:', e.message);
@@ -1496,6 +1805,8 @@ export default async function handler(req, res) {
     if (path.endsWith('/user/progress'))       return await userProgress(req, res);
     if (path.endsWith('/user/reviews'))        return await userReviews(req, res);
     if (path.endsWith('/user/certificates'))   return await userCertificates(req, res);
+    if (path.endsWith('/user/submissions'))    return await userSubmissions(req, res);
+    if (path.endsWith('/admin/submissions'))   return await adminSubmissions(req, res);
 
     // IMPORTANT: specific routes checked before generic /purchases to avoid endsWith overlap
     if (path.endsWith('/admin/purchases'))     return await adminPurchases(req, res);
