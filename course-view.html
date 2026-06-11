@@ -308,9 +308,9 @@
   .content-area { display: none; padding: 32px 36px 60px; max-width: 1200px; margin: 0 auto; }
   .content-area.active { display: block; animation: fadeUp .4s cubic-bezier(.16,1,.3,1) both; }
 
-  /* The module/video panel uses much more of the screen so the player is large on
-     wide monitors. Other panels keep the 1200px cap for comfortable reading width. */
-  #panelModule { max-width: 1600px; }
+  /* The module/video panel uses nearly the full width so the player is large on wide
+     monitors with minimal empty side space. Other panels keep the 1200px reading cap. */
+  #panelModule { max-width: 1760px; }
 
   .assignment-header { margin-bottom: 24px; }
   .stat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
@@ -591,9 +591,21 @@
   }
 
   /* ─── UNIFIED MODULE LAYOUT ─── */
-  .unified-course-layout { display: flex; gap: 24px; align-items: flex-start; }
-  .video-main { flex: 1; min-width: 0; }
-  .video-sidebar { width: 380px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+  /* Desktop: grid so the description sits under the video (left column) while the
+     module sidebar fills the right column. On mobile this becomes a flex column
+     (see the ≤1024 media query) where DOM order gives: video → modules → description. */
+  .unified-course-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    grid-template-areas:
+      "main    sidebar"
+      "desc    sidebar";
+    gap: 24px;
+    align-items: start;
+  }
+  .video-main { grid-area: main; min-width: 0; }
+  .video-sidebar { grid-area: sidebar; width: 380px; display: flex; flex-direction: column; gap: 16px; }
+  .unified-course-layout > .description-tab { grid-area: desc; margin: 0; }
 
   .video-player-area {
     background: #000;
@@ -949,8 +961,14 @@
   .acc-lecture-dur { font-size: 0.7rem; color: var(--muted); }
 
   @media (max-width: 1024px) {
-    .unified-course-layout { flex-direction: column; }
-    .video-sidebar { width: 100%; }
+    /* Stack everything; flex column means the DOM order applies:
+       video → "Show Modules" → modules → description. */
+    .unified-course-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .video-main, .video-sidebar, .unified-course-layout > .description-tab { width: 100%; }
   }
   @media (max-width: 768px) {
     .custom-controls-bar { height: auto; padding: 8px 10px; flex-wrap: wrap; }
@@ -1210,11 +1228,6 @@
 
       <!-- MODULE TAB -->
       <div class="content-area active" id="panelModule">
-        <!-- Mobile module toggle -->
-        <div class="mob-module-toggle-bar" id="mobToggleBar">
-          <span id="mobToggleLabel">📋 Show Modules</span>
-          <svg id="mobToggleChevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </div>
         <div class="unified-course-layout" id="unifiedLayout">
           
           <div class="video-main">
@@ -1316,11 +1329,13 @@
               <button class="nav-btn" id="btnNextLec" onclick="navigateLecture(1)" disabled>Next →</button>
             </div>
 
-            <div class="description-tab">
-              <div class="description-label">Description:</div>
-              <div class="description-content" id="displayLessonDesc">Course description and notes will appear here.</div>
-            </div>
           </div><!-- /video-main -->
+
+          <!-- Mobile "Show Modules" toggle — sits directly below the video on mobile -->
+          <div class="mob-module-toggle-bar" id="mobToggleBar">
+            <span id="mobToggleLabel">📋 Show Modules</span>
+            <svg id="mobToggleChevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
 
           <div class="video-sidebar">
             <div class="sidebar-progress">
@@ -1335,6 +1350,11 @@
               <button id="certificateCta" onclick="claimCertificate()" style="display:none;margin-top:12px;width:100%;padding:11px;border:none;border-radius:9px;background:linear-gradient(135deg,#fbbf24,#ff4d8d);color:#111;font-weight:800;font-size:0.82rem;cursor:pointer;letter-spacing:.3px;">🎓 Get Your Certificate</button>
             </div>
             <div class="module-accordion-list" id="accordionList"></div>
+          </div>
+
+          <div class="description-tab">
+            <div class="description-label">Description:</div>
+            <div class="description-content" id="displayLessonDesc">Course description and notes will appear here.</div>
           </div>
 
         </div>
