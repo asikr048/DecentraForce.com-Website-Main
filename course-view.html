@@ -308,6 +308,10 @@
   .content-area { display: none; padding: 32px 36px 60px; max-width: 1200px; margin: 0 auto; }
   .content-area.active { display: block; animation: fadeUp .4s cubic-bezier(.16,1,.3,1) both; }
 
+  /* The module/video panel uses much more of the screen so the player is large on
+     wide monitors. Other panels keep the 1200px cap for comfortable reading width. */
+  #panelModule { max-width: 1600px; }
+
   .assignment-header { margin-bottom: 24px; }
   .stat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
   .stat-card {
