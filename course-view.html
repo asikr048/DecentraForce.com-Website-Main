@@ -1931,6 +1931,11 @@
       resetCustomUI();
     } else {
       mainPlayer = new YT.Player('main-yt-iframe', {
+        // Explicit 100% so the iframe always fills the responsive 16:9 box at every
+        // breakpoint (never YouTube's default 640x390 fixed size). Same player for
+        // every module/lecture — they all load into this one instance.
+        width: '100%',
+        height: '100%',
         videoId: videoId,
         playerVars: {
           autoplay: 0,
@@ -1939,7 +1944,8 @@
           rel: 0,
           showinfo: 0,
           disablekb: 1,
-          fs: 0
+          fs: 0,
+          playsinline: 1   // keep video inline on iOS so mobile matches desktop sizing
         },
         events: {
           onReady: onPlayerReady,
