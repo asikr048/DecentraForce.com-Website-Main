@@ -910,7 +910,10 @@
     }
 
     try {
-      const res = await fetch('/api/_public/courses');
+      // Fetch fresh so a lecture that was just switched public→private (or vice-versa)
+      // is reflected immediately — otherwise a stale cache could offer a "Free Preview"
+      // link to a now-private lecture. cache:'no-store' + unique ?t= bypass browser & CDN cache.
+      const res = await fetch('/api/_public/courses?t=' + Date.now(), { cache: 'no-store' });
       const data = await res.json();
       activeCourse = data.courses.find(c => c.id == courseId);
 

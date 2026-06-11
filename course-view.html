@@ -610,6 +610,17 @@
     background: #000;
   }
 
+  /* In fullscreen, drop the 16:9 padding hack and fill the whole screen so the
+     video isn't a tiny strip. Custom controls stay pinned to the bottom. */
+  .youtube-player-container:fullscreen,
+  .youtube-player-container:-webkit-full-screen {
+    width: 100vw; height: 100vh; padding-bottom: 0;
+  }
+  .youtube-player-container:fullscreen .youtube-iframe-wrapper,
+  .youtube-player-container:-webkit-full-screen .youtube-iframe-wrapper {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  }
+
   .youtube-iframe-wrapper {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -704,6 +715,12 @@
   .video-player-area:hover .custom-controls-bar,
   .custom-controls-bar:focus-within {
     opacity: 1;
+  }
+
+  /* Touch devices (phones/tablets) have no hover, so the hover-only control bar
+     would be invisible — including the fullscreen button. Keep it always visible. */
+  @media (hover: none), (pointer: coarse) {
+    .custom-controls-bar { opacity: 1 !important; }
   }
 
   /* ─── TIMELINE ─── */
@@ -932,6 +949,11 @@
     .custom-controls-bar { height: auto; padding: 8px 10px; flex-wrap: wrap; }
     .timeline-slider-container { order: -1; flex: 1 1 100%; margin-bottom: 4px; }
     .volume-slider { width: 44px; }
+    /* Controls wrap to ~2 rows on mobile — keep the tap-to-play shield clear of them
+       so tapping a control button doesn't also toggle play/pause. */
+    .youtube-click-shield { height: calc(100% - 92px); }
+    /* Slightly larger tap targets on phones. */
+    .control-btn { width: 38px; height: 38px; }
   }
   /* ── Mobile module toggle bar ── */
   .mob-module-toggle-bar {
@@ -1481,7 +1503,11 @@
     }
 
     try {
-      const res  = await fetch('/api/_public/courses');
+      // SECURITY: this page enforces lecture access (public vs enrolled-only), so it
+      // must NEVER use a cached copy of the course. A stale cache (common on mobile)
+      // would keep showing a lecture as "public" after an admin made it private.
+      // cache:'no-store' bypasses the browser cache; the unique ?t= busts the CDN edge cache.
+      const res  = await fetch('/api/_public/courses?t=' + Date.now(), { cache: 'no-store' });
       const data = await res.json();
       activeCourse = (data.courses || []).find(c => String(c.id) === String(courseId));
       if (!activeCourse) { showError('Course not found.'); return; }
@@ -2032,10 +2058,29 @@
 
   function toggleMainFullscreen() {
     const container = document.getElementById('yt-container');
-    if (!document.fullscreenElement) {
-      (container.requestFullscreen || container.webkitRequestFullscreen).call(container);
-    } else {
-      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+
+    // Already fullscreen? Exit (with vendor prefixes).
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+    if (fsEl) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if (exit) exit.call(document);
+      return;
+    }
+
+    // Desktop + Android Chrome: fullscreen the whole container so our custom
+    // controls bar (incl. the ⛶ button) stays visible. All vendor prefixes covered.
+    const req = container.requestFullscreen || container.webkitRequestFullscreen
+              || container.mozRequestFullScreen || container.msRequestFullscreen;
+    if (req) { req.call(container); return; }
+
+    // iOS Safari: arbitrary elements can't go fullscreen — fall back to the YouTube
+    // player's own iframe, which can present its native fullscreen video on iOS.
+    const iframe = (mainPlayer && mainPlayer.getIframe) ? mainPlayer.getIframe()
+                 : document.querySelector('#main-yt-iframe');
+    if (iframe) {
+      const ifReq = iframe.requestFullscreen || iframe.webkitRequestFullscreen
+                  || iframe.webkitEnterFullscreen;
+      if (ifReq) ifReq.call(iframe);
     }
   }
 
