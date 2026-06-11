@@ -617,6 +617,23 @@
     pointer-events: none;
   }
 
+  /* Message overlay (locked / invalid) — same 16:9 box as the player so the
+     layout never shifts, and the real player is only hidden, never removed. */
+  .player-message-overlay {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    height: 0;
+    background: rgba(5,10,24,0.95);
+  }
+  .player-message-inner {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 18px; padding: 32px 24px; text-align: center;
+  }
+
   .youtube-iframe-wrapper iframe {
     width: 100%; height: 100%; border: none;
   }
@@ -1252,6 +1269,13 @@
                 </div><!-- /youtube-overlay -->
 
               </div><!-- /youtube-player-container -->
+
+              <!-- Message overlay (locked lecture / invalid URL). Shown INSTEAD of the
+                   player without ever destroying #yt-container, so the custom controls
+                   and fullscreen button survive for every module/lecture. -->
+              <div class="player-message-overlay" id="playerMessage" style="display:none;">
+                <div class="player-message-inner" id="playerMessageInner"></div>
+              </div>
             </div><!-- /video-player-area -->
 
             <h2 class="lesson-title-main" id="displayLessonTitle">Select a lecture to begin</h2>
@@ -1657,10 +1681,14 @@
   // ── VIDEO LOADING ──────────────────────────────────────────────────────
   function extractYouTubeVideoId(url) {
     if (!url) return null;
+    url = String(url).trim();
+    // Bare 11-char video id pasted on its own
+    if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
     const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
-      /(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
-      /(?:youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11}))/,
+      // watch?v=ID  /  &v=ID  (any host: youtube.com, m.youtube.com, music.youtube.com)
+      /[?&]v=([a-zA-Z0-9_-]{11})/,
+      // youtu.be/ID  /  /embed/ID  /  /v/ID  /  /shorts/ID  /  /live/ID  (incl. youtube-nocookie.com)
+      /(?:youtu\.be\/|\/embed\/|\/v\/|\/shorts\/|\/live\/)([a-zA-Z0-9_-]{11})/,
     ];
     for (const pattern of patterns) {
       const match = url.match(pattern);
@@ -1682,6 +1710,25 @@
       initOrUpdatePlayer(flatLectures[currentLectureIndex].url);
     }
   };
+
+  // Show the real player; hide the message overlay. The player is NEVER removed
+  // from the DOM, so its custom controls + fullscreen button work for every lecture.
+  function showPlayer() {
+    const yt  = document.getElementById('yt-container');
+    const msg = document.getElementById('playerMessage');
+    if (yt)  yt.style.display = '';
+    if (msg) { msg.style.display = 'none'; document.getElementById('playerMessageInner').innerHTML = ''; }
+  }
+
+  // Show a message (locked lecture / invalid URL) over the player area WITHOUT
+  // destroying #yt-container — that container holds the custom controls & fullscreen.
+  function showPlayerMessage(html) {
+    const yt  = document.getElementById('yt-container');
+    const msg = document.getElementById('playerMessage');
+    try { if (mainPlayer && mainPlayer.pauseVideo) mainPlayer.pauseVideo(); } catch (e) {}
+    if (yt)  yt.style.display = 'none';
+    if (msg) { document.getElementById('playerMessageInner').innerHTML = html; msg.style.display = 'block'; }
+  }
 
   function loadLecture(flatIdx) {
     if (flatIdx < 0 || flatIdx >= flatLectures.length) return;
@@ -1734,20 +1781,17 @@
     document.getElementById('displayLessonTitle').textContent = lec.title;
     document.getElementById('displayLessonDesc').textContent  = '🔒 This lecture is available to enrolled students only.';
 
-    const playerArea = document.getElementById('mainPlayerArea');
-    playerArea.innerHTML = `
-      <div style="height:100%;min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:40px 24px;text-align:center;background:rgba(5,10,24,0.95);border-radius:12px;">
-        <div style="width:72px;height:72px;border-radius:50%;background:rgba(123,92,255,0.15);border:2px solid rgba(123,92,255,0.3);display:grid;place-items:center;font-size:2rem;">🔒</div>
-        <div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.15rem;color:var(--text);margin-bottom:8px;">${escapeHtml(lec.title)}</div>
-          <div style="color:var(--muted);font-size:0.9rem;max-width:360px;line-height:1.6;">This lecture is for enrolled students only. ${price === 0 ? 'Enroll for free to unlock all content.' : 'Purchase this course to unlock all lectures.'}</div>
-        </div>
-        ${price === 0
-          ? `<a href="course-details.html?id=${courseId}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;background:linear-gradient(135deg,#00e599,#00e5ff);color:#111;font-weight:700;font-size:0.95rem;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">🎓 Enroll for Free</a>`
-          : `<a href="course-details.html?id=${courseId}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;background:linear-gradient(135deg,#7b5cff,#00e5ff);color:#fff;font-weight:700;font-size:0.95rem;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">🛒 Purchase Course — ${priceLabel}</a>`
-        }
-        <a href="course-details.html?id=${courseId}" style="color:var(--muted);font-size:0.82rem;text-decoration:underline;">← Back to course details</a>
-      </div>`;
+    showPlayerMessage(`
+      <div style="width:72px;height:72px;border-radius:50%;background:rgba(123,92,255,0.15);border:2px solid rgba(123,92,255,0.3);display:grid;place-items:center;font-size:2rem;">🔒</div>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.15rem;color:var(--text);margin-bottom:8px;">${escapeHtml(lec.title)}</div>
+        <div style="color:var(--muted);font-size:0.9rem;max-width:360px;line-height:1.6;">This lecture is for enrolled students only. ${price === 0 ? 'Enroll for free to unlock all content.' : 'Purchase this course to unlock all lectures.'}</div>
+      </div>
+      ${price === 0
+        ? `<a href="course-details.html?id=${courseId}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;background:linear-gradient(135deg,#00e599,#00e5ff);color:#111;font-weight:700;font-size:0.95rem;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">🎓 Enroll for Free</a>`
+        : `<a href="course-details.html?id=${courseId}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;background:linear-gradient(135deg,#7b5cff,#00e5ff);color:#fff;font-weight:700;font-size:0.95rem;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">🛒 Purchase Course — ${priceLabel}</a>`
+      }
+      <a href="course-details.html?id=${courseId}" style="color:var(--muted);font-size:0.82rem;text-decoration:underline;">← Back to course details</a>`);
   }
 
   function navigateLecture(direction) {
@@ -1842,12 +1886,17 @@
   function initOrUpdatePlayer(url) {
     const videoId = extractYouTubeVideoId(url);
     if (!videoId) {
-      document.getElementById('mainPlayerArea').innerHTML = `
-        <div style="height:200px;display:grid;place-items:center;color:var(--muted);font-size:0.9rem;">
-          ⚠️ Invalid or non-YouTube video URL
-        </div>`;
+      showPlayerMessage(`
+        <div style="font-size:2.2rem;">⚠️</div>
+        <div style="color:var(--muted);font-size:0.95rem;max-width:380px;line-height:1.6;">
+          This lecture's video link is missing or not a valid YouTube URL.<br>Please contact your instructor.
+        </div>`);
       return;
     }
+
+    // Valid video — make sure the real player (with custom controls + fullscreen)
+    // is visible. This is what was missing after a locked/invalid lecture wiped it.
+    showPlayer();
 
     if (!isPlayerReady || typeof YT === 'undefined' || !YT.Player) return;
 
