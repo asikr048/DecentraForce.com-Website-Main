@@ -596,7 +596,9 @@
      (see the ≤1024 media query) where DOM order gives: video → modules → description. */
   .unified-course-layout {
     display: grid;
-    grid-template-columns: 1fr 380px;
+    /* minmax(0,1fr) so wide description content can NEVER force the video column to
+       grow/shrink — the player width stays consistent for every lecture. */
+    grid-template-columns: minmax(0, 1fr) 380px;
     grid-template-areas:
       "main    sidebar"
       "desc    sidebar";
@@ -605,7 +607,7 @@
   }
   .video-main { grid-area: main; min-width: 0; }
   .video-sidebar { grid-area: sidebar; width: 380px; display: flex; flex-direction: column; gap: 16px; }
-  .unified-course-layout > .description-tab { grid-area: desc; margin: 0; }
+  .unified-course-layout > .description-tab { grid-area: desc; margin: 0; min-width: 0; max-width: 100%; overflow: hidden; }
 
   .video-player-area {
     background: #000;
@@ -888,9 +890,14 @@
   .description-tab {
     padding: 20px; border-radius: 12px; background: var(--surface);
     border: 1px solid var(--border2);
+    min-width: 0; max-width: 100%; overflow: hidden;
   }
   .description-label { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text); margin-bottom: 8px; }
-  .description-content { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+  /* Keep any pasted-HTML content inside the box: wrap long words/URLs and let wide
+     blocks (tables, <pre>) scroll instead of stretching the page. */
+  .description-content { font-size: 0.9rem; color: var(--muted); line-height: 1.6; min-width: 0; max-width: 100%; overflow-x: auto; overflow-wrap: break-word; word-break: break-word; }
+  .description-content * { max-width: 100%; }
+  .description-content table { display: block; overflow-x: auto; max-width: 100%; }
   .description-content a { color: var(--accent); text-decoration: underline; }
   .description-content a:hover { opacity: 0.85; }
   .description-content ul, .description-content ol { margin: 8px 0; padding-left: 22px; }
@@ -1803,7 +1810,7 @@
     currentLectureIndex = flatIdx;
 
     document.getElementById('displayLessonTitle').textContent = lec.title;
-    document.getElementById('displayLessonDesc').innerHTML    = lec.desc;
+    document.getElementById('displayLessonDesc').innerHTML    = sanitizeDescriptionHtml(lec.desc);
     document.getElementById('btnPrevLec').disabled = (flatIdx === 0);
     document.getElementById('btnNextLec').disabled = (flatIdx === flatLectures.length - 1);
 
@@ -2761,6 +2768,30 @@
     const d = document.createElement('div');
     d.textContent = text;
     return d.innerHTML;
+  }
+
+  // Clean lecture-description HTML so it can render formatting (bold, links, lists,
+  // images) but can NEVER affect the rest of the page. The big offender is a <style>
+  // block pasted into a description — its CSS applies globally and shrinks the player.
+  function sanitizeDescriptionHtml(html) {
+    const tpl = document.createElement('template');
+    tpl.innerHTML = String(html == null ? '' : html);
+    // Remove anything that runs code or injects page-wide styles/layout.
+    tpl.content.querySelectorAll('style, script, link, meta, base, title, iframe, object, embed, form').forEach(el => el.remove());
+    tpl.content.querySelectorAll('*').forEach(el => {
+      [...el.attributes].forEach(attr => {
+        const name = attr.name.toLowerCase();
+        const val  = (attr.value || '').trim().toLowerCase();
+        // Strip event handlers and javascript: URLs.
+        if (name.startsWith('on')) el.removeAttribute(attr.name);
+        if ((name === 'href' || name === 'src') && val.startsWith('javascript:')) el.removeAttribute(attr.name);
+        // Strip inline styles that can break out of the description box.
+        if (name === 'style' && /position\s*:\s*(fixed|absolute|sticky)|width\s*:\s*\d+\s*v|left\s*:|right\s*:|top\s*:|bottom\s*:|z-index/i.test(attr.value)) {
+          el.removeAttribute(attr.name);
+        }
+      });
+    });
+    return tpl.innerHTML;
   }
   function formatTime(seconds) {
     if (isNaN(seconds) || seconds < 0) return '0:00';
