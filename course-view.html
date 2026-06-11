@@ -724,9 +724,12 @@
   }
 
   /* ─── TIMELINE ─── */
-  .timeline-slider-container { flex: 1; display: flex; align-items: center; gap: 8px; }
+  /* min-width:0 lets this flex item shrink past its content's intrinsic size so the
+     fixed-width buttons after it (CC, volume, settings, FULLSCREEN) are never pushed
+     off the right edge and clipped by the player's overflow:hidden. */
+  .timeline-slider-container { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; }
   .timeline-slider {
-    flex: 1; height: 3px; background: rgba(255,255,255,0.18);
+    flex: 1; min-width: 0; height: 3px; background: rgba(255,255,255,0.18);
     border-radius: 2px; outline: none; -webkit-appearance: none; appearance: none; cursor: pointer;
     transition: height 0.15s;
   }
@@ -1284,8 +1287,10 @@
                       </div>
                     </div>
 
-                    <!-- Fullscreen -->
-                    <button class="control-btn fullscreen" onclick="toggleMainFullscreen()">⛶</button>
+                    <!-- Fullscreen (SVG icon — the ⛶ glyph isn't in many Windows fonts) -->
+                    <button class="control-btn fullscreen" onclick="toggleMainFullscreen()" title="Fullscreen" aria-label="Fullscreen">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M8 21H5a2 2 0 0 1-2-2v-3m18 0v3a2 2 0 0 1-2 2h-3"/></svg>
+                    </button>
 
                   </div><!-- /custom-controls-bar -->
                 </div><!-- /youtube-overlay -->
