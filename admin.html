@@ -1779,7 +1779,7 @@ function addModuleUI(title='') {
   return builderContainer.lastElementChild;
 }
 
-function addLectureUI(container, title='', url='', duration='', access='enrolled_only') {
+function addLectureUI(container, title='', url='', duration='', access='enrolled_only', description='') {
   const isPublic = access === 'public';
   const html = `
     <div class="lecture-block flex items-start gap-2.5">
@@ -1789,6 +1789,7 @@ function addLectureUI(container, title='', url='', duration='', access='enrolled
           <input type="url" placeholder="YouTube URL" class="admin-input text-sm flex-1 lecture-url" value="${esc(url)}">
           <input type="text" placeholder="Duration" class="admin-input text-sm w-28 lecture-duration" value="${esc(duration)}">
         </div>
+        <textarea placeholder="Class description / note (shown below the lecture in the course view)" rows="2" class="admin-input text-sm lecture-desc" style="resize:vertical">${esc(description)}</textarea>
         <div class="flex items-center gap-2 pt-0.5">
           <span class="text-[10px] font-bold uppercase tracking-wider text-[#4a6080]">Access:</span>
           <label class="flex items-center gap-1.5 cursor-pointer select-none">
@@ -1864,7 +1865,7 @@ function openEditCourse(id) {
   } else {
     m.curriculum.forEach(mod => {
       const el = addModuleUI(mod.moduleTitle);
-      mod.lectures.forEach(l => addLectureUI(el.querySelector('.lectures-container'),l.title,l.url,l.duration,l.access||'enrolled_only'));
+      mod.lectures.forEach(l => addLectureUI(el.querySelector('.lectures-container'),l.title,l.url,l.duration,l.access||'enrolled_only',l.description||''));
     });
   }
   showTab('add-course');
@@ -1884,9 +1885,11 @@ async function saveCourse() {
       const t = lec.querySelector('.lecture-title').value.trim();
       const u = lec.querySelector('.lecture-url').value.trim();
       const d = lec.querySelector('.lecture-duration').value.trim();
+      const descEl = lec.querySelector('.lecture-desc');
+      const desc = descEl ? descEl.value.trim() : '';
       const checkedAccess = lec.querySelector('.lecture-access:checked');
       const a = checkedAccess ? checkedAccess.value : 'enrolled_only';
-      if(t||u) lectures.push({title:t,url:u,duration:d,access:a});
+      if(t||u) lectures.push({title:t,url:u,duration:d,access:a,description:desc});
     });
     if(moduleTitle||lectures.length) curriculum.push({moduleTitle,lectures});
   });
