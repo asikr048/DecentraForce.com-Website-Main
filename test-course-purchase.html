@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Course Purchase Flow</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .pass { background: #d4edda; border-color: #c3e6cb; }
+        .fail { background: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Course Purchase Flow Test</h1>
+    
+    <div class="test">
+        <h3>Test 1: localStorage Purchase Structure</h3>
+        <p>Checking if localStorage key "purchases" exists and has correct structure</p>
+        <button onclick="testLocalStorage()">Run Test</button>
+        <div id="test1-result"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Test 2: Button Logic (status = Ongoing)</h3>
+        <p>Simulating course with status "ongoing" should show "Buy Now" button</p>
+        <button onclick="testButtonLogic()">Run Test</button>
+        <div id="test2-result"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Test 3: Payment Form Validation</h3>
+        <p>Testing validation for required fields</p>
+        <button onclick="testValidation()">Run Test</button>
+        <div id="test3-result"></div>
+    </div>
+    
+    <div class="test">
+        <h3>Test 4: WhatsApp Redirect</h3>
+        <p>Checking WhatsApp redirect logic</p>
+        <button onclick="testWhatsAppRedirect()">Run Test</button>
+        <div id="test4-result"></div>
+    </div>
+    
+    <script>
+        function testLocalStorage() {
+            const result = document.getElementById('test1-result');
+            try {
+                const purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
+                const isValid = Array.isArray(purchases);
+                const hasRequiredFields = purchases.length === 0 || purchases.every(p => 
+                    p.courseTitle !== undefined &&
+                    p.paymentMethod !== undefined &&
+                    p.senderNumber !== undefined &&
+                    p.trxId !== undefined &&
+                    p.status === 'pending' &&
+                    p.whatsappLink !== undefined
+                );
+                
+                if (isValid && hasRequiredFields) {
+                    result.innerHTML = `<div class="pass">PASS: localStorage structure is correct. Found ${purchases.length} purchase(s).</div>`;
+                    if (purchases.length > 0) {
+                        result.innerHTML += `<pre>${JSON.stringify(purchases[0], null, 2)}</pre>`;
+                    }
+                } else {
+                    result.innerHTML = `<div class="fail">FAIL: localStorage structure is incorrect.</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="fail">ERROR: ${e.message}</div>`;
+            }
+        }
+        
+        function testButtonLogic() {
+            const result = document.getElementById('test2-result');
+            // Simulate the getCourseButton function logic
+            const testCourse = {
+                id: 'test123',
+                title: 'Test Course',
+                status: 'ongoing',
+                price: 99,
+                whatsapp: ''
+            };
+            
+            // Test 1: status = ongoing should show Buy Now
+            let buttonHtml = '';
+            if (testCourse.status === 'ongoing') {
+                buttonHtml = `<button class="continue-btn buy-now-btn" data-course-id="${testCourse.id}" style="cursor:pointer">Buy Now</button>`;
+            } else if (testCourse.status === 'completed') {
+                buttonHtml = `<span class="continue-btn disabled" style="cursor:default; opacity:0.6">Closed</span>`;
+            } else if (testCourse.status === 'upcoming') {
+                buttonHtml = `<span class="continue-btn secondary" style="cursor:default; opacity:0.8">Coming Soon</span>`;
+            }
+            
+            const hasBuyNow = buttonHtml.includes('Buy Now');
+            const hasDataAttr = buttonHtml.includes(`data-course-id="${testCourse.id}"`);
+            
+            if (hasBuyNow && hasDataAttr) {
+                result.innerHTML = `<div class="pass">PASS: Course with status "ongoing" correctly shows "Buy Now" button with data attribute.</div>`;
+                result.innerHTML += `<div>Generated button: ${buttonHtml}</div>`;
+            } else {
+                result.innerHTML = `<div class="fail">FAIL: Button logic incorrect. Generated: ${buttonHtml}</div>`;
+            }
+        }
+        
+        function testValidation() {
+            const result = document.getElementById('test3-result');
+            // Test validation logic from confirmPayment function
+            const tests = [
+                { paymentMethod: '', senderNumber: '01712345678', transactionId: 'TRX123456', expected: false, desc: 'Missing payment method' },
+                { paymentMethod: 'bkash', senderNumber: '', transactionId: 'TRX123456', expected: false, desc: 'Missing sender number' },
+                { paymentMethod: 'bkash', senderNumber: '01712345678', transactionId: '', expected: false, desc: 'Missing transaction ID' },
+                { paymentMethod: 'bkash', senderNumber: '01712345678', transactionId: 'TRX123456', expected: true, desc: 'All fields valid' },
+                { paymentMethod: 'bkash', senderNumber: '123', transactionId: 'TRX123456', expected: false, desc: 'Invalid phone number' },
+            ];
+            
+            let allPassed = true;
+            let resultsHtml = '';
+            
+            tests.forEach(test => {
+                const phoneRegex = /^(\+88)?01[3-9]\d{8}$/;
+                const isValid = test.paymentMethod && 
+                               test.senderNumber && 
+                               test.transactionId && 
+                               phoneRegex.test(test.senderNumber) && 
+                               test.transactionId.length >= 8;
+                
+                const passed = isValid === test.expected;
+                allPassed = allPassed && passed;
+                
+                resultsHtml += `<div class="${passed ? 'pass' : 'fail'}" style="margin:5px;padding:5px;">
+                    ${test.desc}: ${passed ? 'PASS' : 'FAIL'} (expected ${test.expected}, got ${isValid})
+                </div>`;
+            });
+            
+            result.innerHTML = `<div>${allPassed ? '<div class="pass">All validation tests passed!</div>' : '<div class="fail">Some validation tests failed.</div>'}${resultsHtml}</div>`;
+        }
+        
+        function testWhatsAppRedirect() {
+            const result = document.getElementById('test4-result');
+            // Test the redirect logic
+            const testCases = [
+                { whatsappLink: 'https://chat.whatsapp.com/test', shouldRedirect: true, desc: 'Valid WhatsApp link' },
+                { whatsappLink: '', shouldRedirect: false, desc: 'No WhatsApp link' },
+            ];
+            
+            let resultsHtml = '';
+            testCases.forEach(testCase => {
+                const wouldRedirect = testCase.whatsappLink ? true : false;
+                const passed = wouldRedirect === testCase.shouldRedirect;
+                
+                resultsHtml += `<div class="${passed ? 'pass' : 'fail'}" style="margin:5px;padding:5px;">
+                    ${testCase.desc}: ${passed ? 'PASS' : 'FAIL'} (would ${wouldRedirect ? '' : 'not '}redirect)
+                </div>`;
+            });
+            
+            result.innerHTML = `<div>${resultsHtml}</div>`;
+        }
+        
+        // Initialize with a test purchase
+        window.onload = function() {
+            // Add a test purchase to localStorage for testing
+            const testPurchase = {
+                courseTitle: "Test Course",
+                paymentMethod: "bkash",
+                senderNumber: "01712345678",
+                trxId: "TRX123456789",
+                status: "pending",
+                whatsappLink: "https://chat.whatsapp.com/test",
+                courseId: "test123",
+                price: 99,
+                timestamp: new Date().toISOString()
+            };
+            
+            const purchases = JSON.parse(localStorage.getItem('purchases') || '[]');
+            if (purchases.length === 0) {
+                purchases.push(testPurchase);
+                localStorage.setItem('purchases', JSON.stringify(purchases));
+            }
+        };
+    </script>
+</body>
+</html>

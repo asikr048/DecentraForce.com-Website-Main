@@ -1,0 +1,1 @@
+- [Access control vs public cache](access-control-vs-public-cache.md) — why access-sensitive pages must fetch /api/_public/courses fresh, not cached

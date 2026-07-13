@@ -1,0 +1,2221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="icon" type="image/png" href="/assets/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/assets/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/assets/favicon-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/assets/favicon-64x64.png" sizes="64x64">
+<link rel="icon" type="image/png" href="/assets/favicon-128x128.png" sizes="128x128">
+<link rel="icon" type="image/png" href="/assets/favicon-256x256.png" sizes="256x256">
+<link rel="apple-touch-icon" href="/assets/favicon-180x180.png">
+<link rel="mask-icon" href="/assets/favicon.svg" color="#7b5cff">
+<title>DecentraForce — Your Web3 Career University</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #050a18;
+    --bg2: #080f22;
+    --surface: #0d1630;
+    --surface2: #111d3a;
+    --accent: #00e5ff;
+    --accent2: #7b5cff;
+    --accent3: #ff4d8d;
+    --text: #e8eeff;
+    --muted: #7d8fb3;
+    --border: rgba(0, 229, 255, 0.12);
+    --glow: rgba(0, 229, 255, 0.15);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  /* Keyboard focus visibility (a11y) */
+  a:focus-visible, button:focus-visible, input:focus-visible,
+  select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Respect users who prefer less motion */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ── Noise overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    opacity: .45;
+  }
+
+  /* ── Grid background ── */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* ── Glow blobs ── */
+  .blob {
+    position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0;
+  }
+  .blob-1 { width: 600px; height: 600px; background: rgba(123,92,255,.18); top: -200px; right: -100px; animation: drift1 12s ease-in-out infinite alternate; }
+  .blob-2 { width: 500px; height: 500px; background: rgba(0,229,255,.12); bottom: 100px; left: -150px; animation: drift2 15s ease-in-out infinite alternate; }
+  .blob-3 { width: 350px; height: 350px; background: rgba(255,77,141,.1); top: 50%; right: 10%; animation: drift1 10s ease-in-out infinite alternate-reverse; }
+
+  @keyframes drift1 { from { transform: translate(0,0) scale(1); } to { transform: translate(40px, 60px) scale(1.1); } }
+  @keyframes drift2 { from { transform: translate(0,0); } to { transform: translate(-30px, -50px) scale(1.05); } }
+
+  /* ══════════ NAV ══════════ */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 5%;
+    height: 70px;
+    background: rgba(5,10,24,.7);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    overflow: visible;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem;
+    color: var(--text); text-decoration: none; letter-spacing: -.5px;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: unset;
+    flex-shrink: 0;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: .8rem; font-weight: 900;
+    color: #fff;
+    box-shadow: 0 0 18px rgba(123,92,255,.5);
+  }
+  .logo span { color: var(--accent); }
+  .logo-text { color: var(--text); }
+
+  .nav-links {
+    display: flex; align-items: center; gap: 32px;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--muted); text-decoration: none; font-size: .92rem; font-weight: 500;
+    transition: color .2s;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a.active { color: var(--accent); }
+
+  .nav-right { display: flex; align-items: center; gap: 14px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 22px; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: .9rem;
+    cursor: pointer; text-decoration: none; border: none; transition: all .2s;
+  }
+  .btn-ghost {
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: rgba(0,229,255,.3); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff;
+    box-shadow: 0 0 24px rgba(123,92,255,.4);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 32px rgba(123,92,255,.6); }
+  .btn-outline {
+    background: transparent; color: var(--accent);
+    border: 1.5px solid var(--accent); gap: 10px;
+  }
+  .btn-outline:hover { background: rgba(0,229,255,.08); }
+
+  /* ─── USER DROPDOWN & AVATAR ─── */
+  .avatar-wrapper { position: relative; display: flex; align-items: center; }
+  .avatar-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border: 2px solid var(--border); display: grid; place-items: center;
+    font-size: .85rem; font-weight: 800; color: #fff; cursor: pointer;
+    box-shadow: 0 0 16px rgba(123,92,255,.35); transition: transform 0.2s;
+  }
+  .avatar-btn:hover { transform: scale(1.05); }
+
+  .user-dropdown {
+    position: absolute; top: 120%; right: 0; width: 260px;
+    background: rgba(13, 22, 48, 0.95); backdrop-filter: blur(20px); 
+    border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    overflow: hidden; z-index: 100; opacity: 0; visibility: hidden;
+    transform: translateY(-10px); transition: all 0.2s ease;
+  }
+  .user-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+  .dropdown-header { padding: 16px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .dropdown-header h4 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--text); margin-bottom: 2px; }
+  .dropdown-header p { font-size: 0.78rem; color: var(--muted); }
+  .dropdown-body { padding: 16px; border-bottom: 1px solid var(--border); }
+  .dropdown-footer { padding: 8px; }
+  .dropdown-item {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 10px 12px; border-radius: 8px; border: none;
+    background: transparent; color: var(--text); font-size: 0.88rem;
+    font-weight: 500; cursor: pointer; transition: background 0.2s; text-align: left;
+    text-decoration: none;
+  }
+  .dropdown-item:hover { background: var(--surface2); color: var(--accent); }
+  .dropdown-item.logout { color: var(--accent3); margin-top: 4px; }
+  .dropdown-item.logout:hover { background: rgba(255,77,141,0.1); }
+
+  /* ══════════ HERO ══════════ */
+  .hero {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding: 120px 5% 80px;
+    overflow: hidden;
+  }
+
+  .hero-content {
+    flex: 1; max-width: 580px;
+    animation: fadeUp .9s cubic-bezier(.16,1,.3,1) both;
+  }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,229,255,.08); border: 1px solid rgba(0,229,255,.2);
+    padding: 6px 14px; border-radius: 100px;
+    font-size: .8rem; font-weight: 600; color: var(--accent); letter-spacing: .08em;
+    text-transform: uppercase; margin-bottom: 24px;
+  }
+  .eyebrow::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 8px var(--accent);
+    animation: pulse 1.5s ease infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: clamp(1.9rem, 5.5vw, 4.2rem);
+    line-height: 1.1; letter-spacing: -.03em;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 .line-accent {
+    position: relative; display: inline-block;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero h1 .line-accent::after {
+    content: '';
+    position: absolute; left: 0; bottom: -4px; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    box-shadow: 0 0 14px var(--accent);
+  }
+
+  .hero p {
+    font-size: 1.05rem; color: var(--muted); line-height: 1.75;
+    max-width: 470px; margin-bottom: 36px; font-weight: 300;
+  }
+
+  .hero-btns { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+  .hero-visual {
+    flex: 1; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 520px;
+    animation: fadeUp .9s .2s cubic-bezier(.16,1,.3,1) both;
+  }
+
+  /* 3D Container */
+  .three-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    border-radius: 20px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .loading-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 10, 24, 0.7);
+    backdrop-filter: blur(4px);
+    border-radius: 20px;
+    z-index: 2;
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 20px;
+  }
+
+  /* Float cards */
+  .float-card {
+    position: absolute; background: var(--surface);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    border-radius: 14px; padding: 14px 18px;
+    box-shadow: 0 16px 48px rgba(0,0,0,.5);
+    z-index: 10;
+  }
+  .fc-members { top: 30px; right: 0; min-width: 200px; animation: floatY 4s ease-in-out infinite; }
+  .fc-mentors { bottom: 40px; left: -20px; min-width: 190px; animation: floatY 4s 1.5s ease-in-out infinite; }
+
+  @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+  .fc-row { display: flex; align-items: center; gap: 12px; }
+  .fc-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: grid; place-items: center; font-size: 1rem; flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(123,92,255,.4);
+  }
+  .fc-big { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; line-height: 1; }
+  .fc-small { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+  .mentor-avatars { display: flex; margin-top: 10px; }
+  .mentor-avatars .av {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2px solid var(--surface);
+    margin-left: -8px; overflow: hidden;
+    background: linear-gradient(135deg, var(--accent2), var(--accent3));
+    display: grid; place-items: center; font-size: .65rem; font-weight: 700; color: #fff;
+  }
+  .mentor-avatars .av:first-child { margin-left: 0; }
+
+  /* ══════════ STATS BAR ══════════ */
+  .stats-bar {
+    position: relative; z-index: 1;
+    background: linear-gradient(90deg, rgba(13,22,48,.8), rgba(8,15,34,.95));
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid rgba(0,229,255,.1);
+    padding: 32px 5%;
+    display: flex; justify-content: space-around; flex-wrap: wrap; gap: 24px;
+    animation: fadeUp .9s .3s cubic-bezier(.16,1,.3,1) both;
+    backdrop-filter: blur(10px);
+  }
+
+  .stat-item {
+    text-align: center; position: relative; padding: 0 24px;
+  }
+  .stat-item:not(:last-child)::after {
+    content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    width: 1px; height: 32px;
+    background: linear-gradient(180deg, transparent, var(--border), transparent);
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 12px rgba(0,229,255,.2));
+  }
+  .stat-label { font-size: .8rem; color: var(--muted); font-weight: 500; margin-top: 4px; letter-spacing: .03em; }
+
+  /* ══════════ COURSES ══════════ */
+  section { position: relative; z-index: 1; padding: 90px 5%; }
+
+  .section-header { text-align: center; margin-bottom: 56px; }
+  .section-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.2);
+    color: var(--accent); font-size: .75rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; padding: 6px 16px;
+    border-radius: 100px; margin-bottom: 18px;
+    box-shadow: 0 0 20px rgba(0,229,255,.07);
+  }
+  .section-tag::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    background: var(--accent); box-shadow: 0 0 8px var(--accent);
+    animation: tagPulse 2s ease-in-out infinite;
+  }
+  @keyframes tagPulse { 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  .section-header h2 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: clamp(1.5rem, 3.8vw, 3rem);
+    letter-spacing: -.03em; margin-bottom: 14px; line-height: 1.1;
+    background: linear-gradient(160deg, #e8eeff 30%, #7d8fb3 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .section-header h2 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .section-header p { color: var(--muted); font-size: 1rem; max-width: 480px; margin: 0 auto; line-height: 1.7; }
+
+  .courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+    gap: 22px;
+  }
+
+  /* ── Catalog controls (search / filter / sort) ── */
+  .catalog-controls {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    max-width: 1100px; margin: 0 auto 30px; padding: 0 4px;
+  }
+  .catalog-search {
+    display: flex; align-items: center; gap: 10px; flex: 1 1 280px; min-width: 220px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 0 14px; height: 46px; transition: border-color .25s, box-shadow .25s;
+  }
+  .catalog-search:focus-within { border-color: rgba(0,229,255,.4); box-shadow: 0 0 0 3px rgba(0,229,255,.08); }
+  .catalog-search span { color: var(--muted); font-size: .95rem; }
+  .catalog-search input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text); font-family: inherit; font-size: .92rem;
+  }
+  .catalog-search input::placeholder { color: var(--muted); }
+  .catalog-sort {
+    height: 46px; padding: 0 14px; border-radius: 12px; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    font-family: inherit; font-size: .88rem; outline: none;
+  }
+  .catalog-sort:focus { border-color: rgba(0,229,255,.4); }
+  .catalog-filters {
+    display: flex; gap: 8px; flex-wrap: wrap; width: 100%; justify-content: center;
+  }
+  .cat-chip {
+    padding: 7px 16px; border-radius: 999px; cursor: pointer; user-select: none;
+    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+    font-size: .82rem; font-weight: 500; transition: all .2s;
+  }
+  .cat-chip:hover { color: var(--text); border-color: rgba(0,229,255,.3); }
+  .cat-chip.active {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff; border-color: transparent; box-shadow: 0 4px 16px rgba(123,92,255,.35);
+  }
+  .catalog-empty { grid-column: 1/-1; text-align: center; padding: 40px; color: var(--muted); }
+
+  .course-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px; overflow: hidden;
+    transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s ease, border-color .3s ease;
+    cursor: pointer; position: relative;
+  }
+  .course-card::before {
+    content:''; position:absolute; inset:0; border-radius:18px; z-index:0; pointer-events:none;
+    background: linear-gradient(135deg, rgba(123,92,255,.04), rgba(0,229,255,.04));
+    opacity:0; transition: opacity .3s;
+  }
+  .course-card:hover::before { opacity:1; }
+  .course-card:hover {
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0 28px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(0,229,255,.18);
+    border-color: rgba(0,229,255,.25);
+  }
+
+  .card-banner {
+    height: 150px; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem;
+  }
+  .banner-1 { background: linear-gradient(135deg, #0d1a3a, #1a0d3a); }
+  .banner-2 { background: linear-gradient(135deg, #0d2a1a, #0d1a3a); }
+  .banner-3 { background: linear-gradient(135deg, #2a0d1a, #0d1a3a); }
+  .banner-4 { background: linear-gradient(135deg, #1a2a0d, #0d2a2a); }
+
+  .card-banner::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 70% 30%, rgba(0,229,255,.15), transparent 70%);
+  }
+  .banner-badge {
+    position: absolute; top: 12px; left: 12px;
+    background: rgba(0,0,0,.4); backdrop-filter: blur(8px);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 3px 10px; font-size: .7rem; font-weight: 600; color: var(--accent);
+  }
+
+  .card-body { padding: 18px 20px 20px; }
+  .card-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .tag {
+    font-size: .68rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 100px;
+  }
+  .tag-blue { background: rgba(0,229,255,.1); color: var(--accent); }
+  .tag-purple { background: rgba(123,92,255,.12); color: var(--accent2); }
+  .tag-pink { background: rgba(255,77,141,.1); color: var(--accent3); }
+  .tag-green { background: rgba(0,229,153,.1); color: #00e599; }
+
+  .card-body h3 {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem;
+    margin-bottom: 8px; line-height: 1.3;
+  }
+  .card-body h3 * { font-size: inherit !important; line-height: inherit !important; font-weight: inherit !important; }
+  .card-body p { font-size: .85rem; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+
+  .card-footer { display: flex; flex-direction: column; gap: 12px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .card-footer-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+  .card-action-btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 18px; border-radius: 8px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; width: 100%; }
+  .card-btn-purchase { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; }
+  .card-btn-purchase:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(123,92,255,0.45); }
+  .card-btn-enroll { background: rgba(0,229,153,0.15); color: #00e599; border: 1px solid rgba(0,229,153,0.35) !important; }
+  .card-btn-enroll:hover { background: rgba(0,229,153,0.28); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,229,153,0.25); }
+  .card-btn-enrolled { background: rgba(0,229,153,0.1); color: #00e599; border: 1px solid rgba(0,229,153,0.2) !important; cursor: default; }
+  .card-btn-pending { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25) !important; cursor: default; }
+  .rating { display: flex; align-items: center; gap: 5px; font-size: .8rem; color: var(--muted); }
+  .rating .stars { color: #fbbf24; letter-spacing: -2px; }
+  .price { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--accent); }
+  .price span { font-family: 'DM Sans'; font-weight: 300; font-size: .78rem; color: var(--muted); text-decoration: line-through; margin-right: 4px; }
+
+  /* ══════════ HOW IT WORKS ══════════ */
+  .how-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 60px; align-items: center;
+  }
+  .steps { display: flex; flex-direction: column; gap: 24px; }
+  .step {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 20px; border-radius: 14px;
+    border: 1px solid transparent;
+    transition: all .3s;
+    cursor: pointer;
+  }
+  .step:hover, .step.active {
+    background: var(--surface); border-color: var(--border);
+    box-shadow: 0 8px 30px rgba(0,0,0,.3);
+  }
+  .step-num {
+    width: 44px; height: 44px; flex-shrink: 0; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: grid; place-items: center;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; color: #fff;
+    box-shadow: 0 0 20px rgba(123,92,255,.4);
+  }
+  .step-text h4 { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 6px; }
+  .step-text p { font-size: .87rem; color: var(--muted); line-height: 1.6; }
+
+  .how-visual {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px; padding: 40px;
+    position: relative; overflow: hidden;
+    text-align: center;
+  }
+  .how-visual::before {
+    content: ''; position: absolute; top: -40px; right: -40px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(123,92,255,.2), transparent 70%);
+  }
+  .visual-icon { font-size: 5rem; margin-bottom: 20px; display: block; }
+  .how-visual h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.4rem; margin-bottom: 10px; }
+  .how-visual p { color: var(--muted); font-size: .9rem; line-height: 1.7; }
+  .progress-bars { margin-top: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .pb-row { display: flex; flex-direction: column; gap: 5px; text-align: left; }
+  .pb-label { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); }
+  .pb-label strong { color: var(--text); font-weight: 500; }
+  .pb-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .pb-fill { height: 100%; border-radius: 3px; }
+  .pb-fill-1 { width: 92%; background: linear-gradient(90deg, var(--accent2), var(--accent)); box-shadow: 0 0 8px var(--accent); animation: grow 1.5s .5s cubic-bezier(.16,1,.3,1) both; }
+  .pb-fill-2 { width: 76%; background: linear-gradient(90deg, var(--accent3), var(--accent2)); animation: grow 1.5s .7s cubic-bezier(.16,1,.3,1) both; }
+  .pb-fill-3 { width: 88%; background: linear-gradient(90deg, #00e599, var(--accent)); animation: grow 1.5s .9s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes grow { from{width:0} }
+
+  /* ══════════ MENTORS ══════════ */
+  .mentors-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 22px;
+  }
+  .mentor-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 36px 24px; text-align: center;
+    transition: all .35s cubic-bezier(.16,1,.3,1);
+  }
+  .mentor-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(0,229,255,.22);
+    box-shadow: 0 28px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(0,229,255,.1);
+  }
+  .mentor-avatar {
+    width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 18px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; font-weight: 900; color: #fff;
+    border: 3px solid rgba(255,255,255,.07);
+    box-shadow: 0 0 0 4px rgba(123,92,255,.15), 0 8px 32px rgba(0,0,0,.4);
+    overflow: hidden; position: relative;
+  }
+  .mentor-card h4 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; margin-bottom: 3px; }
+  .mentor-card .role { display: none; } /* replaced by .mentor-badge */
+  .mentor-card .bio { font-size: .82rem; color: var(--muted); line-height: 1.65; margin-bottom: 16px; }
+  .mentor-socials { display: flex; justify-content: center; gap: 8px; }
+  .social-btn {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    display: grid; place-items: center; font-size: .8rem; cursor: pointer;
+    transition: all .2s; text-decoration: none; color: var(--muted);
+  }
+  .social-btn:hover { color: var(--accent); border-color: rgba(0,229,255,.3); background: rgba(0,229,255,.06); transform: translateY(-1px); }
+
+  /* ══════════ CTA ══════════ */
+  .cta-section {
+    background: linear-gradient(135deg, rgba(123,92,255,.12), rgba(0,229,255,.07));
+    border: 1px solid rgba(123,92,255,.25);
+    border-radius: 28px; margin: 0 5% 80px;
+    padding: 80px 5%; text-align: center; position: relative; overflow: hidden; z-index: 1;
+  }
+  .cta-section::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% -10%, rgba(123,92,255,.28), transparent 65%);
+  }
+  .cta-section::after {
+    content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 60%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+  }
+  .cta-section h2 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: clamp(1.5rem, 3.8vw, 3rem);
+    letter-spacing: -.03em; margin-bottom: 18px;
+    position: relative;
+  }
+  .cta-section p { color: var(--muted); font-size: 1rem; max-width: 480px; margin: 0 auto 36px; position: relative; line-height: 1.7; }
+  .cta-btns { display: flex; gap: 14px; justify-content: center; position: relative; }
+
+  /* ══════════ FOOTER ══════════ */
+  footer {
+    position: relative; z-index: 1;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 50px 5% 30px;
+  }
+  .footer-top {
+    display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 40px; margin-bottom: 40px;
+  }
+  .footer-brand p { color: var(--muted); font-size: .87rem; line-height: 1.7; margin: 14px 0 20px; max-width: 240px; }
+  .footer-col h5 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: .9rem; margin-bottom: 16px; }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col ul a { color: var(--muted); text-decoration: none; font-size: .87rem; transition: color .2s; }
+  .footer-col ul a:hover { color: var(--accent); }
+  .footer-bottom { display: flex; align-items: center; justify-content: space-between; padding-top: 28px; border-top: 1px solid var(--border); }
+  .footer-bottom p { color: var(--muted); font-size: .82rem; }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a { color: var(--muted); text-decoration: none; font-size: .82rem; transition: color .2s; }
+  .footer-links a:hover { color: var(--accent); }
+
+  /* ══════════ ANIMATIONS ══════════ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ══════════ RESPONSIVE ══════════ */
+  @media (max-width: 900px) {
+    .nav-links { display: none; }
+    /* Hide login/register buttons on mobile — accessible via hamburger menu */
+    .btn[data-auth="login"], .btn[data-auth="register"] { display: none !important; }
+    .hero { flex-direction: column; text-align: center; padding: 100px 5% 60px; gap: 50px; }
+    .hero p { max-width: 100%; }
+    .hero-btns { justify-content: center; }
+    .how-grid { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+    /* Fix dropdown overflow on small screens */
+    .user-dropdown { right: -10px; width: 240px; }
+  }
+  @media (max-width: 600px) {
+    .hero-visual { min-height: 320px; }
+    .orbit-ring { width: 260px; height: 260px; }
+    .orbit-ring-2 { width: 180px; height: 180px; }
+    .center-badge { width: 110px; height: 110px; }
+    .center-badge .big-num { font-size: 1.5rem; }
+    .footer-top { grid-template-columns: 1fr; }
+    .cta-section { padding: 40px 24px; }
+    .cta-btns { flex-direction: column; align-items: center; }
+    .logo { font-size: 1.1rem; }
+    .logo-icon { width: 32px; height: 32px; font-size: 0.75rem; }
+  }
+  @media (max-width: 480px) {
+    nav { padding: 0 16px; height: 60px; }
+    /* Hide logo text on small mobile, keep only DF icon */
+    .logo-text { display: none; }
+    .logo { gap: 0; flex-shrink: 0; }
+    .logo-icon { width: 34px; height: 34px; font-size: 0.78rem; flex-shrink: 0; }
+    /* Ensure nav-right doesn't overflow */
+    .nav-right { gap: 8px; flex-shrink: 0; }
+    /* Ensure avatar is always visible */
+    .avatar-btn { width: 34px; height: 34px; flex-shrink: 0; }
+    .avatar-wrapper { flex-shrink: 0; }
+    .hero { padding: 90px 16px 50px; gap: 32px; }
+    .hero h1 { font-size: clamp(1.6rem, 8vw, 2rem); margin-bottom: 16px; }
+    .hero p { font-size: 0.9rem; margin-bottom: 24px; }
+    .hero-btns { gap: 10px; }
+    .hero-btns .btn { padding: 10px 18px; font-size: 0.85rem; }
+    .eyebrow { font-size: 0.7rem; padding: 5px 12px; margin-bottom: 16px; }
+    .section-header h2 { font-size: clamp(1.3rem, 6vw, 1.8rem); }
+    .stats-bar { gap: 24px; flex-wrap: wrap; padding: 20px 16px; }
+    .stat-num { font-size: 1.6rem; }
+    .courses-grid { grid-template-columns: 1fr; gap: 16px; }
+    .hero-visual { min-height: 260px; }
+    .fc-members, .fc-mentors { display: none; }
+    .blob-1 { width: 300px; height: 300px; }
+    .blob-2 { width: 250px; height: 250px; }
+    .blob-3 { width: 200px; height: 200px; }
+    .cta-section h2 { font-size: clamp(1.3rem, 6vw, 1.8rem); }
+    .cta-section { padding: 32px 16px; }
+    .btn { padding: 10px 18px; font-size: 0.85rem; }
+    .footer { padding: 40px 16px 24px; }
+  }
+
+  /* ══════════ CHECKOUT MODAL ══════════ */
+/* ══════════ CHECKOUT MODAL ══════════ */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px); display: none; align-items: center;
+    justify-content: center; z-index: 1000; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; width: 100%; max-width: 440px;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
+    animation: modalFadeIn 0.3s ease-out;
+    /* NEW: Prevent overflowing off screen */
+    max-height: 90vh; 
+    display: flex; flex-direction: column;
+  }
+  
+  @keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .modal-header {
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0; /* Keeps header fixed */
+  }
+  .modal-header h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.2rem; color: var(--text); }
+  
+  .modal-close {
+    width: 32px; height: 32px; border-radius: 8px; background: var(--surface2);
+    border: 1px solid var(--border); display: grid; place-items: center;
+    cursor: pointer; color: var(--muted); font-size: 1.2rem; transition: all 0.2s;
+  }
+  .modal-close:hover { color: var(--accent); border-color: var(--accent); }
+  
+  .modal-body {
+    padding: 24px; 
+    overflow-y: auto; /* NEW: Makes the inside scrollable */
+    flex: 1;
+  }
+  
+  /* Custom Scrollbar for Modal */
+  .modal-body::-webkit-scrollbar { width: 6px; }
+  .modal-body::-webkit-scrollbar-track { background: transparent; }
+  .modal-body::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.2); border-radius: 10px; }
+  
+  .modal-actions { display: flex; gap: 12px; margin-top: 10px; }
+  .modal-actions .btn { flex: 1; padding: 12px; font-size: 0.95rem; font-weight: 600; }
+  .btn-success { background: linear-gradient(135deg, #00e599, #00e5ff); color: #111; border: none; }
+  .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0, 229, 153, 0.4); }
+
+  /* ══════════ ADMIN-ONLY ══════════ */
+  .admin-only { display: none !important; }
+  .admin-only.show { display: block !important; }
+
+  /* ══════════ FLOATING TESTIMONIAL MARQUEE ══════════ */
+  .tmarquee-track {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+    padding: 8px 0;
+  }
+  .tmarquee-inner {
+    display: flex;
+    gap: 20px;
+    width: max-content;
+    animation: marqueeScroll 50s linear infinite;
+  }
+  .tmarquee-inner:hover { animation-play-state: paused; }
+
+  @keyframes marqueeScroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .tcard {
+    width: 320px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(13,22,48,.9) 0%, rgba(17,29,58,.9) 100%);
+    border: 1px solid rgba(123,92,255,.15);
+    border-radius: 20px;
+    padding: 22px 22px 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.5);
+    position: relative;
+    overflow: hidden;
+    transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s ease, border-color .3s ease;
+    cursor: default;
+  }
+  .tcard::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    opacity: 0; transition: opacity .3s;
+  }
+  .tcard:hover { transform: translateY(-6px) scale(1.012); box-shadow: 0 28px 70px rgba(0,0,0,.6), 0 0 0 1px rgba(123,92,255,.3); border-color: rgba(123,92,255,.35); }
+  .tcard:hover::before { opacity: 1; }
+
+  .tcard-glow {
+    position: absolute; top: -30px; right: -30px;
+    width: 110px; height: 110px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(123,92,255,.18), transparent 70%);
+    pointer-events: none;
+  }
+  .tcard-quote {
+    font-family: 'Syne', sans-serif;
+    font-size: 4rem; line-height: .5;
+    color: var(--accent2); opacity: .3;
+    font-weight: 900;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .tcard-text {
+    font-size: .85rem;
+    color: rgba(232,238,255,.88);
+    line-height: 1.72;
+    margin-bottom: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .tcard-stars { font-size: .82rem; letter-spacing: 1px; margin-bottom: 12px; }
+
+  .tcard-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .tcard-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    overflow: hidden; flex-shrink: 0;
+    border: 2px solid rgba(123,92,255,.25);
+    box-shadow: 0 0 12px rgba(123,92,255,.2);
+  }
+  .tcard-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .tcard-info { flex: 1; min-width: 0; }
+  .tcard-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: .84rem;
+    color: var(--text); margin-bottom: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .tcard-role { font-size: .7rem; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tcard-lang {
+    font-size: .6rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 100px; flex-shrink: 0;
+  }
+  .tcard-lang.bangla { background: rgba(0,229,153,.12); color: #00e599; border:1px solid rgba(0,229,153,.2); }
+  .tcard-lang.english { background: rgba(0,229,255,.1); color: var(--accent); border:1px solid rgba(0,229,255,.2); }
+
+  /* ══════════ MENTOR CARDS ══════════ */
+  .mentor-card { position: relative; overflow: hidden; text-align:center; padding: 32px 24px; }
+  .mentor-card::before {
+    content: ''; position: absolute; inset: 0; z-index: 0;
+    background: linear-gradient(135deg, rgba(123,92,255,.05) 0%, rgba(0,229,255,.05) 100%);
+    opacity: 0; transition: opacity .3s;
+  }
+  .mentor-card:hover::before { opacity: 1; }
+  .mentor-card::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    opacity: 0; transition: opacity .3s;
+  }
+  .mentor-card:hover::after { opacity: 1; }
+  .mentor-card > * { position: relative; z-index: 1; }
+  .mentor-name-en { font-size: .75rem; color: var(--muted); margin-top: 2px; margin-bottom: 8px; letter-spacing: .03em; }
+  .mentor-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 100px; font-size: .7rem; font-weight: 600;
+    background: rgba(0,229,255,.08); color: var(--accent); border: 1px solid rgba(0,229,255,.2); margin-bottom: 10px;
+  }
+
+  /* ══════════ FLOATING FEEDBACK SYSTEM ══════════ */
+  .feedback-button {
+    position: fixed;
+    bottom: 30px; /* Changed to bottom */
+    left: 30px;   /* Changed to left */
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    box-shadow: 0 6px 0 #008eb3, 0 15px 25px rgba(0, 0, 0, 0.4);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .feedback-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0 #008eb3, 0 20px 30px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(135deg, #8a6fff, #00f0ff);
+  }
+  .feedback-button:active {
+    transform: translateY(6px);
+    box-shadow: 0 0px 0 #008eb3, 0 5px 10px rgba(0, 0, 0, 0.4);
+  }
+  .feedback-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transition: background 0.3s ease;
+  }
+  .feedback-button:hover .feedback-icon {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Responsive Adjustments for Feedback Button */
+  @media (max-width: 600px) {
+    .feedback-button {
+      bottom: 20px;
+      left: 20px;
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      gap: 8px;
+    }
+    .feedback-icon {
+      width: 26px;
+      height: 26px;
+    }
+    .feedback-button svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  /* Feedback Modal Styles */
+  .feedback-modal-overlay {
+    position: fixed; inset: 0; background: rgba(5, 10, 24, 0.85); backdrop-filter: blur(8px);
+    z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; transition: opacity 0.3s ease;
+  }
+  .feedback-modal-overlay.open { display: flex; opacity: 1; }
+  .feedback-modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+    width: 100%; max-width: 480px; box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+    transform: translateY(20px); opacity: 0; transition: all 0.3s ease;
+  }
+  .feedback-modal-overlay.open .feedback-modal { transform: translateY(0); opacity: 1; }
+  .feedback-modal-header {
+    padding: 20px 28px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--surface2);
+  }
+  .feedback-modal-header h3 { font-family: 'Syne', sans-serif; font-size: 1.3rem; margin: 0; }
+  .feedback-modal-close {
+    background: transparent; border: none; color: var(--muted); font-size: 1.8rem; cursor: pointer; transition: color 0.2s; padding: 0; line-height: 1;
+  }
+  .feedback-modal-close:hover { color: var(--accent3); }
+  .feedback-modal-body { padding: 28px; }
+  .feedback-input, .feedback-textarea {
+    width: 100%; padding: 14px 16px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); font-family: inherit; margin-top: 8px; margin-bottom: 20px; outline: none; transition: border 0.3s;
+  }
+  .feedback-input:focus, .feedback-textarea:focus { border-color: var(--accent); }
+  .feedback-modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 10px; }
+  .feedback-btn { padding: 12px 24px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .feedback-btn-primary { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; }
+  .feedback-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(123,92,255,0.4); }
+  .feedback-btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .feedback-btn-secondary:hover { color: var(--text); border-color: var(--accent); }
+  
+  /* Toast Notification */
+  .feedback-toast {
+    position: fixed; bottom: 30px; right: 30px; z-index: 2001; padding: 16px 24px;
+    background: var(--surface2); color: var(--text); border-radius: 10px; border-left: 4px solid #00e599;
+    opacity: 0; transform: translateY(20px); transition: all 0.3s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: 600;
+  }
+  .feedback-toast.show { opacity: 1; transform: translateY(0); }
+  .feedback-toast.error { border-left-color: var(--accent3); }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+<script src="scripts/three-scene.js" defer></script>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<nav>
+  <a href="#" class="logo" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">
+    <div class="logo-icon">DF</div>
+    <span class="logo-text">Decentra<span style="color:var(--accent)">Force</span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#" class="active" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">Home</a></li>
+    <li><a href="#courses">Courses</a></li>
+    <li><a href="my-courses.html?tab=nanodegree" style="display:flex;align-items:center;gap:4px">NanoDegree <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></a></li>
+    <li><a href="my-courses.html?tab=premium">My Course</a></li>
+    <li><a href="#testimonials-section" style="display:flex;align-items:center;gap:4px">Explore <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></a></li>
+  </ul>
+  
+  <div class="nav-right">
+    <a href="login.html" class="btn btn-ghost" data-auth="login">Log In</a>
+    <a href="register.html" class="btn btn-primary" style="font-weight: 700; padding: 10px 24px;" data-auth="register">Create Account</a>
+    
+    <div class="avatar-wrapper" data-auth="protected" style="display: none;">
+      <div class="avatar-btn" id="navAvatar" onclick="toggleDropdown(event)">
+        <span id="navAvatarText" style="font-size:.82rem;font-weight:800;letter-spacing:.5px;">??</span>
+      </div>
+      
+      <div class="user-dropdown" id="userMenu">
+        <div class="dropdown-header">
+          <h4 id="dropName" data-auth="user" data-field="username">Loading...</h4>
+          <p id="dropEmail" data-auth="user" data-field="email">loading@email.com</p>
+        </div>
+        <div class="dropdown-body">
+          <div style="display: flex; justify-content: space-between; font-size: .75rem; color: var(--muted); margin-bottom: 6px;">
+            <span>Avg. Progress</span><span style="color:var(--accent);font-weight:700">47%</span>
+          </div>
+          <div style="height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin-top:8px">
+            <div style="height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)); box-shadow: 0 0 8px rgba(0,229,255,.4); width:47%"></div>
+          </div>
+        </div>
+        <div class="dropdown-footer">
+          <a href="my-courses.html?tab=profile" class="dropdown-item">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            My Profile
+          </a>
+          <button class="dropdown-item logout" data-auth="logout">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Log Out
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-content">
+    <div class="eyebrow">Build Your Web3 Career Right Now</div>
+    <h1>
+      Unlock Your<br>
+      Decentralized<br>
+      <span class="line-accent">Future</span>
+    </h1>
+    <p style="font-size: 1.1rem; line-height: 1.8; margin-bottom: 36px;">
+      <span style="color:var(--accent)">Making Everyone King 👑</span><br>
+      <span style="color:var(--accent)">Decentralized Systems, Finance & Technology Lover</span><br><br>
+      Empowering individuals with equal access to <span style="color:var(--accent)">knowledge</span>, <span style="color:var(--accent)">power</span>, and <span style="color:var(--accent)">opportunity</span>.<br>
+      Not just blockchain — a future of <span style="color:var(--accent)">independence</span>, <span style="color:var(--accent)">ownership</span>, and <span style="color:var(--accent)">true equality</span>.
+    </p>
+    <div class="hero-btns">
+      <a href="my-courses.html" class="btn btn-primary" style="padding:13px 28px;font-size:.95rem;">🚀 Get Started</a>
+      <a href="#free-courses" class="btn btn-outline" style="padding:13px 22px;font-size:.95rem;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 5.5l4 2.5-4 2.5V5.5z" fill="currentColor"/></svg>
+        Free Courses
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="float-card fc-members">
+      <div class="fc-row">
+        <div class="fc-icon">👥</div>
+        <div>
+          <div class="fc-big">17k+</div>
+          <div class="fc-small">Active Members</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="hero-3d-container" class="three-container">
+      <div class="loading-fallback" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:.9rem;">
+        <div style="text-align:center;">
+          <div style="font-size:2rem;margin-bottom:10px;">⏳</div>
+          <p>Loading interactive 3D visualization...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="float-card fc-mentors">
+      <div class="fc-big">20+</div>
+      <div class="fc-small" style="margin-bottom:8px">Top Expert Mentors</div>
+      <div class="mentor-avatars">
+        <div class="av">RK</div>
+        <div class="av" style="background:linear-gradient(135deg,#ff4d8d,#7b5cff)">SH</div>
+        <div class="av" style="background:linear-gradient(135deg,#00e599,#00e5ff)">TM</div>
+        <div class="av" style="background:linear-gradient(135deg,#fbbf24,#ff4d8d)">AR</div>
+        <div class="av" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:.6rem">+16</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-num">17k+</div><div class="stat-label">Active Learners</div></div>
+  <div class="stat-item"><div class="stat-num">50+</div><div class="stat-label">Live Courses</div></div>
+  <div class="stat-item"><div class="stat-num">20+</div><div class="stat-label">Expert Mentors</div></div>
+  <div class="stat-item"><div class="stat-num">98%</div><div class="stat-label">Satisfaction Rate</div></div>
+  <div class="stat-item"><div class="stat-num">12k+</div><div class="stat-label">Certifications Issued</div></div>
+</div>
+
+<section id="courses">
+  <div class="section-header">
+    <div class="section-tag">Our Curriculum</div>
+    <h2>Explore <em>Top Courses</em></h2>
+    <p>Master the skills that shape the decentralized economy — from DeFi to NFTs, smart contracts, and beyond.</p>
+  </div>
+  <div class="catalog-controls" id="catalogControls">
+    <div class="catalog-search">
+      <span>🔍</span>
+      <input id="courseSearch" type="text" placeholder="Search courses by title or topic…" autocomplete="off">
+    </div>
+    <select id="courseSort" class="catalog-sort" aria-label="Sort courses">
+      <option value="default">Sort: Featured</option>
+      <option value="rating">Top Rated</option>
+      <option value="price-low">Price: Low → High</option>
+      <option value="price-high">Price: High → Low</option>
+      <option value="newest">Newest</option>
+    </select>
+    <div class="catalog-filters" id="categoryChips"></div>
+  </div>
+  <div class="courses-grid">
+    </div>
+  <div style="text-align:center;margin-top:40px">
+    <a href="my-courses.html" class="btn btn-outline" style="padding:13px 28px;font-size:.95rem;">View All Courses →</a>
+  </div>
+</section>
+
+<section id="free-courses">
+  <div class="section-header">
+    <div class="section-tag">Free Learning</div>
+    <h2>Start with <em>Free Courses</em></h2>
+    <p>Jump into blockchain with our curated free courses. No payment required — learn at your own pace.</p>
+  </div>
+  <div class="courses-grid" id="free-courses-grid">
+    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">
+      Loading free courses...
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:40px">
+    <a href="my-courses.html?tab=free" class="btn btn-outline" style="padding:13px 28px;font-size:.95rem;">Browse All Free Courses →</a>
+  </div>
+</section>
+
+<!-- TESTIMONIALS SECTION -->
+<section id="testimonials-section" style="padding:80px 0;overflow:hidden;">
+  <div class="section-header" style="padding:0 5%;margin-bottom:48px;">
+    <div class="section-tag">Student Voices</div>
+    <h2>What Our <em>Learners Say</em></h2>
+    <p>Real feedback from our growing community of Web3 professionals across Bangladesh and beyond.</p>
+  </div>
+  <div class="tmarquee-track" style="margin-bottom:20px;">
+    <div class="tmarquee-inner" id="trow1"></div>
+  </div>
+  <div class="tmarquee-track" style="--dir:-1;">
+    <div class="tmarquee-inner" style="animation-direction:reverse;" id="trow2"></div>
+  </div>
+</section>
+
+<section style="background:rgba(13,22,48,.5);">
+  <div class="section-header">
+    <div class="section-tag">The Process</div>
+    <h2>How <em>DecentraForce</em> Works</h2>
+    <p>A streamlined path from zero to blockchain professional in four clear steps.</p>
+  </div>
+  <div class="how-grid">
+    <div class="steps">
+      <div class="step active">
+        <div class="step-num">01</div>
+        <div class="step-text">
+          <h4>Choose Your Path</h4>
+          <p>Browse curated tracks for developers, creators, traders, and entrepreneurs in the Web3 space.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-text">
+          <h4>Learn from Experts</h4>
+          <p>Study with top industry mentors through hands-on projects, live sessions, and code reviews.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-text">
+          <h4>Build Real Projects</h4>
+          <p>Deploy smart contracts, launch dApps, and build a portfolio that proves your expertise on-chain.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-text">
+          <h4>Get Certified & Hired</h4>
+          <p>Earn blockchain-verified certificates and connect with 500+ partner companies worldwide.</p>
+        </div>
+      </div>
+    </div>
+    <div class="how-visual">
+      <span class="visual-icon">🚀</span>
+      <h3>Your Skill Progress</h3>
+      <p>Track every milestone as you go from learner to certified Web3 professional.</p>
+      <div class="progress-bars">
+        <div class="pb-row">
+          <div class="pb-label"><strong>Blockchain Basics</strong><span>92%</span></div>
+          <div class="pb-track"><div class="pb-fill pb-fill-1"></div></div>
+        </div>
+        <div class="pb-row">
+          <div class="pb-label"><strong>Smart Contracts</strong><span>76%</span></div>
+          <div class="pb-track"><div class="pb-fill pb-fill-2"></div></div>
+        </div>
+        <div class="pb-row">
+          <div class="pb-label"><strong>DeFi Protocols</strong><span>88%</span></div>
+          <div class="pb-track"><div class="pb-fill pb-fill-3"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="mentors-section">
+  <div class="section-header">
+    <div class="section-tag">Expert Faculty</div>
+    <h2>Meet Our <em>Top Mentors</em></h2>
+    <p>Learn from professionals who have built real products in the blockchain industry.</p>
+  </div>
+  <div class="mentors-grid" id="mentors-container">
+    <div class="empty-state" id="mentors-empty" style="display:none;">
+      <div class="empty-icon">👨‍🏫</div>
+      <h3>No mentors yet</h3>
+      <p>Our expert mentors will be listed here soon.</p>
+    </div>
+  </div>
+  <div style="text-align:center; margin-top: 40px;" class="admin-only" id="manage-mentors-btn" style="display:none;">
+    <a href="admin.html?tab=mentors" class="btn btn-outline">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:8px">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+      </svg>
+      Manage Mentors (Admin)
+    </a>
+  </div>
+</section>
+
+<div class="cta-section">
+  <h2>Ready to Join the<br><em style="background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-style:normal">Decentralized Revolution?</em></h2>
+  <p>Over 17,000 learners are already building their Web3 careers with DecentraForce. Your seat is waiting.</p>
+  <div class="cta-btns">
+    <a href="my-courses.html?tab=free" class="btn btn-primary" style="padding:14px 32px;font-size:1rem;">Start Learning Free</a>
+    <a href="my-courses.html" class="btn btn-ghost" style="padding:14px 28px;font-size:1rem;">Explore Courses</a>
+  </div>
+</div>
+
+<footer id="dynamic-footer">
+  </footer>
+
+<script src="scripts/auth.js"></script>
+<script src="scripts/feedback.js"></script>
+<script src="scripts/floating-feedback.js" defer></script>
+<!-- SECTION ORDER CONTROL -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var DEFAULT_ORDER = ['courses','free-courses','testimonials-section','mentors-section'];
+  try {
+    var stored = localStorage.getItem('homepageSectionOrder');
+    var order = stored ? JSON.parse(stored) : DEFAULT_ORDER;
+    var main = document.querySelector('main') || document.body;
+    var sections = {};
+    order.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) sections[id] = el;
+    });
+    // Reference anchor — the how-it-works section
+    var anchor = document.querySelector('section[style*="rgba(13,22,48"]') || null;
+    order.forEach(function(id) {
+      var el = sections[id];
+      if (el && anchor && anchor.parentNode) {
+        anchor.parentNode.insertBefore(el, anchor);
+      }
+    });
+  } catch(e) {}
+});
+</script>
+
+<script>
+// ==================== DYNAMIC FOOTER RENDERING ====================
+
+// Default footer data (same as in admin.html)
+const defaultFooterData = {
+  description: "Your career-building university for the decentralized web. Learn, build, and thrive in Web3.",
+  social: {
+    twitter: "#",
+    linkedin: "#",
+    facebook: "#",
+    youtube: "#"
+  },
+  courses: ["Blockchain Basics", "Smart Contracts", "DeFi Mastery", "NFT & Metaverse", "Web3 Development"],
+  company: ["About Us", "Our Mentors", "Careers", "Blog", "Press Kit"],
+  support: ["Help Center", "Community Forum", "Contact Us", "Refund Policy", "Affiliate Program"]
+};
+
+// Get footer data from localStorage
+function getFooterData() {
+  try {
+    const data = localStorage.getItem('footerData');
+    return data ? JSON.parse(data) : defaultFooterData;
+  } catch (error) {
+    console.error('Error reading footer data:', error);
+    return defaultFooterData;
+  }
+}
+
+// Render footer based on data
+function renderFooter() {
+  const footer = document.getElementById('dynamic-footer');
+  if (!footer) return;
+  
+  const data = getFooterData();
+  
+  // Determine social button icons and labels
+  const socialButtons = [
+    { key: 'twitter', icon: '𝕏', label: 'Twitter/X', url: data.social.twitter },
+    { key: 'linkedin', icon: 'in', label: 'LinkedIn', url: data.social.linkedin },
+    { key: 'facebook', icon: '📘', label: 'Facebook', url: data.social.facebook },
+    { key: 'youtube', icon: '▶', label: 'YouTube', url: data.social.youtube }
+  ];
+  
+  // Generate list HTML from array
+  function generateList(items) {
+    return items.map(item => `<li><a href="#">${item}</a></li>`).join('');
+  }
+  
+  const footerHTML = `
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#" class="logo" style="margin-bottom:4px;display:inline-flex">
+          <div class="logo-icon">DF</div>
+          Decentra<span>Force</span>
+        </a>
+        <p>${data.description}</p>
+        <div style="display:flex;gap:10px">
+          ${socialButtons.map(btn =>
+            `<a href="${btn.url}" class="social-btn" title="${btn.label}" ${btn.url !== '#' ? 'target="_blank"' : ''}>${btn.icon}</a>`
+          ).join('')}
+        </div>
+      </div>
+      <div class="footer-col">
+        <h5>Courses</h5>
+        <ul>
+          ${generateList(data.courses)}
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <ul>
+          ${generateList(data.company)}
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Support</h5>
+        <ul>
+          ${generateList(data.support)}
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© ${new Date().getFullYear()} DecentraForce. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Cookie Settings</a>
+      </div>
+    </div>
+  `;
+  
+  footer.innerHTML = footerHTML;
+}
+
+// Initialize footer when DOM is loaded
+document.addEventListener('DOMContentLoaded', renderFooter);
+
+// Also re-render when localStorage changes (if user updates from admin panel)
+window.addEventListener('storage', (e) => {
+  if (e.key === 'footerData') {
+    renderFooter();
+  }
+});
+</script>
+
+<script>
+  // Step hover interaction
+  document.querySelectorAll('.step').forEach(s => {
+    s.addEventListener('mouseenter', () => {
+      document.querySelectorAll('.step').forEach(x => x.classList.remove('active'));
+      s.classList.add('active');
+    });
+  });
+
+  // Handle logout button clicks
+  document.addEventListener('click', function(e) {
+    if (e.target.matches('[data-auth="logout"]') || e.target.closest('[data-auth="logout"]')) {
+      e.preventDefault();
+      if (window.auth) {
+        window.auth.logout().then(result => {
+          if (result.success) {
+            window.location.reload();
+          }
+        });
+      }
+    }
+  });
+
+  // Toggle Dropdown
+  function toggleDropdown(e) {
+    e.stopPropagation();
+    document.getElementById('userMenu').classList.toggle('show');
+  }
+  
+  // Close dropdown clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.avatar-wrapper')) {
+      const menu = document.getElementById('userMenu');
+      if (menu) menu.classList.remove('show');
+    }
+  });
+
+  // Smart Loader for Courses (API first, LocalStorage fallback + Sequence Sort)
+// Smart Loader for Courses (API first, LocalStorage fallback + Sequence Sort)
+
+
+
+// Smart Loader for Courses (API first, LocalStorage fallback + Sequence Sort)
+  document.addEventListener('DOMContentLoaded', async () => {
+    
+    // Fallback: Fetch courses from localStorage
+    function getCoursesFromStorage() {
+      try {
+        const cached = localStorage.getItem('courses');
+        if (!cached) return [];
+        return JSON.parse(cached);
+      } catch (error) {
+        console.error('Error reading courses from localStorage:', error);
+        return [];
+      }
+    }
+
+    // Fetch user purchases from API (similar to my-courses.html)
+  // Fetch user purchases from API (similar to my-courses.html)
+    async function fetchUserPurchases() {
+      let dbPurchases = [];
+      let isAuthFailed = false; // Track if the API rejected us due to being logged out
+      
+      try {
+        const res = await fetch('/api/user/purchases', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            dbPurchases = data.purchases.map(p => ({
+              courseId: p.course_id?.toString(),
+              status: p.status,
+              senderNumber: p.sender_number,
+              transactionId: p.transaction_id,
+              paymentMethod: p.payment_method,
+              timestamp: p.created_at,
+              id: p.id?.toString()
+            }));
+          } else {
+            isAuthFailed = true;
+          }
+        } else if (res.status === 401 || res.status === 403) {
+          isAuthFailed = true; // User is definitively not logged in
+        }
+      } catch (error) {
+        console.error('Failed to fetch purchases from API:', error);
+      }
+
+      // STRICT CHECK: If the user is explicitly logged out, do NOT load local storage!
+      if (isAuthFailed || (window.auth && window.auth.isLoggedIn === false)) {
+        return [];
+      }
+
+      // Load from localStorage for free enrollments (legacy) ONLY if authenticated
+      let localPurchases = [];
+      try {
+        const purchasesJson = localStorage.getItem('purchases');
+        if (purchasesJson) {
+          const parsed = JSON.parse(purchasesJson);
+          if (Array.isArray(parsed)) {
+            localPurchases = parsed;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading purchases from localStorage:', error);
+      }
+
+      // Merge: prefer DB purchases, but keep local purchases that are not in DB
+      const merged = [...dbPurchases];
+      const existingIds = new Set(dbPurchases.map(p => `${p.courseId}-${p.transactionId}`));
+      for (const local of localPurchases) {
+        const key = `${local.courseId}-${local.trxId}`;
+        if (!existingIds.has(key)) {
+          merged.push({
+            courseId: local.courseId?.toString(),
+            status: local.status,
+            senderNumber: local.senderNumber,
+            transactionId: local.trxId,
+            paymentMethod: local.paymentMethod,
+            timestamp: local.timestamp,
+            id: local.id?.toString()
+          });
+        }
+      }
+      return merged;
+    }
+
+
+    // Fetch real courses from the Database via API
+    async function fetchPublicCourses() {
+      try {
+        const res = await fetch('/api/_public/courses');
+        const data = await res.json();
+        if (data.success && data.courses && data.courses.length > 0) {
+          return data.courses;
+        }
+        return [];
+      } catch (error) {
+        console.error('Error fetching courses from API:', error);
+        return [];
+      }
+    }
+
+    // Render course cards into a given container
+    function renderCourseGrid(containerSelector, courses, enrolledCourseIds = [], pendingCourseIds = []) {
+      const container = document.querySelector(containerSelector);
+      if (!container) return;
+
+      container.innerHTML = '';
+
+      if (courses.length === 0) {
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">No courses available. Check back soon!</div>';
+        return;
+      }
+
+      const banners = ['banner-1', 'banner-2', 'banner-3', 'banner-4'];
+      const emojis = ['⛓️', '📝', '🖼️', '💰', '🚀', '🔗', '⚡', '🎓'];
+      const badges = ['🔥 Bestseller', '⚡ New', '🎨 Popular', '📈 Trending', '⭐ Featured'];
+
+      courses.forEach((course, index) => {
+        const bannerClass = banners[index % banners.length];
+        const emoji = emojis[index % emojis.length];
+        const badge = course.badge || badges[index % badges.length];
+        
+        const priceValue = parseFloat(course.price);
+        const discountValue = parseFloat(course.discount_price);
+        const isFree = isNaN(priceValue) || priceValue === 0 || course.price === null || course.price === '0';
+        const hasDiscount = !isFree && !isNaN(discountValue) && discountValue > 0 && discountValue < priceValue;
+
+        // Real ratings from the DB (avg_rating / review_count). Show "New" until a course has reviews.
+        const reviewCount = parseInt(course.review_count) || 0;
+        const hasReviews = reviewCount > 0;
+        const avgRating = parseFloat(course.avg_rating) || 0;
+        const ratingVal = hasReviews ? avgRating.toFixed(1) : 'New';
+        const reviewsVal = reviewCount >= 1000 ? (reviewCount/1000).toFixed(1)+'k' : reviewCount;
+        const filledStars = hasReviews ? Math.round(avgRating) : 0;
+        const starsStr = '★★★★★☆☆☆☆☆'.slice(5 - filledStars, 10 - filledStars);
+        const ratingHtml = hasReviews
+          ? `<div class="rating"><span class="stars">${starsStr}</span> ${ratingVal} (${reviewsVal})</div>`
+          : `<div class="rating"><span class="stars" style="opacity:.35">★★★★★</span> <span style="color:var(--muted)">New</span></div>`;
+
+        // Price display: show discount_price as the real price, regular price struck through if discounted
+        let priceDisplay;
+        if (isFree) {
+          priceDisplay = '<span style="color:#00e599;font-weight:700;font-size:1rem;">Free</span>';
+        } else if (hasDiscount) {
+          priceDisplay = `<div class="price"><span>৳${priceValue}</span>৳${discountValue}</div>`;
+        } else {
+          priceDisplay = `<div class="price">৳${priceValue}</div>`;
+        }
+        const status = course.status || 'upcoming';
+
+        // Determine enrollment status
+        const courseIdStr = course.id?.toString();
+        const isEnrolled = enrolledCourseIds.includes(courseIdStr);
+        const isPending = pendingCourseIds.includes(courseIdStr);
+        
+        // Enrollment badge text and class
+        let enrollmentBadge = '';
+        if (isEnrolled) {
+          enrollmentBadge = '<span class="tag tag-green" style="background:rgba(0,229,153,0.15);color:#00e599;border:1px solid rgba(0,229,153,0.3);">✅ Enrolled</span>';
+        } else if (isPending) {
+          enrollmentBadge = '<span class="tag tag-purple" style="background:rgba(255,191,36,0.15);color:#fbbf24;border:1px solid rgba(255,191,36,0.3);">⏳ Pending</span>';
+        }
+
+        // Category: prefer the dedicated DB column, fall back to modules JSON, then default
+        let categoryTag = (course.category && course.category !== 'General') ? course.category : 'Blockchain';
+        let levelTag = index % 3 === 0 ? 'Beginner' : index % 3 === 1 ? 'Intermediate' : 'Advanced';
+        let moduleCount = 0;
+        try {
+          const modulesObj = typeof course.modules === 'string' ? JSON.parse(course.modules) : course.modules;
+          if ((!course.category || course.category === 'General') && modulesObj && modulesObj.category) categoryTag = modulesObj.category;
+          if (modulesObj && modulesObj.level) levelTag = modulesObj.level;
+          // Prefer manually-entered "Total Lectures" field (admin explicitly sets this)
+          if (modulesObj && parseInt(modulesObj.lectures) > 0) {
+            moduleCount = parseInt(modulesObj.lectures);
+          } else if (modulesObj && Array.isArray(modulesObj.curriculum) && modulesObj.curriculum.length > 0) {
+            // Fall back to counting from curriculum
+            moduleCount = modulesObj.curriculum.reduce((sum, m) => sum + (Array.isArray(m.lectures) ? m.lectures.length : 0), 0);
+          } else if (Array.isArray(modulesObj)) {
+            moduleCount = modulesObj.length;
+          }
+        } catch(e) {}
+
+        // Handle Image rendering dynamically
+        const bgStyle = course.thumbnail_url ? `style="background-image: url('${course.thumbnail_url}'); background-size: cover; background-position: center;"` : '';
+        const innerEmoji = course.thumbnail_url ? '' : `<span style="z-index:2;position:relative">${emoji}</span>`;
+
+        const card = document.createElement('div');
+        card.className = 'course-card';
+        card.dataset.courseId = course.id;
+        card.innerHTML = `
+          <div class="card-banner ${course.thumbnail_url ? '' : bannerClass}" ${bgStyle}>
+            ${innerEmoji}
+            <span class="banner-badge">${badge}</span>
+          </div>
+          <div class="card-body">
+            <div class="card-meta">
+              <span class="tag tag-blue">${categoryTag}</span>
+              ${enrollmentBadge}
+              <span class="tag tag-purple">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+              <span class="tag tag-green">📦 ${moduleCount || 0} Lectures</span>
+            </div>
+            <h3>${(course.title||'Untitled Course').replace(/<style[\s\S]*?<\/style>/gi,'').trim()}</h3>
+            <p>${course.description ? (course.description.length > 100 ? course.description.substring(0, 100) + '...' : course.description) : 'Learn essential skills in this comprehensive course.'}</p>
+            <div class="card-footer">
+              <div class="card-footer-row">
+                ${ratingHtml}
+                ${priceDisplay}
+              </div>
+              ${isEnrolled
+                ? `<button class="card-action-btn card-btn-enrolled" disabled>✅ Already Enrolled</button>`
+                : isPending
+                  ? `<button class="card-action-btn card-btn-pending" disabled>⏳ Pending Approval</button>`
+                  : isFree
+                    ? `<button class="card-action-btn card-btn-enroll" data-id="${course.id}">🎓 Enroll for Free</button>`
+                    : `<button class="card-action-btn card-btn-purchase" data-id="${course.id}">🛒 Purchase Course</button>`
+              }
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+
+      // Card click navigates to details/content (but not when button is clicked)
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('.card-action-btn')) return; // let button handle it
+          if (isEnrolled) {
+            window.location.href = `course-view.html?id=${course.id}`;
+          } else {
+            window.location.href = `course-details.html?id=${course.id}`;
+          }
+        });
+
+        // Purchase / Enroll button click
+        const actionBtn = card.querySelector('.card-action-btn[data-id]');
+        if (actionBtn) {
+          actionBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (isFree) {
+              // Go to course details for free enroll flow
+              window.location.href = `course-details.html?id=${course.id}`;
+            } else {
+              // Open checkout modal for paid courses
+              openCheckoutModal(course);
+            }
+          });
+        }
+      });
+    }// Modal functions
+    let activeCourse = null; 
+    let basePrice = 0; // Tracks the final price (discounted or regular)
+
+    function openCheckoutModal(course) {
+      // Require login before purchasing
+      if (!window.auth || !window.auth.isLoggedIn) {
+        activeCourse = course;
+        document.getElementById('loginPromptModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        return;
+      }
+      activeCourse = course; 
+      
+      // Determine correct price
+      const regularPrice = parseFloat(course.price) || 0;
+      const discountPrice = parseFloat(course.discount_price) || 0;
+      basePrice = (discountPrice > 0) ? discountPrice : regularPrice;
+
+      const modal = document.getElementById('checkoutModal');
+      const title = document.getElementById('modalCourseTitle');
+      const desc = document.getElementById('modalCourseDesc');
+      const priceEl = document.getElementById('modalCoursePrice');
+
+      if (title) title.innerHTML = course.title || 'Untitled Course';
+      if (desc) desc.textContent = course.description || '';
+      
+      // Show admin discount in modal if it exists
+      if (priceEl) {
+        if (basePrice === 0) {
+           priceEl.textContent = 'Free';
+        } else if (discountPrice > 0) {
+           priceEl.innerHTML = `<span style="text-decoration:line-through;color:var(--muted);font-size:0.9rem;margin-right:8px;">৳${regularPrice}</span>৳${basePrice}`;
+        } else {
+           priceEl.textContent = `৳${basePrice}`;
+        }
+      }
+      
+      // Reset Views for Multi-Step Flow
+      document.getElementById('paymentInstructionsPanel').style.display = 'block'; // Ensure panel is visible
+      document.getElementById('paymentDetailsForm').style.display = 'none';
+      document.getElementById('modalActionButtons').style.display = 'none';
+
+      // Reset Inputs
+      if(document.getElementById('paymentMethod')) document.getElementById('paymentMethod').value = '';
+      if(document.getElementById('senderNumber')) document.getElementById('senderNumber').value = '';
+      if(document.getElementById('transactionId')) document.getElementById('transactionId').value = '';
+
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCheckoutModal() {
+      document.getElementById('checkoutModal').classList.remove('open');
+      document.body.style.overflow = '';
+      activeCourse = null;
+    }
+
+    function closeLoginPromptModal() {
+      document.getElementById('loginPromptModal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('loginPromptClose').addEventListener('click', closeLoginPromptModal);
+    document.getElementById('loginPromptCancel').addEventListener('click', closeLoginPromptModal);
+    document.getElementById('loginPromptModal').addEventListener('click', function(e) {
+      if (e.target.id === 'loginPromptModal') closeLoginPromptModal();
+    });
+    document.getElementById('loginPromptRedirect').addEventListener('click', function() {
+      window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+    });
+
+    // Event Listeners
+    if (document.getElementById('modalClose')) document.getElementById('modalClose').addEventListener('click', closeCheckoutModal);
+    if (document.getElementById('modalCancel2')) document.getElementById('modalCancel2').addEventListener('click', closeCheckoutModal);
+    if (document.getElementById('checkoutModal')) document.getElementById('checkoutModal').addEventListener('click', (e) => {
+      if (e.target.id === 'checkoutModal') closeCheckoutModal();
+    });
+
+    // "I have sent the money" Toggle
+    const sentMoneyBtn = document.getElementById('sentMoneyBtn');
+    if (sentMoneyBtn) {
+      sentMoneyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // HIDE THE ENTIRE INSTRUCTIONS PANEL (The Phone Number block)
+        document.getElementById('paymentInstructionsPanel').style.display = 'none'; 
+        
+        // SHOW THE FORM
+        document.getElementById('paymentDetailsForm').style.display = 'block';
+        document.getElementById('modalActionButtons').style.display = 'flex';
+      });
+    }
+
+    // Purchase Submission Logic
+    const confirmBtn = document.getElementById('modalConfirm');
+    if (confirmBtn) {
+      // Clone & replace to prevent double-firing
+      const newConfirmBtn = confirmBtn.cloneNode(true);
+      confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+      newConfirmBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const senderNumber = document.getElementById('senderNumber').value.trim();
+        const transactionId = document.getElementById('transactionId').value.trim();
+        
+        if (!paymentMethod || !senderNumber || !transactionId) {
+          alert('Please fill out all fields: Payment Method, Sender Number, and Transaction ID.');
+          return;
+        }
+
+        // Create the purchase object for API
+        const purchaseData = {
+          course_id: activeCourse.id,
+          sender_number: senderNumber,
+          transaction_id: transactionId,
+          payment_method: paymentMethod
+        };
+
+        newConfirmBtn.textContent = 'Processing...';
+        newConfirmBtn.disabled = true;
+
+        // Send to API
+        fetch('/api/purchases', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(purchaseData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            closeCheckoutModal();
+            if (activeCourse.whatsapp) {
+              window.open(activeCourse.whatsapp, '_blank');
+            }
+            alert(`Payment submitted successfully for ${activeCourse.title}!\nOur team will verify your transaction shortly.`);
+            window.location.href = 'my-courses.html';
+          } else {
+            alert('Failed to submit purchase: ' + (data.error || 'Unknown error'));
+            newConfirmBtn.textContent = 'Submit Payment';
+            newConfirmBtn.disabled = false;
+          }
+        })
+        .catch(error => {
+          console.error('Purchase submission error:', error);
+          alert('Network error. Please check your connection and try again.');
+          newConfirmBtn.textContent = 'Submit Payment';
+          newConfirmBtn.disabled = false;
+        });
+      });
+    }
+    // Initialize courses dynamically from the API, fallback to localStorage if needed
+    let courses = await fetchPublicCourses();
+    if (!courses || courses.length === 0) {
+      courses = getCoursesFromStorage();
+    }
+    
+    // Enable Course Sorting/Sequencing (Sorts by sequence_order. Missing values fall to the bottom)
+    courses.sort((a, b) => {
+      const seqA = (a.sequence_order !== undefined && a.sequence_order !== null) ? parseInt(a.sequence_order) : 9999;
+      const seqB = (b.sequence_order !== undefined && b.sequence_order !== null) ? parseInt(b.sequence_order) : 9999;
+      return seqA - seqB;
+    });
+    
+    // Fetch user purchases to determine enrollment status
+    let enrolledCourseIds = [];
+    let pendingCourseIds = [];
+    try {
+      const purchases = await fetchUserPurchases();
+      const approvedPurchases = purchases.filter(p => p && p.status === 'approved');
+      const pendingPurchases = purchases.filter(p => p && p.status === 'pending');
+      enrolledCourseIds = approvedPurchases.map(p => p.courseId?.toString()).filter(Boolean);
+      pendingCourseIds = pendingPurchases.map(p => p.courseId?.toString()).filter(Boolean);
+    } catch (error) {
+      console.error('Error fetching purchases for enrollment status:', error);
+    }
+    
+    // ── Catalog search / filter / sort ──────────────────────────────────────
+    // Resolve a display category for a course (mirrors the card rendering logic).
+    function courseCategory(course) {
+      if (course.category && course.category !== 'General') return course.category;
+      try {
+        const m = typeof course.modules === 'string' ? JSON.parse(course.modules) : course.modules;
+        if (m && m.category) return m.category;
+      } catch (e) {}
+      return 'Blockchain';
+    }
+
+    const catalogState = { search: '', category: 'All', sort: 'default' };
+
+    function applyCatalogFilters() {
+      let list = courses.slice();
+
+      // Text search across title, description and category
+      const q = catalogState.search.trim().toLowerCase();
+      if (q) {
+        list = list.filter(c =>
+          (c.title || '').toLowerCase().includes(q) ||
+          (c.description || '').toLowerCase().includes(q) ||
+          courseCategory(c).toLowerCase().includes(q)
+        );
+      }
+
+      // Category filter
+      if (catalogState.category !== 'All') {
+        list = list.filter(c => courseCategory(c) === catalogState.category);
+      }
+
+      // Sort
+      const priceOf = c => { const d = parseFloat(c.discount_price); const p = parseFloat(c.price); return (!isNaN(d) && d > 0) ? d : (isNaN(p) ? 0 : p); };
+      if (catalogState.sort === 'rating') {
+        list.sort((a, b) => (parseFloat(b.avg_rating) || 0) - (parseFloat(a.avg_rating) || 0));
+      } else if (catalogState.sort === 'price-low') {
+        list.sort((a, b) => priceOf(a) - priceOf(b));
+      } else if (catalogState.sort === 'price-high') {
+        list.sort((a, b) => priceOf(b) - priceOf(a));
+      } else if (catalogState.sort === 'newest') {
+        list.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      }
+
+      renderCourseGrid('.courses-grid', list, enrolledCourseIds, pendingCourseIds);
+      const grid = document.querySelector('.courses-grid');
+      if (grid && list.length === 0) {
+        grid.innerHTML = '<div class="catalog-empty">No courses match your search. Try a different keyword or category.</div>';
+      }
+    }
+
+    // Build category chips from the available courses
+    (function buildCategoryChips() {
+      const chipBox = document.getElementById('categoryChips');
+      if (!chipBox) return;
+      const cats = ['All', ...Array.from(new Set(courses.map(courseCategory))).sort()];
+      chipBox.innerHTML = cats.map((c, i) =>
+        `<span class="cat-chip${i === 0 ? ' active' : ''}" data-cat="${c.replace(/"/g, '&quot;')}">${c}</span>`
+      ).join('');
+      chipBox.querySelectorAll('.cat-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          chipBox.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          catalogState.category = chip.dataset.cat;
+          applyCatalogFilters();
+        });
+      });
+    })();
+
+    const searchInput = document.getElementById('courseSearch');
+    if (searchInput) {
+      let t;
+      searchInput.addEventListener('input', e => {
+        clearTimeout(t);
+        t = setTimeout(() => { catalogState.search = e.target.value; applyCatalogFilters(); }, 180);
+      });
+    }
+    const sortSelect = document.getElementById('courseSort');
+    if (sortSelect) sortSelect.addEventListener('change', e => { catalogState.sort = e.target.value; applyCatalogFilters(); });
+
+    // Initial render of the main grid
+    applyCatalogFilters();
+
+    // Filter and Render Free Courses (Price == 0)
+    const freeCourses = courses.filter(course => {
+      const p = parseFloat(course.price);
+      return isNaN(p) || p === 0 || course.price === '0' || course.price === null;
+    });
+    renderCourseGrid('#free-courses-grid', freeCourses, enrolledCourseIds, pendingCourseIds);
+  });
+  
+  
+  
+  // Mentor Management Functions for Frontend
+  function getMentorsFromStorage() {
+    try {
+      const mentorsJson = localStorage.getItem('mentors');
+      return mentorsJson ? JSON.parse(mentorsJson) : [];
+    } catch (error) {
+      console.error('Error reading mentors from localStorage:', error);
+      return [];
+    }
+  }
+
+  function renderMentorsGrid() {
+    const container = document.getElementById('mentors-container');
+    const emptyState = document.getElementById('mentors-empty');
+    if (!container) return;
+
+    const rawMentors = getMentorsFromStorage();
+    const mentors = rawMentors.sort((a,b) => {
+      const sa = (a.sequence_order != null) ? parseInt(a.sequence_order) : 9999;
+      const sb = (b.sequence_order != null) ? parseInt(b.sequence_order) : 9999;
+      return sa - sb;
+    });
+    
+    if (mentors.length === 0) {
+      if (emptyState) emptyState.style.display = 'block';
+      container.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)">
+          <div style="font-size:3rem;margin-bottom:16px">👨‍🏫</div>
+          <h3 style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:8px;color:var(--text)">Expert Mentors Coming Soon</h3>
+          <p style="font-size:.9rem">Our team of blockchain professionals will be listed here.</p>
+        </div>
+      `;
+      return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+
+    const GRADIENTS = [
+      'linear-gradient(135deg,#7b5cff,#00e5ff)',
+      'linear-gradient(135deg,#ff4d8d,#7b5cff)',
+      'linear-gradient(135deg,#00e599,#00e5ff)',
+      'linear-gradient(135deg,#fbbf24,#ff4d8d)',
+      'linear-gradient(135deg,#0ea5e9,#7b5cff)',
+      'linear-gradient(135deg,#8b5cf6,#00e5ff)',
+      'linear-gradient(135deg,#ff7b5c,#fbbf24)',
+      'linear-gradient(135deg,#06b6d4,#3b82f6)'
+    ];
+
+    function getInitials(name) {
+      return (name || 'M').split(/\s+/).map(w => w[0] || '').join('').toUpperCase().substring(0, 2);
+    }
+
+    container.innerHTML = mentors.map((mentor, index) => {
+      const gradient = GRADIENTS[index % GRADIENTS.length];
+      const hasRealImage = mentor.imageUrl && mentor.imageUrl !== 'https://via.placeholder.com/150' && !mentor.imageUrl.includes('ui-avatars.com');
+      const avatarContent = hasRealImage
+        ? `<img src="${mentor.imageUrl}" alt="${mentor.name}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : '';
+      const initialsDiv = `<span style="position:${hasRealImage?'absolute':'relative'};${hasRealImage?'display:none;':''}inset:0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;color:#fff;">${getInitials(mentor.name)}</span>`;
+      
+      return `
+      <div class="mentor-card" style="cursor:default;">
+        <div class="mentor-avatar" style="background:${gradient};position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.35),0 0 0 3px rgba(255,255,255,.06);">
+          ${avatarContent}
+          ${initialsDiv}
+        </div>
+        <h4 style="font-size:1.05rem;">${mentor.name}</h4>
+        ${mentor.nameEn && mentor.nameEn !== mentor.name ? `<div class="mentor-name-en">${mentor.nameEn}</div>` : ''}
+        <div class="mentor-badge">${mentor.title}</div>
+        <p class="bio">${mentor.bio || 'Expert in blockchain technology with extensive industry experience.'}</p>
+        <div class="mentor-socials">
+          ${mentor.twitter && mentor.twitter !== '#' ? `<a href="${mentor.twitter}" class="social-btn" title="Twitter" target="_blank" rel="noopener">𝕏</a>` : `<span class="social-btn" style="opacity:.3" title="Twitter">𝕏</span>`}
+          ${mentor.linkedin && mentor.linkedin !== '#' ? `<a href="${mentor.linkedin}" class="social-btn" title="LinkedIn" target="_blank" rel="noopener">in</a>` : `<span class="social-btn" style="opacity:.3" title="LinkedIn">in</span>`}
+          ${mentor.github && mentor.github !== '#' ? `<a href="${mentor.github}" class="social-btn" title="GitHub" target="_blank" rel="noopener">⬡</a>` : `<span class="social-btn" style="opacity:.3" title="GitHub">⬡</span>`}
+        </div>
+      </div>
+    `}).join('');
+  }
+
+  // Initialize mentors section
+  document.addEventListener('DOMContentLoaded', () => {
+    renderMentorsGrid();
+    
+    // Also re-render when localStorage changes (optional)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'mentors') {
+        renderMentorsGrid();
+      }
+    });
+  });
+
+  // Initialize feedback section
+  document.addEventListener('DOMContentLoaded', () => {
+    // ── Build floating testimonial marquee ──
+    if (typeof initDefaultFeedbacks === 'function') initDefaultFeedbacks();
+    if (typeof initDefaultMentors  === 'function') initDefaultMentors();
+    if (typeof initDefaultCourses  === 'function') initDefaultCourses();
+
+    function buildMarquee() {
+      const feedbacks = (typeof getAllFeedbacks === 'function') ? getAllFeedbacks() : [];
+      if (!feedbacks.length) return;
+
+      function makeCard(fb) {
+        const r = fb.rating || 5;
+        const stars = '<span style="color:#fbbf24">' + '★'.repeat(r) + '</span>'
+                    + '<span style="color:rgba(255,255,255,.15)">' + '☆'.repeat(5 - r) + '</span>';
+        const lang = (fb.language || 'English').toLowerCase();
+        const langLabel = fb.language || 'English';
+        const safeText = (fb.text || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const safeName = (fb.name || '').replace(/</g,'&lt;');
+        const safeRole = (fb.role || 'Web3 Learner').replace(/</g,'&lt;');
+        const avatarSrc = fb.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(fb.name.substring(0,2))}&background=7b5cff&color=fff&size=80&bold=true`;
+        return `
+          <div class="tcard">
+            <div class="tcard-glow"></div>
+            <span class="tcard-quote">"</span>
+            <p class="tcard-text">${safeText}</p>
+            <div class="tcard-stars">${stars}</div>
+            <div class="tcard-footer">
+              <div class="tcard-avatar">
+                <img src="${avatarSrc}" alt="${safeName}" loading="lazy"
+                  onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(fb.name.substring(0,2))}&background=7b5cff&color=fff&size=80&bold=true'">
+              </div>
+              <div class="tcard-info">
+                <div class="tcard-name">${safeName}</div>
+                <div class="tcard-role">${safeRole}</div>
+              </div>
+              <span class="tcard-lang ${lang}">${langLabel}</span>
+            </div>
+          </div>`;
+      }
+
+      // Split into two rows, alternate cards
+      const row1 = feedbacks.filter((_, i) => i % 2 === 0);
+      const row2 = feedbacks.filter((_, i) => i % 2 === 1);
+      // Need at least a few cards per row — pad if short
+      function pad(arr) { while(arr.length < 4) arr = [...arr, ...arr]; return arr; }
+      const r1 = pad(row1), r2 = pad(row2);
+
+      const el1 = document.getElementById('trow1');
+      const el2 = document.getElementById('trow2');
+      if (el1) { const h = r1.map(makeCard).join(''); el1.innerHTML = h + h; } // double for seamless loop
+      if (el2) { const h = r2.map(makeCard).join(''); el2.innerHTML = h + h; }
+    }
+    buildMarquee();
+  });
+</script>
+
+<div class="modal-overlay" id="loginPromptModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Login Required</h3>
+      <button class="modal-close" id="loginPromptClose">&times;</button>
+    </div>
+    <div class="modal-body" style="text-align:center;padding:32px 24px;">
+      <div style="font-size:3.5rem;margin-bottom:16px;">🔒</div>
+      <h4 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.3rem;color:var(--text);margin-bottom:12px;">Login to Purchase</h4>
+      <p style="color:var(--muted);font-size:0.95rem;line-height:1.6;margin-bottom:24px;">
+        You need to log in or create an account to purchase this course and track your progress.
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="loginPromptCancel">Cancel</button>
+        <button class="btn" id="loginPromptRedirect" style="background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Log In / Sign Up</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Complete Purchase</h3>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <h4 id="modalCourseTitle" style="font-family:'Syne',sans-serif; font-weight:700; font-size:1.1rem; color:var(--text); margin-bottom:4px;">Course Title</h4>
+      <p id="modalCourseDesc" style="color:var(--muted); font-size:0.85rem; line-height:1.5; margin-bottom:16px;">Course description will appear here.</p>
+      
+      <div style="background: rgba(0,229,255,0.05); border: 1px solid rgba(0,229,255,0.1); padding: 12px 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <span style="color: var(--muted); font-size: 0.9rem; font-weight: 500;">Total Price:</span>
+        <span id="modalCoursePrice" style="font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; color:var(--accent); margin:0;">৳2,500</span>
+      </div>
+
+      <div id="paymentInstructionsPanel" style="background: rgba(123,92,255,0.08); border: 1px solid rgba(123,92,255,0.2); padding: 16px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
+        <p style="color: var(--text); font-size: 1.1rem; margin-bottom: 12px;">
+          <strong style="color: #00e5ff; font-size: 1.3rem; letter-spacing: 0.5px;">Send Money to : 01302201431</strong>
+        </p>
+        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px;">
+          <span style="padding: 4px 12px; background: rgba(226,19,110,0.15); color: #e2136e; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">bKash</span>
+          <span style="padding: 4px 12px; background: rgba(240,101,34,0.15); color: #f06522; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">Nagad</span>
+          <span style="padding: 4px 12px; background: rgba(140,52,148,0.15); color: #8c3494; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">Rocket</span>
+          <span style="padding: 4px 12px; background: rgba(0,166,81,0.15); color: #00a651; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">Upay</span>
+        </div>
+        <button id="sentMoneyBtn" class="btn btn-primary" style="width: 100%; font-size: 1rem; padding: 12px; border-radius: 10px;">I have sent the money</button>
+      </div>
+
+      <div id="paymentDetailsForm" style="display: none; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="font-size: 0.85rem; margin-bottom: 6px; color:var(--muted);">Payment Method *</label>
+          <select id="paymentMethod" class="feedback-input" style="padding: 12px; margin: 0; background:var(--surface2);">
+            <option value="">Select method...</option>
+            <option value="bkash">bKash</option>
+            <option value="nagad">Nagad</option>
+            <option value="rocket">Rocket</option>
+            <option value="upay">Upay</option>
+          </select>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="font-size: 0.85rem; margin-bottom: 6px; color:var(--muted);">Sender Number *</label>
+          <input type="text" id="senderNumber" class="feedback-input" placeholder="01XXXXXXXXX" style="padding: 12px; margin: 0; background:var(--surface2);">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="font-size: 0.85rem; margin-bottom: 6px; color:var(--muted);">Transaction ID *</label>
+          <input type="text" id="transactionId" class="feedback-input" placeholder="TrxID" style="padding: 12px; margin: 0; background:var(--surface2);">
+        </div>
+      </div>
+
+      <div class="modal-actions" id="modalActionButtons" style="display: none;">
+        <button class="btn btn-ghost" id="modalCancel2">Cancel</button>
+        <button class="btn btn-success" id="modalConfirm">Submit Payment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="feedbackButton" class="feedback-button">
+  <div class="feedback-icon">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0034 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.9C9.87812 3.30493 11.1801 2.99656 12.5 3H13C15.0843 3.11499 17.053 3.99477 18.5291 5.47087C20.0052 6.94696 20.885 8.91565 21 11V11.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <span class="feedback-label">Feedback</span>
+</div>
+
+<div id="feedbackModal" class="feedback-modal-overlay">
+  <div class="feedback-modal">
+    <div class="feedback-modal-header">
+      <h3>Share Your Feedback</h3>
+      <button class="feedback-modal-close" id="feedbackModalClose">&times;</button>
+    </div>
+    <div class="feedback-modal-body">
+      <form id="feedbackForm">
+        <div class="form-group">
+          <label for="feedbackName">Name (optional)</label>
+          <input type="text" id="feedbackName" class="feedback-input" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label for="feedbackContact">Contact (optional)</label>
+          <input type="text" id="feedbackContact" class="feedback-input" placeholder="Email or phone">
+        </div>
+        <div class="form-group">
+          <label for="feedbackMessage">Feedback Message <span class="required">*</span></label>
+          <textarea id="feedbackMessage" class="feedback-textarea" placeholder="Your feedback, suggestions, or issues..." rows="4" required></textarea>
+        </div>
+        <div class="feedback-modal-actions">
+          <button type="button" class="feedback-btn feedback-btn-secondary" id="feedbackCancel">Cancel</button>
+          <button type="submit" class="feedback-btn feedback-btn-primary">Submit Feedback</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="feedbackToast" class="feedback-toast">
+  <span id="feedbackToastMessage">Feedback submitted successfully!</span>
+</div>
+
+<script src="scripts/ux-enhancements.js" defer></script>
+
+</body>
+</html>

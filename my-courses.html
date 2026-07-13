@@ -1,0 +1,2285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="icon" type="image/png" href="/assets/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/assets/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/assets/favicon-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/assets/favicon-64x64.png" sizes="64x64">
+<link rel="icon" type="image/png" href="/assets/favicon-128x128.png" sizes="128x128">
+<link rel="icon" type="image/png" href="/assets/favicon-256x256.png" sizes="256x256">
+<link rel="apple-touch-icon" href="/assets/favicon-180x180.png">
+<link rel="mask-icon" href="/assets/favicon.svg" color="#7b5cff">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>My Courses — DecentraForce</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #050a18;
+    --bg2: #080f22;
+    --surface: #0d1630;
+    --surface2: #111d3a;
+    --surface3: #162040;
+    --accent: #00e5ff;
+    --accent2: #7b5cff;
+    --accent3: #ff4d8d;
+    --text: #e8eeff;
+    --muted: #7d8fb3;
+    --border: rgba(0, 229, 255, 0.12);
+    --border2: rgba(255,255,255,0.06);
+    --glow: rgba(0, 229, 255, 0.15);
+    --sidebar-w: 240px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  /* Keyboard focus visibility (a11y) */
+  a:focus-visible, button:focus-visible, input:focus-visible,
+  select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Respect users who prefer less motion */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Grid bg */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(0,229,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Blobs */
+  .blob { position: fixed; border-radius: 50%; filter: blur(130px); pointer-events: none; z-index: 0; }
+  .blob-1 { width: 500px; height: 500px; background: rgba(123,92,255,.12); top: -150px; right: -100px; }
+  .blob-2 { width: 400px; height: 400px; background: rgba(0,229,255,.08); bottom: 0; left: 200px; }
+
+  /* ─── LAYOUT ─── */
+.app-shell { display: flex; min-height: 100vh; position: relative; }
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    width: var(--sidebar-w); flex-shrink: 0; background: var(--surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    padding: 0; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50;
+  }
+
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.15rem;
+    color: var(--text); text-decoration: none; letter-spacing: -.5px;
+    padding: 18px 16px 16px; border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .logo-line { display: block; line-height: 1.2; }
+  .logo-line-force { margin-top: -1px; }
+  .logo-icon {
+    width: 32px; height: 32px; min-width: 32px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border-radius: 7px; display: grid; place-items: center;
+    font-size: .72rem; font-weight: 900; color: #fff;
+    box-shadow: 0 0 16px rgba(123,92,255,.5); flex-shrink: 0;
+  }
+  .sidebar-logo > div { min-width: 0; }
+  .sidebar-logo span { color: var(--accent); }
+  .sidebar-logo .tagline {
+    font-family: 'DM Sans', sans-serif; font-weight: 300;
+    font-size: .6rem; color: var(--muted); letter-spacing: .08em;
+    text-transform: uppercase; display: block; margin-top: 3px;
+    -webkit-text-fill-color: initial;
+  }
+
+  .sidebar-nav { flex: 1; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: 10px;
+    font-size: .9rem; font-weight: 500; color: var(--muted);
+    text-decoration: none; cursor: pointer; border: none;
+    background: transparent; width: 100%; transition: all .2s; position: relative;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active {
+    color: var(--accent); background: rgba(0,229,255,.08);
+    border: 1px solid rgba(0,229,255,.15);
+  }
+  .nav-item.active::before {
+    content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
+    width: 3px; border-radius: 0 2px 2px 0; background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .nav-icon {
+    width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+    display: grid; place-items: center; font-size: 1rem;
+    background: var(--surface2);
+  }
+  .nav-item.active .nav-icon { background: rgba(0,229,255,.12); }
+
+  .nav-divider { height: 1px; background: var(--border); margin: 8px 14px; }
+
+  .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border); }
+  .back-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: 10px;
+    font-size: .85rem; color: var(--muted);
+    text-decoration: none; transition: all .2s;
+    border: 1px solid var(--border2);
+  }
+  .back-btn:hover { color: var(--text); border-color: var(--border); background: var(--surface2); }
+
+  /* ─── MAIN CONTENT ─── */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    height: 66px; background: rgba(5,10,24,.85); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px; position: sticky; top: 0; z-index: 60;
+  }
+
+  /* Mobile hamburger — hidden on desktop, shown on mobile via media query */
+  .mob-menu-btn {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 38px; height: 38px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: border-color 0.2s;
+  }
+  .mob-menu-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .topbar-breadcrumb { font-size: .85rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .topbar-breadcrumb a { color: var(--muted); text-decoration: none; }
+  .topbar-breadcrumb a:hover { color: var(--accent); }
+  .topbar-breadcrumb span { color: var(--text); font-weight: 500; }
+  .chevron { color: var(--muted); font-size: .8rem; }
+
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+
+  .student-id-badge {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 6px 14px; border-radius: 8px; font-size: .8rem;
+  }
+  .student-id-badge .label { color: var(--muted); }
+  .student-id-badge .id {
+    font-family: 'Syne', sans-serif; font-weight: 700; color: var(--accent);
+    letter-spacing: .05em;
+  }
+
+  /* ─── USER DROPDOWN & AVATAR ─── */
+  .avatar-wrapper { position: relative; }
+  .avatar-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border: 2px solid var(--border); display: grid; place-items: center;
+    font-size: .85rem; font-weight: 800; color: #fff; cursor: pointer;
+    box-shadow: 0 0 16px rgba(123,92,255,.35); transition: transform 0.2s;
+  }
+  .avatar-btn:hover { transform: scale(1.05); }
+
+  .user-dropdown {
+    position: absolute; top: 120%; right: 0; width: 260px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    overflow: hidden; z-index: 100; opacity: 0; visibility: hidden;
+    transform: translateY(-10px); transition: all 0.2s ease;
+  }
+  .user-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+  .dropdown-header { padding: 16px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .dropdown-header h4 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--text); margin-bottom: 2px; }
+  .dropdown-header p { font-size: 0.78rem; color: var(--muted); }
+  .dropdown-body { padding: 16px; border-bottom: 1px solid var(--border); }
+  .dropdown-footer { padding: 8px; }
+  .dropdown-item {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 10px 12px; border-radius: 8px; border: none;
+    background: transparent; color: var(--text); font-size: 0.88rem;
+    font-weight: 500; cursor: pointer; transition: background 0.2s; text-align: left;
+  }
+  .dropdown-item:hover { background: var(--surface2); color: var(--accent); }
+  .dropdown-item.logout { color: var(--accent3); margin-top: 4px; }
+  .dropdown-item.logout:hover { background: rgba(255,77,141,0.1); }
+
+  /* ─── PAGE BODY ─── */
+  .page-body { padding: 32px; flex: 1; }
+
+  .page-header { margin-bottom: 28px; animation: fadeUp .6s cubic-bezier(.16,1,.3,1) both; }
+  .page-header h1 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 1.75rem; letter-spacing: -.02em; margin-bottom: 6px;
+  }
+  .page-header h1 em {
+    font-style: normal; background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-header p { font-size: .9rem; color: var(--muted); }
+
+  /* ─── TAB BAR ─── */
+  .tabs {
+    display: flex; align-items: center; gap: 0; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 12px; padding: 5px;
+    width: fit-content; margin-bottom: 28px; animation: fadeUp .6s .1s cubic-bezier(.16,1,.3,1) both;
+  }
+  .tab-btn {
+    padding: 10px 22px; border-radius: 9px; font-size: .88rem; font-weight: 500;
+    color: var(--muted); cursor: pointer; border: none; background: transparent;
+    transition: all .2s; white-space: nowrap;
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff; box-shadow: 0 0 20px rgba(123,92,255,.4); font-weight: 600;
+  }
+  .tab-btn:not(.active):hover { color: var(--text); background: var(--surface2); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .section-label {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem;
+    color: var(--muted); margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ─── COURSES GRID & CARDS ─── */
+  .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+  /* Certificates grid */
+  .cert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+  .cert-card {
+    position: relative; background: linear-gradient(160deg, #0f1a38, #0b1226);
+    border: 1px solid rgba(212,175,55,.35); border-radius: 16px; padding: 22px 22px 18px;
+    overflow: hidden; transition: transform .25s, box-shadow .25s;
+  }
+  .cert-card::before { content:''; position:absolute; inset:0; background: radial-gradient(120% 80% at 100% 0%, rgba(212,175,55,.12), transparent 60%); pointer-events:none; }
+  .cert-card:hover { transform: translateY(-5px); box-shadow: 0 24px 50px rgba(0,0,0,.5), 0 0 0 1px rgba(212,175,55,.4); }
+  .cert-card .cc-ribbon { display:inline-flex; align-items:center; gap:6px; font-size:.7rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#d4af37; }
+  .cert-card .cc-title { font-family:'Syne',sans-serif; font-weight:700; font-size:1.08rem; color:var(--text); margin:12px 0 6px; line-height:1.3; }
+  .cert-card .cc-meta { font-size:.78rem; color:var(--muted); }
+  .cert-card .cc-code { font-size:.72rem; color:#8aa0c8; margin-top:4px; font-family:monospace; letter-spacing:.04em; }
+  .cert-card .cc-actions { display:flex; gap:10px; margin-top:16px; }
+  .cert-card .cc-btn { flex:1; text-align:center; padding:9px 12px; border-radius:9px; font-size:.82rem; font-weight:700; text-decoration:none; cursor:pointer; transition:all .2s; }
+  .cert-card .cc-btn-primary { background: linear-gradient(135deg,#d4af37,#f0c94f); color:#3a2c06; border:none; }
+  .cert-card .cc-btn-primary:hover { filter:brightness(1.06); }
+  .cert-card .cc-btn-ghost { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+  .cert-card .cc-btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+  .course-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+    overflow: hidden; transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+    cursor: pointer; position: relative; animation: fadeUp .5s cubic-bezier(.16,1,.3,1) both;
+  }
+  .course-card:hover { transform: translateY(-5px); box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(0,229,255,.15); border-color: rgba(0,229,255,.2); }
+  .card-thumbnail { width: 100%; aspect-ratio: 16/9; overflow: hidden; position: relative; background: var(--surface2); display: flex; align-items: center; justify-content: center; }
+  .thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+  .thumb-bg-1 { background: linear-gradient(135deg, #0d1a3a 0%, #1a0d3a 50%, #0d1a2a 100%); }
+  .thumb-glow { position: absolute; inset: 0; background: radial-gradient(circle at 70% 30%, rgba(0,229,255,.12), transparent 65%); pointer-events: none; }
+  .card-badge { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,.5); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; font-size: .68rem; font-weight: 600; }
+  .badge-nano { color: var(--accent2); }
+
+  .card-body { padding: 18px 20px 20px; }
+  .card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; line-height: 1.35; margin-bottom: 14px; color: var(--text); }
+  .card-title * { font-size: inherit !important; line-height: inherit !important; font-weight: inherit !important; }
+  .card-stats { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .stat-pill { display: flex; align-items: center; gap: 5px; background: var(--surface2); border: 1px solid var(--border2); padding: 5px 11px; border-radius: 7px; font-size: .75rem; color: var(--muted); }
+  
+  .card-progress { margin-top: 14px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: .75rem; color: var(--muted); margin-bottom: 6px; }
+  .progress-track { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)); box-shadow: 0 0 8px rgba(0,229,255,.4); transition: width 1s cubic-bezier(.16,1,.3,1); }
+
+  .card-footer { padding: 12px 20px; border-top: 1px solid var(--border2); display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,.15); }
+  .continue-btn { display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .2s; text-decoration: none; box-shadow: 0 0 16px rgba(123,92,255,.3); }
+
+  /* Button styles for modal */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 22px; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: .9rem;
+    cursor: pointer; text-decoration: none; border: none; transition: all .2s;
+  }
+  .btn-ghost {
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: rgba(0,229,255,.3); }
+
+  /* ─── PROFILE PANEL & FORMS ─── */
+  .profile-layout { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+  .profile-panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 32px; flex: 1; min-width: 0;
+    animation: fadeUp .5s cubic-bezier(.16,1,.3,1) both;
+  }
+  .edit-profile-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 32px; flex: 1.5; min-width: 0;
+    animation: fadeUp .5s .1s cubic-bezier(.16,1,.3,1) both;
+  }
+
+  .profile-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent2), var(--accent)); display: grid; place-items: center;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem; color: #fff;
+    box-shadow: 0 0 28px rgba(123,92,255,.4); border: 2px solid var(--border);
+  }
+  .profile-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; margin-bottom: 4px; }
+  .profile-id { font-size: .82rem; color: var(--accent); }
+  
+  .profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; margin-bottom: 24px; }
+  .pstat { background: var(--surface2); border: 1px solid var(--border2); border-radius: 12px; padding: 14px; text-align: center; }
+  .pstat .num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .pstat .lbl { font-size: .72rem; color: var(--muted); margin-top: 3px; }
+
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+  .form-input {
+    width: 100%; padding: 12px 16px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-size: 16px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,255,0.1); }
+  .form-input::placeholder { color: rgba(125,143,179,0.5); }
+
+  .save-btn {
+    width: 100%; padding: 14px; border-radius: 10px; border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; letter-spacing: 0.05em;
+    box-shadow: 0 0 20px rgba(123,92,255,.3); transition: all 0.2s; margin-top: 10px;
+  }
+  .save-btn:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(123,92,255,.5); }
+
+  /* ─── EMPTY STATES & LOADING ─── */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    margin: 20px 0;
+  }
+  .empty-icon {
+    font-size: 3.5rem;
+    margin-bottom: 16px;
+    opacity: 0.7;
+  }
+  .empty-state h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .empty-state p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  .loading-courses {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 1rem;
+  }
+  .loading-courses::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin-left: 10px;
+    animation: spin 1s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Sidebar overlay — hidden by default, shown only when sidebar is open on mobile */
+  .sidebar-overlay {
+    display: none;
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 55; /* below topbar (z-60) so hamburger stays tappable */
+  }
+  .sidebar-overlay.mob-open {
+    display: block;
+    pointer-events: all;
+  }
+
+  @media (max-width: 768px) {
+    :root { --sidebar-w: 0px; }
+    .sidebar { display: none; position: fixed; top: 0; left: 0; height: 100%; width: 260px; z-index: 65; transform: translateX(-100%); transition: transform 0.3s ease; }
+    .sidebar.mob-open { display: flex !important; transform: translateX(0); }
+    .mob-menu-btn { display: flex !important; }
+    .main { margin-left: 0; }
+    .page-body { padding: 20px 16px; }
+    .courses-grid { grid-template-columns: 1fr; }
+    .topbar { padding: 0 16px; }
+    .student-id-badge { display: none; }
+    
+    /* Modal responsive improvements */
+    .modal { max-width: 95%; margin: 10px; }
+    .modal-header { padding: 18px 20px 16px; }
+    .modal-body { padding: 20px; }
+    .modal-actions { flex-direction: column; gap: 10px; }
+    .modal-actions .btn { width: 100%; }
+    .coupon-input-group { flex-direction: column; }
+    .coupon-input-group input { margin-bottom: 10px; }
+    .btn-coupon { width: 100%; }
+    .payment-methods { justify-content: center; }
+  }
+  @media (max-width: 480px) {
+    .topbar { height: 56px; padding: 0 14px; }
+    .topbar-breadcrumb { font-size: 0.78rem; }
+    .page-body { padding: 16px 12px; }
+    .page-title { font-size: 1.4rem; }
+    .page-subtitle { font-size: 0.85rem; }
+    .courses-grid { gap: 14px; }
+    .card-thumb { height: 140px; font-size: 2.2rem; }
+    .card-body { padding: 16px; }
+    .card-title { font-size: 1rem; }
+    .empty-state { padding: 40px 16px; }
+    .modal { border-radius: 14px; }
+    .modal-header { padding: 16px; }
+    .modal-body { padding: 16px; }
+  }
+
+  /* ══════════ CHECKOUT MODAL ══════════ */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-overlay.open {
+    display: flex;
+  }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 480px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
+    animation: modalFadeIn 0.3s ease-out;
+  }
+  @keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .modal-header {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--text);
+  }
+  .modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 1.2rem;
+    transition: all 0.2s;
+  }
+  .modal-close:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .modal-body {
+    padding: 28px;
+  }
+  .modal-course-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .modal-course-desc {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .modal-price {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--accent);
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+  }
+  .modal-actions .btn {
+    flex: 1;
+    padding: 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .btn-success {
+    background: linear-gradient(135deg, #00e599, #00e5ff);
+    color: #fff;
+    border: none;
+  }
+  .btn-success:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Enhanced Checkout Modal Styles */
+  .course-info-section {
+    margin-bottom: 24px;
+  }
+  
+  .price-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding: 16px;
+    background: rgba(0, 229, 255, 0.05);
+    border: 1px solid rgba(0, 229, 255, 0.1);
+    border-radius: 12px;
+  }
+  
+  .original-price {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.1rem;
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+  
+  .final-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  
+  .final-price-label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  
+  .final-price-amount {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--accent);
+  }
+  
+  .coupon-section {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .coupon-section label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  
+  .coupon-input-group {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .coupon-input-group input {
+    flex: 1;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px; /* Prevents iOS Safari auto-zoom on focus */
+  }
+  
+  .coupon-input-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  
+  .btn-coupon {
+    padding: 12px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .btn-coupon:hover {
+    background: var(--surface3);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
+  .coupon-message {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    min-height: 20px;
+  }
+  
+  .coupon-message.success {
+    color: #00e599;
+  }
+  
+  .coupon-message.error {
+    color: #ff4d8d;
+  }
+  
+  .payment-error {
+    background: rgba(255, 77, 141, 0.1);
+    border: 1px solid rgba(255, 77, 141, 0.3);
+    color: #ff4d8d;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    display: none;
+  }
+  
+  .payment-instructions {
+    margin-bottom: 24px;
+    padding: 20px;
+    background: rgba(123, 92, 255, 0.05);
+    border: 1px solid rgba(123, 92, 255, 0.1);
+    border-radius: 12px;
+  }
+  
+  .payment-instructions h5 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  
+  .instructions-content p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+  
+  .payment-methods {
+    display: flex;
+    gap: 8px;
+    margin: 12px 0;
+    flex-wrap: wrap;
+  }
+  
+  .payment-method-tag {
+    padding: 6px 12px;
+    background: rgba(123, 92, 255, 0.1);
+    border: 1px solid rgba(123, 92, 255, 0.2);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent2);
+  }
+  
+  .instruction-note {
+    font-size: 0.85rem;
+    color: var(--accent);
+    margin-top: 12px;
+    font-style: italic;
+  }
+  
+  .payment-details-form {
+    margin-bottom: 28px;
+  }
+  
+  .payment-details-form h5 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+  
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .form-group label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  
+  .form-group select,
+  .form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px; /* Prevents iOS Safari auto-zoom on focus */
+  }
+  
+  .form-group select:focus,
+  .form-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  
+  .form-group select option {
+    background: var(--surface);
+    color: var(--text);
+  }
+  
+  /* Glassmorphism enhancement */
+  .modal {
+    background: rgba(13, 22, 48, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 229, 255, 0.15);
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(0, 229, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+  
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
+  }
+
+  @media (max-width: 768px) {
+  /* ── Prevent iOS Safari auto-zoom on any input/select/textarea focus ── */
+  /* iOS zooms when font-size < 16px. Set 16px on everything universally. */
+  input,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="url"],
+  input[type="search"],
+  input[type="tel"],
+  select,
+  textarea,
+  .form-input,
+  .coupon-input-group input {
+    font-size: 16px !important;
+  }
+
+  /* ── Prevent double-tap zoom on interactive elements ── */
+  button, a, .tab-btn, .nav-btn, .control-btn, .nav-item,
+  .continue-btn, .save-btn, .btn-coupon, .card-course {
+    touch-action: manipulation !important;
+  }
+
+  /* ── Profile layout: full-width single column on mobile ── */
+  .profile-layout {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .profile-panel,
+  .edit-profile-card {
+    width: 100%;
+    padding: 20px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <a href="index.html" class="sidebar-logo" title="Go to Home">
+      <div class="logo-icon">DF</div>
+      <div>
+        <span class="logo-line">Decentra</span>
+        <span class="logo-line logo-line-force"><span>Force</span></span>
+        <span class="tagline">Your Web3 University</span>
+      </div>
+    </a>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="showPanel('courses')">
+        <div class="nav-icon">⊞</div>
+        My Courses
+      </button>
+      <button class="nav-item" onclick="showPanel('profile')">
+        <div class="nav-icon">◎</div>
+        Profile
+      </button>
+      <button class="nav-item" onclick="showPanel('rewards')">
+        <div class="nav-icon">🏆</div>
+        Rewards
+      </button>
+
+
+      <div class="nav-divider"></div>
+      <button class="nav-item" onclick="showPanel('courses'); setTab('enrolled')">
+        <div class="nav-icon">🎓</div>
+        Enrolled
+      </button>
+      <button class="nav-item" onclick="showPanel('courses'); setTab('premium')">
+        <div class="nav-icon">💳</div>
+        Premium
+      </button>
+      <button class="nav-item" onclick="showPanel('courses'); setTab('free')">
+        <div class="nav-icon">🎁</div>
+        Free Courses
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="index.html" class="back-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M9 11L5 7l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Back to Home
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mob-menu-btn" id="mobMenuBtn" aria-label="Open navigation">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="topbar-breadcrumb">
+          <a href="index.html">Home</a>
+          <span class="chevron">›</span>
+          <span id="breadcrumb-label">My Courses</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <!-- Guest buttons (shown when not logged in) -->
+        <div id="guestNavBtns" style="display:none;gap:8px;align-items:center;">
+          <a href="login.html" style="padding:8px 18px;border-radius:9px;border:1px solid var(--border);color:var(--text);font-size:0.85rem;font-weight:600;text-decoration:none;background:var(--surface2);transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Log In</a>
+          <a href="register.html" style="padding:8px 18px;border-radius:9px;border:none;color:#fff;font-size:0.85rem;font-weight:600;text-decoration:none;background:linear-gradient(135deg,var(--accent2),var(--accent));transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Sign Up</a>
+        </div>
+
+        <div class="student-id-badge" id="studentIdBadge">
+          <span class="label">Student ID:</span>
+          <span class="id" id="topbarStudentId">DF-LOADING</span>
+        </div>
+
+        <div class="avatar-wrapper" id="avatarWrapper">
+          <div class="avatar-btn" id="navAvatar" onclick="toggleDropdown(event)">...</div>
+          
+          <div class="user-dropdown" id="userMenu">
+            <div class="dropdown-header">
+              <h4 id="dropName">Loading...</h4>
+              <p id="dropEmail">loading@email.com</p>
+            </div>
+            <div class="dropdown-body">
+              <div class="progress-label"><span>Avg. Progress</span><span id="dropProgress" style="color:var(--accent);font-weight:700">—</span></div>
+              <div class="progress-track" style="margin-top:8px"><div class="progress-fill" id="dropProgressBar" style="width:0%"></div></div>
+            </div>
+            <div class="dropdown-footer">
+              <button class="dropdown-item" onclick="showPanel('profile'); document.getElementById('userMenu').classList.remove('show');">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                My Profile
+              </button>
+              <button class="dropdown-item logout" onclick="logoutUser()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <div class="page-body">
+
+      <div id="panel-courses">
+        <div class="page-header">
+          <h1>My Courses — <em>Continue Your Learning Journey</em></h1>
+          <p>Pick up where you left off, or explore something new.</p>
+        </div>
+
+
+        <div class="tabs">
+          <button class="tab-btn active" onclick="setTab('enrolled')" id="tab-enrolled">Enrolled Courses</button>
+          <button class="tab-btn" onclick="setTab('premium')" id="tab-premium">Premium Courses</button>
+          <button class="tab-btn" onclick="setTab('free')" id="tab-free">Free Courses</button>
+        </div>
+
+        <div class="tab-panel active" id="panel-enrolled">
+          <div class="section-label">Enrolled Courses</div>
+          <div class="courses-grid" id="enrolled-courses">
+            <div class="loading-courses">Loading enrolled courses...</div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="panel-premium">
+          <div class="section-label">Premium Courses</div>
+          <div class="courses-grid" id="premium-courses">
+            <div class="loading-courses">Loading premium courses...</div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="panel-free">
+          <div class="section-label">Free Courses</div>
+          <div class="courses-grid" id="free-courses">
+            <div class="loading-courses">Loading free courses...</div>
+          </div>
+        </div>
+
+
+
+      </div>
+
+      <div id="panel-profile" style="display:none">
+        <div class="page-header">
+          <h1>My <em>Profile</em></h1>
+          <p>Manage your account settings and credentials.</p>
+        </div>
+        
+        <div class="profile-layout">
+          <div class="profile-panel">
+            <div class="flex items-center gap-6 mb-4">
+              <div class="profile-avatar mb-0" id="profileBigAvatar">DF</div>
+              <div>
+                <div class="profile-name" id="profileBigName">User</div>
+                <div class="profile-id" id="profileBigId">Student ID: Loading...</div>
+                <div id="profileBigEmail" style="font-size:.82rem;color:var(--muted);margin-top:4px;">—</div>
+              </div>
+            </div>
+            
+            <div class="profile-stats">
+              <div class="pstat"><div class="num" id="statEnrolled">—</div><div class="lbl">Enrolled</div></div>
+              <div class="pstat"><div class="num" id="statCompleted">—</div><div class="lbl">Completed</div></div>
+              <div class="pstat"><div class="num" id="statProgress">—</div><div class="lbl">Avg. Progress</div></div>
+            </div>
+            <p style="font-size:.88rem;color:var(--muted);line-height:1.7">Building your Web3 career one block at a time. Keep going — you're on your way to becoming a certified blockchain developer! 🚀</p>
+          </div>
+
+          <div class="edit-profile-card">
+            <h3 style="font-family: 'Syne', sans-serif; font-size: 1.3rem; margin-bottom: 24px; font-weight: 700;">Account Settings</h3>
+            
+            <!-- VIEW MODE: shows current info, read-only -->
+            <div id="profileViewMode">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);">
+                <div>
+                  <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;">Display Name</div>
+                  <div style="font-size:1rem;font-weight:600;color:var(--text)" id="viewName">—</div>
+                </div>
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--muted)"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" stroke-width="2" d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);">
+                <div>
+                  <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;">Email Address</div>
+                  <div style="font-size:1rem;font-weight:600;color:var(--text)" id="viewEmail">—</div>
+                </div>
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--muted)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline stroke-linecap="round" stroke-linejoin="round" stroke-width="2" points="22,6 12,13 2,6"/></svg>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;">
+                <div>
+                  <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;">Password</div>
+                  <div style="font-size:1.2rem;letter-spacing:.2em;color:var(--muted)">••••••••</div>
+                </div>
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--muted)"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </div>
+              <button onclick="showProfileEditMode()" class="save-btn" style="margin-top:10px;">✏️ Change Info</button>
+            </div>
+
+            <!-- EDIT MODE: hidden until Change Info is clicked -->
+            <div id="profileEditMode" style="display:none;">
+              <div class="form-group">
+                <label>Display Name</label>
+                <input type="text" id="editUsername" class="form-input" placeholder="Your Name">
+              </div>
+
+              <div style="font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:600;display:flex;align-items:center;gap:10px;margin:4px 0 16px;">
+                Email change — confirm twice
+                <span style="flex:1;height:1px;background:var(--border);display:inline-block;"></span>
+              </div>
+              <div class="form-group">
+                <label>New Email Address</label>
+                <input type="email" id="editEmail" class="form-input" placeholder="New email address" oninput="checkEmailMatch()">
+              </div>
+              <div class="form-group">
+                <label>Confirm New Email</label>
+                <input type="email" id="editEmail2" class="form-input" placeholder="Confirm new email address" oninput="checkEmailMatch()">
+                <span id="emailMatchHint" style="font-size:.8rem;margin-top:4px;display:block;min-height:16px;"></span>
+              </div>
+
+              <div style="font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:600;display:flex;align-items:center;gap:10px;margin:4px 0 16px;">
+                Password change — confirm twice
+                <span style="flex:1;height:1px;background:var(--border);display:inline-block;"></span>
+              </div>
+              <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" id="editCurrentPass" class="form-input" placeholder="••••••••">
+              </div>
+              <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="editNewPass" class="form-input" placeholder="New password" oninput="checkPassMatch()">
+              </div>
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" id="editNewPass2" class="form-input" placeholder="Confirm new password" oninput="checkPassMatch()">
+                <span id="passMatchHint" style="font-size:.8rem;margin-top:4px;display:block;min-height:16px;"></span>
+              </div>
+
+              <div style="display:flex;gap:10px;margin-top:4px;">
+                <button onclick="cancelProfileEdit()" class="save-btn" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border);box-shadow:none;flex:0 0 auto;width:auto;padding:14px 22px;">Cancel</button>
+                <button onclick="saveProfileData()" class="save-btn" style="flex:1;">SAVE CHANGES</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-rewards" style="display:none">
+        <div class="page-header">
+          <h1>My <em>Certificates</em></h1>
+          <p>Achievements and certificates you've earned on your journey. Complete every lesson in a course to unlock its certificate.</p>
+        </div>
+        <div id="certificates-grid" class="cert-grid">
+          <div class="loading-courses">Loading certificates…</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="loginPromptModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:420px;width:90%;background:var(--surface);border-radius:16px;padding:0;overflow:hidden;">
+    <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border);">
+      <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;color:var(--text);margin:0;">Login Required</h3>
+      <button id="loginPromptClose" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.3rem;line-height:1;">&times;</button>
+    </div>
+    <div style="text-align:center;padding:32px 24px;">
+      <div style="font-size:3.5rem;margin-bottom:16px;">🔒</div>
+      <h4 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.2rem;color:var(--text);margin-bottom:12px;">Login to Continue</h4>
+      <p style="color:var(--muted);font-size:0.92rem;line-height:1.6;margin-bottom:24px;">You need to log in or create an account to purchase or enroll in this course.</p>
+      <div style="display:flex;gap:12px;">
+        <button id="loginPromptCancel" style="flex:1;padding:12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:0.9rem;font-weight:600;cursor:pointer;">Cancel</button>
+        <button id="loginPromptRedirect" style="flex:1;padding:12px;border-radius:10px;background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer;">Log In / Sign Up</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { getCourses, refreshCourses, getCacheStatus } from './scripts/course-cache.js';
+  
+  let currentUser = null;
+  let allCourses = [];
+  // Global storage for selected course in checkout
+  window.selectedCourse = null;
+
+  /* ────────────────────────────────────────────────────────
+     INITIALIZATION & USER DATA
+   ──────────────────────────────────────────────────────── */
+  async function initApp() {
+    try {
+      const res = await fetch('/api/auth/verify', { credentials: 'include' });
+      const data = await res.json();
+      
+      if (data.success && data.user) {
+        currentUser = data.user;
+        
+        // Populate Dropdown
+        document.getElementById('dropName').textContent = currentUser.username;
+        document.getElementById('dropEmail').textContent = currentUser.email;
+        
+        // Populate Profile Tab
+        document.getElementById('profileBigName').textContent = currentUser.username;
+        document.getElementById('profileBigId').textContent = `Student ID: DF-${currentUser.id.toString().padStart(6, '0')}`;
+        document.getElementById('profileBigEmail').textContent = currentUser.email;
+        document.getElementById('topbarStudentId').textContent = `DF-${currentUser.id.toString().padStart(6, '0')}`;
+        // Populate view-mode read-only fields
+        document.getElementById('viewName').textContent = currentUser.username;
+        document.getElementById('viewEmail').textContent = currentUser.email;
+        document.getElementById('editUsername').value = currentUser.username;
+        document.getElementById('editEmail').value = '';
+        
+        const initials = currentUser.username.substring(0, 2).toUpperCase();
+        document.getElementById('navAvatar').textContent = initials;
+        document.getElementById('profileBigAvatar').textContent = initials;
+
+        // Show avatar, hide guest buttons
+        document.getElementById('guestNavBtns').style.display = 'none';
+        document.getElementById('avatarWrapper').style.display = '';
+        document.getElementById('studentIdBadge').style.display = '';
+
+      } else {
+        // Guest mode — show courses but hide user-specific UI
+        currentUser = null;
+        document.getElementById('guestNavBtns').style.display = 'flex';
+        document.getElementById('avatarWrapper').style.display = 'none';
+        document.getElementById('studentIdBadge').style.display = 'none';
+      }
+    } catch(e) {
+      console.error('Auth verify failed:', e);
+      currentUser = null;
+      document.getElementById('guestNavBtns').style.display = 'flex';
+      document.getElementById('avatarWrapper').style.display = 'none';
+      document.getElementById('studentIdBadge').style.display = 'none';
+    }
+    // Always load courses regardless of auth state
+    loadAllCourses();
+    if (currentUser) loadCertificates();
+  }
+
+  document.addEventListener('DOMContentLoaded', initApp);
+
+  /* ────────────────────────────────────────────────────────
+     CERTIFICATES
+   ──────────────────────────────────────────────────────── */
+  async function loadCertificates() {
+    const grid = document.getElementById('certificates-grid');
+    if (!grid) return;
+    try {
+      const res  = await fetch('/api/user/certificates', { credentials: 'include' });
+      const data = await res.json();
+      const certs = (data && data.certificates) || [];
+      if (!certs.length) {
+        grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🎓</div><h3>No certificates yet</h3><p>Finish all the lessons in a course you’re enrolled in to earn your first certificate.</p></div>';
+        return;
+      }
+      const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+      grid.innerHTML = certs.map(c => {
+        const when = c.issued_at ? new Date(c.issued_at).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}) : '';
+        const link = `certificate.html?code=${encodeURIComponent(c.cert_code)}`;
+        return `
+          <div class="cert-card">
+            <div class="cc-ribbon">🏆 Certificate of Completion</div>
+            <div class="cc-title">${esc(c.course_title || 'Course')}</div>
+            <div class="cc-meta">Issued to ${esc(c.recipient_name || '')}${when ? ' · ' + when : ''}</div>
+            <div class="cc-code">${esc(c.cert_code)}</div>
+            <div class="cc-actions">
+              <a class="cc-btn cc-btn-primary" href="${link}">View &amp; Download</a>
+              <a class="cc-btn cc-btn-ghost" href="${link}" target="_blank" rel="noopener">Verify</a>
+            </div>
+          </div>`;
+      }).join('');
+    } catch(e) {
+      grid.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Could not load certificates</h3><p>Please refresh and try again.</p></div>';
+    }
+  }
+
+  /* ────────────────────────────────────────────────────────
+     DROPDOWN LOGIC
+  ──────────────────────────────────────────────────────── */
+  function toggleDropdown(e) {
+    e.stopPropagation();
+    document.getElementById('userMenu').classList.toggle('show');
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.avatar-wrapper')) {
+      document.getElementById('userMenu').classList.remove('show');
+    }
+  });
+
+  async function logoutUser() {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      window.location.href = 'login.html';
+    } catch(e) {
+      console.error('Logout error', e);
+    }
+  }
+
+  // ── Login prompt modal ──
+  function showLoginPrompt() {
+    const modal = document.getElementById('loginPromptModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function hideLoginPrompt() {
+    document.getElementById('loginPromptModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  document.getElementById('loginPromptClose').addEventListener('click', hideLoginPrompt);
+  document.getElementById('loginPromptCancel').addEventListener('click', hideLoginPrompt);
+  document.getElementById('loginPromptModal').addEventListener('click', function(e) {
+    if (e.target.id === 'loginPromptModal') hideLoginPrompt();
+  });
+  document.getElementById('loginPromptRedirect').addEventListener('click', function() {
+    window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+  });
+  window.showLoginPrompt = showLoginPrompt;
+
+  /* ────────────────────────────────────────────────────────
+     PROFILE VIEW / EDIT TOGGLE
+  ──────────────────────────────────────────────────────── */
+  function showProfileEditMode() {
+    document.getElementById('profileViewMode').style.display = 'none';
+    document.getElementById('profileEditMode').style.display = '';
+    // Pre-fill name, clear sensitive fields
+    if (currentUser) document.getElementById('editUsername').value = currentUser.username;
+    document.getElementById('editEmail').value = '';
+    document.getElementById('editEmail2').value = '';
+    document.getElementById('editCurrentPass').value = '';
+    document.getElementById('editNewPass').value = '';
+    document.getElementById('editNewPass2').value = '';
+    document.getElementById('emailMatchHint').textContent = '';
+    document.getElementById('passMatchHint').textContent = '';
+  }
+
+  function cancelProfileEdit() {
+    document.getElementById('profileEditMode').style.display = 'none';
+    document.getElementById('profileViewMode').style.display = '';
+  }
+
+  function checkEmailMatch() {
+    const e1 = document.getElementById('editEmail').value;
+    const e2 = document.getElementById('editEmail2').value;
+    const hint = document.getElementById('emailMatchHint');
+    if (!e1 && !e2) { hint.textContent = ''; return; }
+    if (!e2) { hint.textContent = ''; return; }
+    if (e1 === e2) {
+      hint.style.color = '#00e599'; hint.textContent = '✓ Emails match';
+    } else {
+      hint.style.color = '#ff4d8d'; hint.textContent = '✗ Emails do not match';
+    }
+  }
+
+  function checkPassMatch() {
+    const p1 = document.getElementById('editNewPass').value;
+    const p2 = document.getElementById('editNewPass2').value;
+    const hint = document.getElementById('passMatchHint');
+    if (!p1 && !p2) { hint.textContent = ''; return; }
+    if (!p2) { hint.textContent = ''; return; }
+    if (p1 === p2) {
+      hint.style.color = '#00e599'; hint.textContent = '✓ Passwords match';
+    } else {
+      hint.style.color = '#ff4d8d'; hint.textContent = '✗ Passwords do not match';
+    }
+  }
+
+  window.showProfileEditMode = showProfileEditMode;
+  window.cancelProfileEdit = cancelProfileEdit;
+  window.checkEmailMatch = checkEmailMatch;
+  window.checkPassMatch = checkPassMatch;
+
+  /* ────────────────────────────────────────────────────────
+     PROFILE EDIT LOGIC
+  ──────────────────────────────────────────────────────── */
+  async function saveProfileData() {
+    const newUsername = document.getElementById('editUsername').value.trim();
+    const newEmail    = document.getElementById('editEmail').value.trim();
+    const newEmail2   = document.getElementById('editEmail2').value.trim();
+    const currentPass = document.getElementById('editCurrentPass').value;
+    const newPass     = document.getElementById('editNewPass').value;
+    const newPass2    = document.getElementById('editNewPass2').value;
+
+    if (!newUsername) {
+      showToast('Name cannot be empty.', 'error');
+      return;
+    }
+
+    // If trying to change email, must match and both filled
+    if (newEmail || newEmail2) {
+      if (!newEmail || !newEmail2) {
+        showToast('Please fill both email fields to change email.', 'error');
+        return;
+      }
+      if (newEmail !== newEmail2) {
+        showToast('Email addresses do not match.', 'error');
+        return;
+      }
+    }
+
+    // If trying to change password, must match and current provided
+    if (newPass || newPass2) {
+      if (!currentPass) {
+        showToast('Enter your current password to set a new one.', 'error');
+        return;
+      }
+      if (!newPass || !newPass2) {
+        showToast('Please fill both new password fields.', 'error');
+        return;
+      }
+      if (newPass !== newPass2) {
+        showToast('New passwords do not match.', 'error');
+        return;
+      }
+    }
+
+    const emailToSave = newEmail || (currentUser ? currentUser.email : '');
+    if (!emailToSave) {
+      showToast('Email cannot be empty.', 'error');
+      return;
+    }
+
+    const saveBtn = document.querySelector('#profileEditMode .save-btn:last-child');
+    const origText = saveBtn ? saveBtn.textContent : 'SAVE CHANGES';
+    if (saveBtn) { saveBtn.textContent = 'Saving…'; saveBtn.disabled = true; }
+
+    // ── Update name + email ──────────────────────────────────────────────────
+    try {
+      const res = await fetch('/api/user/update-profile', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'profile', newUsername, newEmail: emailToSave })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        showToast(data.error || 'Failed to update profile.', 'error');
+        if (saveBtn) { saveBtn.textContent = origText; saveBtn.disabled = false; }
+        return;
+      }
+    } catch (e) {
+      showToast('Network error — could not update profile.', 'error');
+      if (saveBtn) { saveBtn.textContent = origText; saveBtn.disabled = false; }
+      return;
+    }
+
+    // ── Update password if provided ──────────────────────────────────────────
+    if (newPass) {
+      if (!currentPass) {
+        showToast('Enter your current password to set a new one.', 'error');
+        saveBtn.textContent = origText;
+        saveBtn.disabled = false;
+        return;
+      }
+      try {
+        const res = await fetch('/api/user/update-profile', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'password', currentPassword: currentPass, newPassword: newPass })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          showToast(data.error || 'Password update failed.', 'error');
+          if (saveBtn) { saveBtn.textContent = origText; saveBtn.disabled = false; }
+          return;
+        }
+        showToast('Profile & password updated!', 'success');
+      } catch (e) {
+        showToast('Network error — password not updated.', 'error');
+        if (saveBtn) { saveBtn.textContent = origText; saveBtn.disabled = false; }
+        return;
+      }
+    } else {
+      showToast('Profile updated successfully!', 'success');
+    }
+
+    // ── Optimistically update UI ─────────────────────────────────────────────
+    document.getElementById('profileBigName').textContent  = newUsername;
+    document.getElementById('profileBigEmail').textContent = emailToSave;
+    document.getElementById('dropName').textContent  = newUsername;
+    document.getElementById('dropEmail').textContent = emailToSave;
+    // Update view mode read-only fields
+    document.getElementById('viewName').textContent  = newUsername;
+    document.getElementById('viewEmail').textContent = emailToSave;
+    // Update currentUser cache
+    if (currentUser) { currentUser.username = newUsername; currentUser.email = emailToSave; }
+
+    const initials = newUsername.substring(0, 2).toUpperCase();
+    document.getElementById('navAvatar').textContent       = initials;
+    document.getElementById('profileBigAvatar').textContent = initials;
+
+    // Clear password fields and return to view mode
+    document.getElementById('editCurrentPass').value = '';
+    document.getElementById('editNewPass').value     = '';
+    document.getElementById('editNewPass2').value    = '';
+    if (saveBtn) { saveBtn.textContent = origText; saveBtn.disabled = false; }
+    cancelProfileEdit();
+  }
+
+  /* ────────────────────────────────────────────────────────
+     PANEL & TAB NAVIGATION LOGIC
+  ──────────────────────────────────────────────────────── */
+  function showPanel(name) {
+    ['courses','profile','rewards'].forEach(p => {
+      const el = document.getElementById('panel-' + p);
+      if (el) el.style.display = (p === name) ? '' : 'none';
+    });
+    // Update sidebar active state
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    const labels = { courses: 'My Courses', profile: 'Profile', rewards: 'Rewards' };
+    document.getElementById('breadcrumb-label').textContent = labels[name] || 'My Courses';
+    // Persist panel so refresh returns here
+    try { sessionStorage.setItem('myCoursesPanel', name); } catch(e) {}
+    // Update URL hash without triggering scroll
+    try { history.replaceState(null, '', '#panel=' + name + (name === 'courses' ? '&tab=' + _currentTab : '')); } catch(e) {}
+  }
+
+  var _currentTab = 'enrolled';
+  function setTab(name) {
+    _currentTab = name;
+    ['enrolled','premium','free'].forEach(t => {
+      document.getElementById('tab-' + t)?.classList.toggle('active', t === name);
+      document.getElementById('panel-' + t)?.classList.toggle('active', t === name);
+    });
+    // Persist tab so refresh returns here
+    try { sessionStorage.setItem('myCoursesTab', name); } catch(e) {}
+    try { history.replaceState(null, '', '#panel=courses&tab=' + name); } catch(e) {}
+    // Animate progress bars
+    setTimeout(() => {
+      document.querySelectorAll('.progress-fill').forEach(fill => {
+        const w = fill.style.width;
+        fill.style.width = '0%';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => { fill.style.width = w; });
+        });
+      });
+    }, 50);
+  }
+/* ────────────────────────────────────────────────────────
+     GLOBAL EXPORTS FOR HTML ONCLICK HANDLERS
+  ──────────────────────────────────────────────────────── */
+  window.toggleDropdown = toggleDropdown;
+  window.logoutUser = logoutUser;
+  window.saveProfileData = saveProfileData;
+  window.showPanel = showPanel;
+  window.setTab = setTab;
+  window.addEventListener('DOMContentLoaded', () => {
+    // Map incoming ?tab= values to internal tab names
+    const TAB_MAP = {
+      'nanodegree': 'premium',
+      'premium':    'premium',
+      'free':       'free',
+      'enrolled':   'enrolled',
+      'বাংলায়':    'free'
+    };
+    // These ?tab= values switch the panel instead of the course tab
+    const PANEL_MAP = {
+      'profile': 'profile',
+      'rewards': 'rewards'
+    };
+
+    const qParams = new URLSearchParams(window.location.search);
+    const qTab = qParams.get('tab');
+
+    // If a ?tab= param is present in the URL, it takes full priority —
+    // clear any stale sessionStorage so it doesn't override the link intent
+    if (qTab) {
+      try { sessionStorage.removeItem('myCoursesPanel'); sessionStorage.removeItem('myCoursesTab'); } catch(e) {}
+    }
+
+    const hash = window.location.hash;
+    const hashParams = new URLSearchParams(hash.replace('#', ''));
+    const savedPanel = hashParams.get('panel') || sessionStorage.getItem('myCoursesPanel') || 'courses';
+    const savedTab   = hashParams.get('tab')   || sessionStorage.getItem('myCoursesTab')   || 'enrolled';
+
+    // Check if the ?tab= is actually a panel switch (e.g. ?tab=profile)
+    if (qTab && PANEL_MAP[qTab]) {
+      showPanel(PANEL_MAP[qTab]);
+      return;
+    }
+
+    const panel = ['courses','profile','rewards'].includes(savedPanel) ? savedPanel : 'courses';
+
+    // Resolve tab: URL query param first, then hash/session
+    let tab = 'enrolled';
+    if (qTab && TAB_MAP[qTab]) {
+      tab = TAB_MAP[qTab];
+    } else if (qTab && ['enrolled','premium','free'].includes(qTab)) {
+      tab = qTab;
+    } else if (['enrolled','premium','free'].includes(savedTab)) {
+      tab = savedTab;
+    }
+
+    showPanel(panel);
+    if (panel === 'courses') setTab(tab);
+  });
+
+  /* ────────────────────────────────────────────────────────
+     COURSE LOADING & DISPLAY
+   ──────────────────────────────────────────────────────── */
+  async function loadAllCourses() {
+    try {
+      allCourses = await getCourses();
+    } catch (error) {
+      console.error('Failed to load courses:', error);
+      showToast('Failed to load courses. Using cached data if available.', 'error');
+      // Ensure allCourses is an empty array to show empty state
+      allCourses = [];
+    }
+    await renderCourses();
+  }
+
+  // Load purchases from database (API) and merge with localStorage (for free enrollments)
+  async function loadPurchases() {
+    if (!currentUser) return []; // guest — no purchases
+    let dbPurchases = [];
+    try {
+      const res = await fetch('/api/user/purchases', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          dbPurchases = data.purchases.map(p => ({
+            courseId: p.course_id?.toString(),
+            status: p.status,
+            senderNumber: p.sender_number,
+            transactionId: p.transaction_id,
+            paymentMethod: p.payment_method,
+            timestamp: p.created_at,
+            id: p.id?.toString()
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch purchases from API:', error);
+    }
+
+    // Load from localStorage for free enrollments (legacy)
+    let localPurchases = [];
+    try {
+      const purchasesJson = localStorage.getItem('purchases');
+      if (purchasesJson) {
+        const parsed = JSON.parse(purchasesJson);
+        if (Array.isArray(parsed)) {
+          localPurchases = parsed;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading purchases from localStorage:', error);
+    }
+
+    // Merge: prefer DB purchases, but keep local purchases that are not in DB (by courseId and transactionId)
+    const merged = [...dbPurchases];
+    const existingIds = new Set(dbPurchases.map(p => `${p.courseId}-${p.transactionId}`));
+    for (const local of localPurchases) {
+      const key = `${local.courseId}-${local.trxId}`;
+      if (!existingIds.has(key)) {
+        merged.push({
+          courseId: local.courseId?.toString(),
+          status: local.status,
+          senderNumber: local.senderNumber,
+          transactionId: local.trxId,
+          paymentMethod: local.paymentMethod,
+          timestamp: local.timestamp,
+          id: local.id?.toString()
+        });
+      }
+    }
+    return merged;
+  }
+
+  // Keep old function for compatibility (calls new async function but returns empty array)
+  function loadPurchasesFromLocalStorage() {
+    console.warn('loadPurchasesFromLocalStorage is deprecated, using empty array');
+    return [];
+  }
+
+  // Filter purchases by status "approved"
+  function filterApprovedPurchases(purchases) {
+    if (!Array.isArray(purchases)) return [];
+    return purchases.filter(p =>
+      p && typeof p === 'object' &&
+      p.status && p.status.toLowerCase() === 'approved'
+    );
+  }
+async function renderCourses() {
+    const courses = Array.isArray(allCourses) ? allCourses : [];
+    
+    // Load and filter purchases
+    const allPurchases = await loadPurchases();
+    const approvedPurchases = allPurchases.filter(p => p && p.status === 'approved');
+    const pendingPurchases  = allPurchases.filter(p => p && p.status === 'pending');
+    
+    const enrolledCourseIds = approvedPurchases.map(p => p.courseId?.toString());
+    const pendingCourseIds  = pendingPurchases.map(p => p.courseId?.toString());
+
+    // Store for openCourseContent access gate
+    window._approvedCourseIds = new Set(enrolledCourseIds);
+
+    // ── Update profile stats with real data ──────────────────────────────────
+    const enrolledCount = enrolledCourseIds.length;
+    // "Completed" = courses for which a certificate has been issued (100% of lessons done)
+    let completedCount = 0;
+    if (currentUser) {
+      try {
+        const cRes  = await fetch('/api/user/certificates', { credentials: 'include' });
+        const cData = await cRes.json();
+        completedCount = ((cData && cData.certificates) || []).length;
+      } catch(e) { /* keep 0 on failure */ }
+    }
+    const avgProgress = enrolledCount > 0 ? Math.round((completedCount / enrolledCount) * 100) : 0;
+    const statEnrolledEl = document.getElementById('statEnrolled');
+    const statCompletedEl = document.getElementById('statCompleted');
+    const statProgressEl = document.getElementById('statProgress');
+    const dropProgressEl = document.getElementById('dropProgress');
+    const dropProgressBarEl = document.getElementById('dropProgressBar');
+    if (statEnrolledEl) statEnrolledEl.textContent = enrolledCount;
+    if (statCompletedEl) statCompletedEl.textContent = completedCount;
+    if (statProgressEl) statProgressEl.textContent = avgProgress + '%';
+    if (dropProgressEl) dropProgressEl.textContent = avgProgress + '%';
+    if (dropProgressBarEl) dropProgressBarEl.style.width = avgProgress + '%';
+
+    // Find enrolled courses (approved purchases)
+    const enrolledCourses = courses.filter(course =>
+      enrolledCourseIds.includes(course.id?.toString())
+    );
+
+    if (courses.length === 0 && enrolledCourses.length === 0) {
+      document.getElementById('enrolled-courses').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">🎓</div><h3>No enrolled courses</h3><p>Enroll in a free course or purchase a premium one to get started.</p></div>';
+      document.getElementById('premium-courses').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">📚</div><h3>No premium courses</h3><p>Check back soon for new premium courses!</p></div>';
+      document.getElementById('free-courses').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">🎁</div><h3>No free courses</h3><p>Free courses will appear here when available.</p></div>';
+      return;
+    }
+
+    // Premium = price > 0 — show ALL premium courses, enrolled ones show with Enrolled badge
+    const premiumCourses = courses.filter(c => {
+      const price = parseFloat(c.price) || 0;
+      return price > 0;
+    });
+    
+    // Free = price 0 — show ALL free courses, enrolled ones show with Enrolled badge
+    const freeCourses = courses.filter(c => {
+      const price = parseFloat(c.price) || 0;
+      return price === 0;
+    });
+
+    if (!currentUser) {
+      document.getElementById('enrolled-courses').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">🔒</div><h3>Not logged in</h3><p>Please <a href="login.html" style="color:var(--accent);text-decoration:underline;">log in</a> to see your enrolled courses.</p></div>';
+    } else {
+      renderCourseGrid('enrolled-courses', enrolledCourses, 'Enrolled', pendingCourseIds);
+    }
+    renderCourseGrid('premium-courses',  premiumCourses,  'Premium',  pendingCourseIds);
+    renderCourseGrid('free-courses',     freeCourses,     'Free',     pendingCourseIds);
+  }
+
+  function enrollFreeCourse(courseId, courseTitle) {
+    const purchase = {
+      courseId: courseId.toString(),
+      courseTitle: courseTitle,
+      price: 0,
+      paymentMethod: 'Free Enrollment',
+      senderNumber: 'N/A',
+      trxId: 'FREE-' + Date.now(),
+      status: "approved", // instantly approved so it shows up in enrolled
+      timestamp: new Date().toISOString(),
+      id: Date.now().toString()
+    };
+    const purchases = loadPurchasesFromLocalStorage();
+    purchases.push(purchase);
+    localStorage.setItem('purchases', JSON.stringify(purchases));
+    
+    showToast(`Successfully enrolled in ${courseTitle}!`, 'success');
+    renderCourses(); // Instantly refresh the grid
+  }
+
+  function renderCourseGrid(containerId, courses, type, pendingCourseIds = []) {
+    const container = document.getElementById(containerId);
+    
+    if (!container) return;
+    
+    if (!Array.isArray(courses) || courses.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">${type === 'Premium' ? '📚' : type === 'Enrolled' ? '🎓' : '🎁'}</div><h3>No ${type.toLowerCase()} courses</h3><p>${type === 'Premium' ? 'Check back soon for new courses!' : type === 'Enrolled' ? 'Enroll in a course to get started.' : 'Free courses will appear here when available.'}</p></div>`;
+      return;
+    }
+
+    container.innerHTML = courses.map(course => {
+      const courseId = course.id || Math.random().toString(36).substring(2);
+      const rawTitle = course.title || 'Untitled Course';
+      const title = rawTitle.replace(/<style[\s\S]*?<\/style>/gi, '').trim();
+      const plainTitleText = title.replace(/<[^>]+>/g, '').trim() || 'Untitled Course';
+      const description = course.description || 'Learn essential skills in this comprehensive course.';
+      const price = parseFloat(course.price) || 0;
+      const discountPrice = parseFloat(course.discount_price) || 0;
+      const hasDiscount = price > 0 && discountPrice > 0 && discountPrice < price;
+      const effectivePrice = hasDiscount ? discountPrice : price;
+      const whatsapp = course.whatsapp || '';
+      
+      const isEnrolled = window._approvedCourseIds && window._approvedCourseIds.has(courseId.toString());
+      const isPending = pendingCourseIds.includes(courseId.toString());
+      
+      // Determine status badge
+      let statusText = 'Premium';
+      let statusClass = 'nano';
+      if (type === 'Enrolled') {
+        statusText = 'Enrolled';
+        statusClass = 'sub';
+      } else if (isEnrolled) {
+        statusText = 'Enrolled';
+        statusClass = 'sub';
+      } else if (type === 'Free') {
+        statusText = 'Free';
+        statusClass = 'free';
+      } else if (isPending) {
+        statusText = 'Pending Approval';
+        statusClass = 'nano';
+      }
+      
+      // Price display: real price = discount_price if set, else price. Show original price struck through.
+      let priceDisplay;
+      if (price === 0) {
+        priceDisplay = 'Free';
+      } else if (hasDiscount) {
+        priceDisplay = `<span style="text-decoration:line-through;color:var(--muted);font-size:0.8rem;margin-right:4px;">৳${price}</span><span style="font-weight:700;color:var(--accent)">৳${discountPrice}</span>`;
+      } else {
+        priceDisplay = `৳${price}`;
+      }
+      
+      const thumbnailUrl = course.thumbnail_url || '';
+      const hasThumbnail = thumbnailUrl && thumbnailUrl.length > 10;
+      
+      return `
+      <div class="course-card" style="animation-delay:.05s">
+        <div class="card-thumbnail">
+          ${hasThumbnail
+            ? `<img src="${thumbnailUrl}" alt="${escapeHtml(plainTitleText)}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+               <div class="thumb-placeholder thumb-bg-${Math.floor(Math.random() * 3) + 1}" style="display:none;position:absolute;inset:0;">
+                 ${getEmojiForCourse(title)}
+               </div>`
+            : `<div class="thumb-placeholder thumb-bg-${Math.floor(Math.random() * 3) + 1}">
+                 ${getEmojiForCourse(title)}
+               </div>`
+          }
+          <div class="thumb-glow"></div>
+          <span class="card-badge badge-${statusClass}">
+            ${statusText}
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">${title}</div>
+          <p class="card-description">${escapeHtml(description.substring(0, 100))}${description.length > 100 ? '...' : ''}</p>
+          <div class="card-stats">
+            <div class="stat-pill">📦 ${getModuleCount(course)} Lecture</div>
+            ${effectivePrice > 0 && type !== 'Enrolled' && !isEnrolled ? `<div class="stat-pill">💰 ${priceDisplay}</div>` : ''}
+            ${whatsapp && type === 'Enrolled' ? `<div class="stat-pill">💬 WhatsApp Group</div>` : ''}
+          </div>
+          ${type === 'Enrolled' ? `
+          <div class="card-progress">
+            <div class="progress-label"><span>Progress</span><span>0%</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          </div>
+          ` : ''}
+        </div>
+        <div class="card-footer">
+          <div class="card-rating"><span class="stars">★★★★★</span> 4.9</div>
+          ${getCourseButton(course, isEnrolled ? 'Enrolled' : type, isPending)}
+        </div>
+      </div>
+      `
+    }).join('');
+
+    // Attach event listeners
+    // Always wire up open-course-btn (enrolled cards appear in all tabs)
+    container.querySelectorAll('.open-course-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const courseId = this.dataset.courseId;
+        const course = courses.find(c => (c.id || '').toString() === courseId.toString());
+        if (course) openCourseContent(courseId, course.title);
+      });
+    });
+
+    if (type === 'Premium') {
+      container.querySelectorAll('.buy-now-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (!currentUser) { showLoginPrompt(); return; }
+          const courseId = this.dataset.courseId;
+          window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
+        });
+      });
+      
+      // Add click handler to premium course cards
+      container.querySelectorAll('.course-card').forEach(card => {
+        const openBtn = card.querySelector('.open-course-btn');
+        const buyBtn  = card.querySelector('.buy-now-btn');
+        const courseId = (openBtn || buyBtn)?.dataset.courseId;
+        if (courseId) {
+          card.style.cursor = 'pointer';
+          card.addEventListener('click', function(e) {
+            if (e.target.closest('.open-course-btn') || e.target.closest('.buy-now-btn') || e.target.closest('a')) return;
+            if (openBtn) {
+              const course = courses.find(c => (c.id || '').toString() === courseId.toString());
+              if (course) openCourseContent(courseId, course.title);
+            } else {
+              window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
+            }
+          });
+        }
+      });
+    }
+    
+    if (type === 'Free') {
+      container.querySelectorAll('.enroll-free-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (!currentUser) { showLoginPrompt(); return; }
+          const courseId = this.dataset.courseId;
+          const course = courses.find(c => (c.id || '').toString() === courseId.toString());
+          if (course) enrollFreeCourse(courseId, course.title);
+        });
+      });
+
+      // Free tab card click — enrolled cards open course, others go to details
+      container.querySelectorAll('.course-card').forEach(card => {
+        const openBtn = card.querySelector('.open-course-btn');
+        const enrollBtn = card.querySelector('.enroll-free-btn');
+        const courseId = (openBtn || enrollBtn)?.dataset.courseId;
+        if (courseId) {
+          card.style.cursor = 'pointer';
+          card.addEventListener('click', function(e) {
+            if (e.target.closest('.open-course-btn') || e.target.closest('.enroll-free-btn') || e.target.closest('a')) return;
+            if (openBtn) {
+              const course = courses.find(c => (c.id || '').toString() === courseId.toString());
+              if (course) openCourseContent(courseId, course.title);
+            } else {
+              window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
+            }
+          });
+        }
+      });
+    }
+    
+    if (type === 'Enrolled') {
+      container.querySelectorAll('.course-card').forEach(card => {
+        const courseId = card.querySelector('.open-course-btn')?.dataset.courseId;
+        if (courseId) {
+          card.style.cursor = 'pointer';
+          card.addEventListener('click', function(e) {
+            if (e.target.closest('.open-course-btn') || e.target.closest('a')) return;
+            const course = courses.find(c => (c.id || '').toString() === courseId.toString());
+            if (course) openCourseContent(courseId, course.title);
+          });
+        }
+      });
+    }
+  }
+
+function getCourseButton(course, type, isPending) {
+    const courseId = course.id || '';
+    const whatsapp = course.whatsapp || '';
+    const status = course.status || 'ongoing'; // Default to ongoing
+
+    // Determine button based on course type
+    if (type === 'Enrolled' || type === 'Purchased') {
+      let buttons = `<button class="continue-btn open-course-btn" data-course-id="${courseId}" style="cursor:pointer">▶ Continue</button>`;
+      if (whatsapp) {
+        buttons += `<a href="${escapeHtml(whatsapp)}" target="_blank" class="continue-btn" style="margin-left:8px; background:#25D366; color:white; border:none; box-shadow:0 0 10px rgba(37,211,102,0.3);">WhatsApp</a>`;
+      }
+      return `<div style="display:flex; justify-content:flex-end;">${buttons}</div>`;
+      
+    } else if (type === 'Free') {
+      // Free courses render the Enroll Now button
+      return `<button class="continue-btn enroll-free-btn" data-course-id="${courseId}" style="cursor:pointer">🎓 Enroll Now</button>`;
+      
+    } else if (type === 'Premium') {
+      // Premium Paid Courses handling
+      if (isPending) {
+        return `<span class="continue-btn disabled" style="cursor:default; opacity:0.8; background:#fbbf24; color:#000;">⏳ Pending Approval</span>`;
+      } else {
+        if (status === 'completed') {
+          return `<span class="continue-btn disabled" style="cursor:default; opacity:0.6">Closed</span>`;
+        } else if (status === 'upcoming') {
+          return `<span class="continue-btn secondary" style="cursor:default; opacity:0.8">Coming Soon</span>`;
+        } else {
+          return `<button class="continue-btn buy-now-btn" data-course-id="${courseId}" style="cursor:pointer;">Purchase</button>`;
+        }
+      }
+    }
+    return '';
+  }
+  
+  
+  
+  // Safe course content opening with validation
+  function openCourseContent(courseId, courseTitle = '') {
+    if (!courseId) { showToast('Course ID is missing', 'error'); return; }
+
+    const course = allCourses.find(c => (c.id || '').toString() === courseId.toString());
+    if (!course) { showToast('Course not found or no longer available', 'error'); return; }
+
+    const isFreeCourse      = parseFloat(course.price || 0) === 0;
+    const hasApprovedAccess = window._approvedCourseIds && window._approvedCourseIds.has(courseId.toString());
+
+    if (!isFreeCourse && !hasApprovedAccess) {
+      showToast('You need a confirmed enrollment to access this course', 'error');
+      return;
+    }
+
+    window.location.href = `course-view.html?id=${encodeURIComponent(courseId)}`;
+  }
+
+  function getEmojiForCourse(title) {
+    if (title.toLowerCase().includes('blockchain')) return '⛓️';
+    if (title.toLowerCase().includes('defi')) return '💰';
+    if (title.toLowerCase().includes('web3')) return '🌐';
+    if (title.toLowerCase().includes('solidity')) return '📝';
+    return '📚';
+  }
+
+  function getModuleCount(course) {
+    try {
+      const modulesObj = typeof course.modules === 'string' ? JSON.parse(course.modules) : course.modules;
+      if (!modulesObj || typeof modulesObj !== 'object') return 0;
+      // Prefer the manually-entered "Total Lectures" field (admin explicitly sets this)
+      const manual = parseInt(modulesObj.lectures);
+      if (manual > 0) return manual;
+      // Fall back to counting actual lectures from the curriculum array
+      if (Array.isArray(modulesObj.curriculum) && modulesObj.curriculum.length > 0) {
+        return modulesObj.curriculum.reduce((sum, m) => sum + (Array.isArray(m.lectures) ? m.lectures.length : 0), 0);
+      }
+      // Legacy: if modules itself is an array
+      if (Array.isArray(modulesObj)) return modulesObj.length;
+    } catch (e) {}
+    return 0;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function showToast(message, type = 'info') {
+    const existing = document.querySelector('.df-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'df-toast';
+    const colors = {
+      success: { bg: 'rgba(0,229,153,0.12)', border: 'rgba(0,229,153,0.4)', text: '#00e599', icon: '✓' },
+      error:   { bg: 'rgba(255,77,141,0.12)', border: 'rgba(255,77,141,0.4)', text: '#ff4d8d', icon: '✕' },
+      info:    { bg: 'var(--surface)', border: 'var(--border)', text: 'var(--text)', icon: 'ℹ' }
+    };
+    const c = colors[type] || colors.info;
+    toast.style.cssText = `
+      position:fixed; top:80px; right:24px; padding:14px 20px;
+      background:${c.bg}; border:1px solid ${c.border};
+      border-radius:12px; z-index:9999; color:${c.text};
+      box-shadow:0 8px 30px rgba(0,0,0,.4);
+      font-size:.9rem; font-weight:600;
+      display:flex; align-items:center; gap:10px;
+      animation:toastIn .3s cubic-bezier(.16,1,.3,1);
+      max-width:320px;
+    `;
+    toast.innerHTML = `<span style="font-size:1rem;">${c.icon}</span><span>${message}</span>`;
+    if (!document.querySelector('#toastStyle')) {
+      const s = document.createElement('style');
+      s.id = 'toastStyle';
+      s.textContent = `@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}`;
+      document.head.appendChild(s);
+    }
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity='0'; toast.style.transition='opacity .4s'; setTimeout(()=>toast.remove(),400); }, 3500);
+  }
+
+  // Checkout Modal Functions// Checkout Modal Functions
+  let activeCourse = null; 
+  let basePrice = 0; 
+
+  function openCheckoutModal(course) {
+    activeCourse = course; 
+    
+    // Determine correct price
+    const regularPrice = parseFloat(course.price) || 0;
+    const discountPrice = parseFloat(course.discount_price) || 0;
+    basePrice = (discountPrice > 0) ? discountPrice : regularPrice;
+
+    const modal = document.getElementById('checkoutModal');
+    const title = document.getElementById('modalCourseTitle');
+    const desc = document.getElementById('modalCourseDesc');
+    const priceEl = document.getElementById('modalCoursePrice');
+
+    if (title) title.innerHTML = course.title || 'Untitled Course';
+    if (desc) desc.textContent = course.description || '';
+    
+    // Show admin discount in modal if it exists
+    if (priceEl) {
+      if (basePrice === 0) {
+         priceEl.textContent = 'Free';
+      } else if (discountPrice > 0) {
+         priceEl.innerHTML = `<span style="text-decoration:line-through;color:var(--muted);font-size:0.9rem;margin-right:8px;">৳${regularPrice}</span>৳${basePrice}`;
+      } else {
+         priceEl.textContent = `৳${basePrice}`;
+      }
+    }
+    
+    // Reset Views for Multi-Step Flow
+    document.getElementById('paymentInstructionsPanel').style.display = 'block';
+    document.getElementById('paymentDetailsForm').style.display = 'none';
+    document.getElementById('modalActionButtons').style.display = 'none';
+
+    // Reset Inputs
+    if(document.getElementById('paymentMethod')) document.getElementById('paymentMethod').value = '';
+    if(document.getElementById('senderNumber')) document.getElementById('senderNumber').value = '';
+    if(document.getElementById('transactionId')) document.getElementById('transactionId').value = '';
+
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCheckoutModal() {
+    const modal = document.getElementById('checkoutModal');
+    if(modal) modal.classList.remove('open');
+    document.body.style.overflow = '';
+    activeCourse = null;
+  }
+
+  // Global openCheckout function
+  window.openCheckout = function(course) {
+    openCheckoutModal(course);
+  };
+
+  // Initialize modal event listeners when DOM is loaded
+  document.addEventListener('DOMContentLoaded', () => {
+    const modalClose = document.getElementById('modalClose');
+    const modalCancel2 = document.getElementById('modalCancel2');
+    const modalOverlay = document.getElementById('checkoutModal');
+    const sentMoneyBtn = document.getElementById('sentMoneyBtn');
+    const confirmBtn = document.getElementById('modalConfirm');
+
+    if (modalClose) modalClose.addEventListener('click', closeCheckoutModal);
+    if (modalCancel2) modalCancel2.addEventListener('click', closeCheckoutModal);
+    if (modalOverlay) modalOverlay.addEventListener('click', (e) => {
+      if (e.target.id === 'checkoutModal') closeCheckoutModal();
+    });
+
+    // "I have sent the money" Toggle
+    if (sentMoneyBtn) {
+      sentMoneyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Hide instructions, show form
+        document.getElementById('paymentInstructionsPanel').style.display = 'none'; 
+        document.getElementById('paymentDetailsForm').style.display = 'block';
+        document.getElementById('modalActionButtons').style.display = 'flex';
+      });
+    }
+
+    // Purchase Submission Logic
+    if (confirmBtn) {
+      // Clone & replace to prevent double-firing
+      const newConfirmBtn = confirmBtn.cloneNode(true);
+      confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+      newConfirmBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const senderNumber = document.getElementById('senderNumber').value.trim();
+        const transactionId = document.getElementById('transactionId').value.trim();
+        
+        if (!paymentMethod || !senderNumber || !transactionId) {
+          alert('Please fill out all fields: Payment Method, Sender Number, and Transaction ID.');
+          return;
+        }
+
+        // Create the purchase object for API
+        const purchaseData = {
+          course_id: activeCourse.id,
+          sender_number: senderNumber,
+          transaction_id: transactionId,
+          payment_method: paymentMethod
+        };
+
+        newConfirmBtn.textContent = 'Processing...';
+        newConfirmBtn.disabled = true;
+
+        // Send to API
+        fetch('/api/purchases', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(purchaseData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            closeCheckoutModal();
+            if (activeCourse.whatsapp) {
+              window.open(activeCourse.whatsapp, '_blank');
+            }
+            alert(`Payment submitted successfully for ${activeCourse.title}!\nOur team will verify your transaction shortly.`);
+            window.location.reload();
+          } else {
+            alert('Failed to submit purchase: ' + (data.error || 'Unknown error'));
+            newConfirmBtn.textContent = 'Submit Payment';
+            newConfirmBtn.disabled = false;
+          }
+        })
+        .catch(error => {
+          console.error('Purchase submission error:', error);
+          alert('Network error. Please check your connection and try again.');
+          newConfirmBtn.textContent = 'Submit Payment';
+          newConfirmBtn.disabled = false;
+        });
+      });
+    }
+  });
+</script>
+
+<!-- Checkout Modal -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Complete Purchase</h3>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <h4 id="modalCourseTitle" style="font-family:'Syne',sans-serif; font-weight:700; font-size:1.1rem; color:var(--text); margin-bottom:4px;">Course Title</h4>
+      <p id="modalCourseDesc" style="color:var(--muted); font-size:0.85rem; line-height:1.5; margin-bottom:16px;">Course description will appear here.</p>
+      
+      <div style="background: rgba(0,229,255,0.05); border: 1px solid rgba(0,229,255,0.1); padding: 12px 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <span style="color: var(--muted); font-size: 0.9rem; font-weight: 500;">Total Price:</span>
+        <span id="modalCoursePrice" style="font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; color:var(--accent); margin:0;">৳2,500</span>
+      </div>
+
+      <div id="paymentInstructionsPanel" style="background: rgba(123,92,255,0.08); border: 1px solid rgba(123,92,255,0.2); padding: 16px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
+        <p style="color: var(--text); font-size: 1.1rem; margin-bottom: 12px;">
+          <strong style="color: #00e5ff; font-size: 1.3rem; letter-spacing: 0.5px;">Send Money to : 01302201431</strong>
+        </p>
+        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px;">
+          <span style="padding: 4px 12px; background: rgba(226,19,110,0.15); color: #e2136e; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">bKash</span>
+          <span style="padding: 4px 12px; background: rgba(240,101,34,0.15); color: #f06522; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">Nagad</span>
+          <span style="padding: 4px 12px; background: rgba(140,52,148,0.15); color: #8c3494; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">Rocket</span>
+          <span style="padding: 4px 12px; background: rgba(0,166,81,0.15); color: #00a651; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">Upay</span>
+        </div>
+        <button id="sentMoneyBtn" class="btn btn-primary" style="width: 100%; font-size: 1rem; padding: 12px; border-radius: 10px;">I have sent the money</button>
+      </div>
+
+      <div id="paymentDetailsForm" style="display: none; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="font-size: 0.85rem; margin-bottom: 6px; color:var(--muted);">Payment Method *</label>
+          <select id="paymentMethod" class="feedback-input" style="padding: 12px; margin: 0; background:var(--surface2); font-size:16px;">
+            <option value="">Select method...</option>
+            <option value="bkash">bKash</option>
+            <option value="nagad">Nagad</option>
+            <option value="rocket">Rocket</option>
+            <option value="upay">Upay</option>
+          </select>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="font-size: 0.85rem; margin-bottom: 6px; color:var(--muted);">Sender Number *</label>
+          <input type="text" id="senderNumber" class="feedback-input" placeholder="01XXXXXXXXX" style="padding: 12px; margin: 0; background:var(--surface2); font-size:16px;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="font-size: 0.85rem; margin-bottom: 6px; color:var(--muted);">Transaction ID *</label>
+          <input type="text" id="transactionId" class="feedback-input" placeholder="TrxID" style="padding: 12px; margin: 0; background:var(--surface2); font-size:16px;">
+        </div>
+      </div>
+
+      <div class="modal-actions" id="modalActionButtons" style="display: none;">
+        <button class="btn btn-ghost" id="modalCancel2">Cancel</button>
+        <button class="btn btn-success" id="modalConfirm">Submit Payment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ── Mobile sidebar toggle ──────────────────────────────────────
+(function() {
+  const btn      = document.getElementById('mobMenuBtn');
+  const sidebar  = document.querySelector('.sidebar');
+  const overlay  = document.getElementById('sidebarOverlay');
+  if (!btn || !sidebar || !overlay) return;
+
+  function openSidebar() {
+    sidebar.classList.add('mob-open');
+    overlay.classList.add('mob-open');
+    btn.setAttribute('aria-expanded', 'true');
+    btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('mob-open');
+    overlay.classList.remove('mob-open');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>';
+  }
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    sidebar.classList.contains('mob-open') ? closeSidebar() : openSidebar();
+  });
+
+  overlay.addEventListener('click', closeSidebar);
+
+  // Close sidebar when a nav item is tapped on mobile
+  sidebar.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+})();
+</script>
+</body>
+</html>
