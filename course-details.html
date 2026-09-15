@@ -25,7 +25,7 @@
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
 
   /* Keyboard focus visibility (a11y) */
@@ -51,9 +51,11 @@
     :root {
       --bg: #050a18; --bg2: #080f22; --surface: #0d1630; --surface2: #111d3a;
       --accent: #00e5ff; --accent2: #7b5cff; --accent3: #ff4d8d;
-      --text: #e8eeff; --muted: #7d8fb3; --border: rgba(0, 229, 255, 0.12);
+      --text: #f1f5f9; --text-dim: #cbd5e1; --muted: #8194b8; --border: rgba(0, 229, 255, 0.14);
+      --gradient-aurora: linear-gradient(135deg, #00e5ff 0%, #7b5cff 50%, #ff4d8d 100%);
+      --gradient-cyber: linear-gradient(135deg, #7b5cff 0%, #00e5ff 100%);
     }
-    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
     
     /* NAV (Simplified for details page) */
     nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 5%; height: 70px; background: rgba(5,10,24,.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
@@ -259,20 +261,69 @@
     .curriculum-empty { color: var(--muted); font-size: 0.95rem; text-align: center; padding: 32px 20px; }
 
     /* === RIGHT COLUMN: STICKY PURCHASE CARD === */
-    .sticky-card { position: sticky; top: 100px; background: var(--surface); border: 1px solid rgba(0,229,255,0.2); border-radius: 20px; overflow: hidden; box-shadow: 0 24px 50px rgba(0,0,0,0.5); margin-left: 10px; }
-    .card-thumbnail { width: 100%; height: 220px; background: linear-gradient(135deg, #111d3a, #0d1630); display: flex; align-items: center; justify-content: center; font-size: 4rem; position: relative; overflow: hidden; }
+    @keyframes btnShimmer {
+      0% { transform: translateX(-150%) skewX(-20deg); }
+      50%, 100% { transform: translateX(200%) skewX(-20deg); }
+    }
+
+    .sticky-card {
+      position: sticky; top: 100px;
+      background: linear-gradient(160deg, rgba(16, 28, 56, 0.85) 0%, rgba(9, 16, 36, 0.98) 100%);
+      border: 1px solid rgba(0, 229, 255, 0.18);
+      border-radius: 24px; overflow: hidden;
+      box-shadow: 0 28px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+      margin-left: 10px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+    .sticky-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      z-index: 5;
+    }
+    .card-thumbnail {
+      width: 100%; height: 220px;
+      background: radial-gradient(circle at 70% 30%, rgba(0, 229, 255, 0.2), transparent 70%), linear-gradient(135deg, #111d3a, #0d1630);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 4rem; position: relative; overflow: hidden;
+    }
     .card-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
     .card-body { padding: 32px 24px; }
-    .price-display { font-family: 'Syne', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
-    .price-display span { font-family: 'DM Sans'; font-size: 1rem; color: var(--muted); text-decoration: line-through; margin-right: 12px; font-weight: 400; }
+    .price-display {
+      font-family: 'Syne', sans-serif; font-size: 2.6rem; font-weight: 800;
+      color: var(--accent); margin-bottom: 8px;
+      text-shadow: 0 0 20px rgba(0, 229, 255, 0.35);
+      letter-spacing: -0.02em;
+    }
+    .price-display span {
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.05rem;
+      color: var(--muted); text-decoration: line-through; margin-right: 12px; font-weight: 400;
+    }
     
-    .btn-purchase { display: flex; align-items: center; justify-content: center; width: 100%; padding: 16px; border-radius: 12px; background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 1.1rem; border: none; cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 24px rgba(123,92,255,0.3); margin-top: 20px; }
-    .btn-purchase:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(123,92,255,0.5); }
+    .btn-purchase {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 16px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent2) 0%, #5b35f6 40%, var(--accent) 100%);
+      color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700; font-size: 1.1rem; border: none; cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 8px 28px rgba(123, 92, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      margin-top: 20px; position: relative; overflow: hidden;
+    }
+    .btn-purchase::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transform: translateX(-150%) skewX(-20deg);
+      animation: btnShimmer 4s ease-in-out infinite;
+    }
+    .btn-purchase:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px rgba(0, 229, 255, 0.45), 0 0 30px rgba(123, 92, 255, 0.5);
+    }
     
     .payment-methods { margin-top: 24px; text-align: center; border-top: 1px solid var(--border); padding-top: 20px; }
     .payment-methods p { font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; font-weight: 500; }
     .pm-badges { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-    .pm-badge { padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px; }
+    .pm-badge { padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px; backdrop-filter: blur(8px); }
     .pm-bkash { background: rgba(226,19,110,0.15); color: #e2136e; border: 1px solid rgba(226,19,110,0.3); }
     .pm-nagad { background: rgba(240,101,34,0.15); color: #f06522; border: 1px solid rgba(240,101,34,0.3); }
     .pm-rocket { background: rgba(140,52,148,0.15); color: #8c3494; border: 1px solid rgba(140,52,148,0.3); }

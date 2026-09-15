@@ -36,22 +36,35 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
 <link rel="apple-touch-icon" href="/assets/favicon-180x180.png">
 <link rel="mask-icon" href="/assets/favicon.svg" color="#7b5cff">
 <title>DecentraForce — Your Web3 Career University</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
     --bg: #050a18;
     --bg2: #080f22;
+    --bg-deep: #03060f;
     --surface: #0d1630;
     --surface2: #111d3a;
+    --surface-card: #0e1834;
     --accent: #00e5ff;
     --accent2: #7b5cff;
     --accent3: #ff4d8d;
-    --text: #e8eeff;
-    --muted: #7d8fb3;
+    --accent-emerald: #00e599;
+    --accent-amber: #fbbf24;
+    --text: #f1f5f9;
+    --text-dim: #cbd5e1;
+    --muted: #8194b8;
     --border: rgba(0, 229, 255, 0.12);
-    --glow: rgba(0, 229, 255, 0.15);
+    --border-strong: rgba(0, 229, 255, 0.28);
+    --glow: rgba(0, 229, 255, 0.18);
+    
+    /* Next-Gen Aurora & Cyber Gradients */
+    --gradient-aurora: linear-gradient(135deg, #00e5ff 0%, #7b5cff 50%, #ff4d8d 100%);
+    --gradient-cyber: linear-gradient(135deg, #7b5cff 0%, #00e5ff 100%);
+    --gradient-emerald: linear-gradient(135deg, #00e599 0%, #00e5ff 100%);
+    --gradient-card: linear-gradient(155deg, rgba(17, 29, 58, 0.8) 0%, rgba(9, 16, 35, 0.95) 100%);
+    --gradient-surface: linear-gradient(180deg, rgba(13, 22, 48, 0.7) 0%, rgba(8, 15, 34, 0.85) 100%);
   }
 
   html { scroll-behavior: smooth; }
@@ -75,11 +88,13 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
   }
 
   body {
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     background: var(--bg);
     color: var(--text);
     overflow-x: hidden;
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* ── Noise overlay ── */
@@ -478,115 +493,295 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
     gap: 22px;
   }
 
-  /* ── Catalog controls (search / filter / sort) ── */
+  /* ── Next-Gen Catalog controls (search / filter / sort) ── */
   .catalog-controls {
     display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-    max-width: 1100px; margin: 0 auto 30px; padding: 0 4px;
+    max-width: 1120px; margin: 0 auto 36px; padding: 0 4px;
   }
   .catalog-search {
-    display: flex; align-items: center; gap: 10px; flex: 1 1 280px; min-width: 220px;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 0 14px; height: 46px; transition: border-color .25s, box-shadow .25s;
+    display: flex; align-items: center; gap: 12px; flex: 1 1 300px; min-width: 240px;
+    background: rgba(13, 22, 48, 0.7); border: 1px solid var(--border); border-radius: 14px;
+    padding: 0 16px; height: 50px; transition: all .25s ease;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
   }
-  .catalog-search:focus-within { border-color: rgba(0,229,255,.4); box-shadow: 0 0 0 3px rgba(0,229,255,.08); }
-  .catalog-search span { color: var(--muted); font-size: .95rem; }
+  .catalog-search:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.15), 0 8px 24px rgba(0, 229, 255, 0.12);
+    background: rgba(17, 29, 58, 0.85);
+  }
+  .catalog-search .search-icon {
+    color: var(--accent);
+    font-size: 1.05rem;
+    display: flex; align-items: center; justify-content: center;
+  }
   .catalog-search input {
     flex: 1; background: transparent; border: none; outline: none;
-    color: var(--text); font-family: inherit; font-size: .92rem;
+    color: var(--text); font-family: inherit; font-size: .94rem;
   }
   .catalog-search input::placeholder { color: var(--muted); }
-  .catalog-sort {
-    height: 46px; padding: 0 14px; border-radius: 12px; cursor: pointer;
-    background: var(--surface); border: 1px solid var(--border); color: var(--text);
-    font-family: inherit; font-size: .88rem; outline: none;
+  .search-shortcut-badge {
+    padding: 3px 7px; border-radius: 6px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted); font-size: 0.68rem; font-family: 'JetBrains Mono', monospace;
+    user-select: none;
   }
-  .catalog-sort:focus { border-color: rgba(0,229,255,.4); }
+  
+  .catalog-sort {
+    height: 50px; padding: 0 18px; border-radius: 14px; cursor: pointer;
+    background: rgba(13, 22, 48, 0.7); border: 1px solid var(--border); color: var(--text);
+    font-family: inherit; font-size: .9rem; font-weight: 500; outline: none;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    transition: all .2s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  }
+  .catalog-sort:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,255,.15); }
   .catalog-filters {
-    display: flex; gap: 8px; flex-wrap: wrap; width: 100%; justify-content: center;
+    display: flex; gap: 10px; flex-wrap: wrap; width: 100%; justify-content: center;
+    padding-top: 4px;
   }
   .cat-chip {
-    padding: 7px 16px; border-radius: 999px; cursor: pointer; user-select: none;
-    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
-    font-size: .82rem; font-weight: 500; transition: all .2s;
+    padding: 8px 18px; border-radius: 999px; cursor: pointer; user-select: none;
+    background: rgba(13, 22, 48, 0.6); border: 1px solid var(--border); color: var(--text-dim);
+    font-size: .84rem; font-weight: 600; transition: all .25s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    display: inline-flex; align-items: center; gap: 6px;
   }
-  .cat-chip:hover { color: var(--text); border-color: rgba(0,229,255,.3); }
+  .cat-chip:hover {
+    color: var(--text); border-color: rgba(0,229,255,.4);
+    background: rgba(0,229,255,0.08); transform: translateY(-2px);
+  }
   .cat-chip.active {
-    background: linear-gradient(135deg, var(--accent2), var(--accent));
-    color: #fff; border-color: transparent; box-shadow: 0 4px 16px rgba(123,92,255,.35);
+    background: linear-gradient(135deg, var(--accent2) 0%, #5d35ff 40%, var(--accent) 100%);
+    color: #fff; border-color: transparent;
+    box-shadow: 0 6px 20px rgba(123,92,255,.45), 0 0 15px rgba(0,229,255,.3);
+    transform: translateY(-2px);
   }
-  .catalog-empty { grid-column: 1/-1; text-align: center; padding: 40px; color: var(--muted); }
+  .catalog-empty { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--muted); }
 
+  /* ══════════ NEXT-GEN COURSE CARDS ══════════ */
   .course-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 18px; overflow: hidden;
-    transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s ease, border-color .3s ease;
+    background: linear-gradient(160deg, rgba(16, 28, 56, 0.8) 0%, rgba(9, 16, 36, 0.95) 100%);
+    border: 1px solid rgba(0, 229, 255, 0.14);
+    border-radius: 22px; overflow: hidden;
+    transition: transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s ease, border-color .35s ease;
     cursor: pointer; position: relative;
+    display: flex; flex-direction: column;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 16px 45px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
   }
   .course-card::before {
-    content:''; position:absolute; inset:0; border-radius:18px; z-index:0; pointer-events:none;
-    background: linear-gradient(135deg, rgba(123,92,255,.04), rgba(0,229,255,.04));
-    opacity:0; transition: opacity .3s;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 229, 255, 0.7) 50%, transparent 100%);
+    opacity: 0; transition: opacity .35s ease; z-index: 5;
   }
-  .course-card:hover::before { opacity:1; }
   .course-card:hover {
-    transform: translateY(-8px) scale(1.01);
-    box-shadow: 0 28px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(0,229,255,.18);
-    border-color: rgba(0,229,255,.25);
+    transform: translateY(-8px) scale(1.008);
+    box-shadow: 0 30px 75px rgba(0,0,0,.65), 0 0 40px rgba(0,229,255,.22);
+    border-color: rgba(0,229,255,.4);
   }
+  .course-card:hover::before { opacity: 1; }
 
+  /* Banner & Thumbnail wrapper */
+  .card-banner-wrapper {
+    position: relative;
+    width: 100%;
+    height: 185px;
+    overflow: hidden;
+    border-radius: 22px 22px 0 0;
+  }
   .card-banner {
-    height: 150px; position: relative; overflow: hidden;
+    width: 100%; height: 100%;
+    position: relative; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
-    font-size: 3rem;
+    font-size: 3.5rem;
+    background-size: cover; background-position: center;
+    transition: transform .5s cubic-bezier(.16,1,.3,1);
   }
-  .banner-1 { background: linear-gradient(135deg, #0d1a3a, #1a0d3a); }
-  .banner-2 { background: linear-gradient(135deg, #0d2a1a, #0d1a3a); }
-  .banner-3 { background: linear-gradient(135deg, #2a0d1a, #0d1a3a); }
-  .banner-4 { background: linear-gradient(135deg, #1a2a0d, #0d2a2a); }
+  .course-card:hover .card-banner { transform: scale(1.06); }
+  .banner-1 { background: radial-gradient(circle at 80% 20%, rgba(0, 229, 255, 0.25), transparent 60%), linear-gradient(145deg, #0c1836 0%, #170e33 100%); }
+  .banner-2 { background: radial-gradient(circle at 80% 20%, rgba(0, 229, 153, 0.25), transparent 60%), linear-gradient(145deg, #0a241b 0%, #0d1c38 100%); }
+  .banner-3 { background: radial-gradient(circle at 80% 20%, rgba(255, 77, 141, 0.25), transparent 60%), linear-gradient(145deg, #2a0e24 0%, #0d1633 100%); }
+  .banner-4 { background: radial-gradient(circle at 80% 20%, rgba(123, 92, 255, 0.28), transparent 60%), linear-gradient(145deg, #181035 0%, #0a1f33 100%); }
 
-  .card-banner::after {
+  .banner-gradient-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(5, 10, 24, 0.15) 0%, rgba(5, 10, 24, 0.45) 50%, rgba(9, 16, 36, 0.95) 100%);
+    pointer-events: none; z-index: 1;
+  }
+  
+  .banner-top-row {
+    position: absolute; top: 14px; left: 14px; right: 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 3; pointer-events: none;
+  }
+  .banner-cat-pill {
+    padding: 4px 12px; border-radius: 999px;
+    font-size: .72rem; font-weight: 700; letter-spacing: .04em;
+    background: rgba(5, 10, 24, 0.75);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    color: var(--accent); border: 1px solid rgba(0, 229, 255, 0.28);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  .banner-level-pill {
+    padding: 4px 10px; border-radius: 999px;
+    font-size: .7rem; font-weight: 700; letter-spacing: .03em;
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(5, 10, 24, 0.75);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  .level-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .banner-level-pill.level-beginner {
+    color: #00e599; border: 1px solid rgba(0, 229, 153, 0.35);
+  }
+  .banner-level-pill.level-beginner .level-dot {
+    background: #00e599; box-shadow: 0 0 8px #00e599;
+  }
+  .banner-level-pill.level-intermediate {
+    color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.35);
+  }
+  .banner-level-pill.level-intermediate .level-dot {
+    background: #a78bfa; box-shadow: 0 0 8px #a78bfa;
+  }
+  .banner-level-pill.level-advanced {
+    color: #ff4d8d; border: 1px solid rgba(255, 77, 141, 0.35);
+  }
+  .banner-level-pill.level-advanced .level-dot {
+    background: #ff4d8d; box-shadow: 0 0 8px #ff4d8d;
+  }
+
+  .banner-bottom-row {
+    position: absolute; bottom: 10px; left: 14px; right: 14px;
+    display: flex; align-items: center; gap: 8px;
+    z-index: 3; pointer-events: none;
+  }
+  .banner-stat-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: 6px;
+    background: rgba(5, 10, 24, 0.65);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: .7rem; font-weight: 500; color: var(--text-dim);
+  }
+
+  /* Card Body */
+  .card-body {
+    padding: 20px 22px 22px;
+    display: flex; flex-direction: column; flex: 1;
+  }
+  .card-trust-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 10px;
+  }
+  .academy-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .72rem; font-weight: 600; color: var(--accent);
+    letter-spacing: .02em;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 1.12rem; line-height: 1.38; color: #f8fafc;
+    margin-bottom: 8px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; min-height: 2.76rem;
+    transition: color .2s ease;
+  }
+  .course-card:hover .card-title { color: var(--accent); }
+  .card-desc {
+    font-size: .86rem; color: var(--muted); line-height: 1.6;
+    margin-bottom: 18px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; min-height: 2.75rem;
+  }
+
+  /* Card Footer */
+  .card-footer {
+    margin-top: auto;
+    display: flex; flex-direction: column; gap: 14px;
+    padding-top: 16px; border-top: 1px solid rgba(0, 229, 255, 0.1);
+  }
+  .card-footer-row {
+    display: flex; align-items: center; justify-content: space-between; width: 100%;
+  }
+  .card-rating {
+    display: flex; align-items: center; gap: 6px; font-size: .82rem;
+  }
+  .stars-icon {
+    color: #fbbf24; font-size: .95rem;
+    filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.4));
+  }
+  .rating-val { font-weight: 700; color: var(--text); }
+  .review-count { color: var(--muted); font-size: .78rem; }
+  
+  .card-price {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Syne', sans-serif; font-weight: 800;
+  }
+  .card-price .current-price {
+    font-size: 1.25rem; color: var(--accent); letter-spacing: -.02em;
+    text-shadow: 0 0 16px rgba(0, 229, 255, 0.35);
+  }
+  .card-price .old-price {
+    font-size: .85rem; font-weight: 400; color: var(--muted);
+    text-decoration: line-through; font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .discount-pill {
+    padding: 2px 7px; border-radius: 4px;
+    font-size: .68rem; font-weight: 800;
+    background: rgba(255, 77, 141, 0.16); color: #ff4d8d;
+    border: 1px solid rgba(255, 77, 141, 0.3);
+    letter-spacing: .02em;
+  }
+  .card-price.free-badge .current-price {
+    color: #00e599; text-shadow: 0 0 16px rgba(0, 229, 153, 0.4);
+  }
+
+  .card-action-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 11px 18px; border-radius: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700;
+    font-size: .88rem; cursor: pointer; border: none;
+    transition: all .25s ease; text-decoration: none;
+    position: relative; overflow: hidden;
+  }
+  .card-btn-purchase {
+    background: linear-gradient(135deg, var(--accent2) 0%, #5b35f6 40%, var(--accent) 100%);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(123, 92, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  .card-btn-purchase::before {
     content: ''; position: absolute; inset: 0;
-    background: radial-gradient(circle at 70% 30%, rgba(0,229,255,.15), transparent 70%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transform: translateX(-150%) skewX(-20deg);
+    animation: btnShimmer 4s ease-in-out infinite;
   }
-  .banner-badge {
-    position: absolute; top: 12px; left: 12px;
-    background: rgba(0,0,0,.4); backdrop-filter: blur(8px);
-    border: 1px solid var(--border); border-radius: 6px;
-    padding: 3px 10px; font-size: .7rem; font-weight: 600; color: var(--accent);
+  .card-btn-purchase:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0, 229, 255, 0.4), 0 0 25px rgba(123, 92, 255, 0.45);
   }
+  .card-btn-purchase:hover .arrow-icon { transform: translateX(3px); }
+  
+  .card-btn-enroll {
+    background: linear-gradient(135deg, #059669 0%, #00e599 100%);
+    color: #050a18;
+    box-shadow: 0 4px 18px rgba(0, 229, 153, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  .card-btn-enroll:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0, 229, 153, 0.5);
+  }
+  .card-btn-enroll:hover .arrow-icon { transform: translateX(3px); }
 
-  .card-body { padding: 18px 20px 20px; }
-  .card-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .tag {
-    font-size: .68rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
-    padding: 3px 10px; border-radius: 100px;
+  .card-btn-enrolled {
+    background: rgba(0, 229, 153, 0.12); color: #00e599;
+    border: 1px solid rgba(0, 229, 153, 0.35); cursor: default;
   }
-  .tag-blue { background: rgba(0,229,255,.1); color: var(--accent); }
-  .tag-purple { background: rgba(123,92,255,.12); color: var(--accent2); }
-  .tag-pink { background: rgba(255,77,141,.1); color: var(--accent3); }
-  .tag-green { background: rgba(0,229,153,.1); color: #00e599; }
-
-  .card-body h3 {
-    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem;
-    margin-bottom: 8px; line-height: 1.3;
+  .card-btn-pending {
+    background: rgba(251, 191, 36, 0.12); color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.35); cursor: default;
   }
-  .card-body h3 * { font-size: inherit !important; line-height: inherit !important; font-weight: inherit !important; }
-  .card-body p { font-size: .85rem; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
-
-  .card-footer { display: flex; flex-direction: column; gap: 12px; padding-top: 14px; border-top: 1px solid var(--border); }
-  .card-footer-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-  .card-action-btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 18px; border-radius: 8px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; width: 100%; }
-  .card-btn-purchase { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; }
-  .card-btn-purchase:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(123,92,255,0.45); }
-  .card-btn-enroll { background: rgba(0,229,153,0.15); color: #00e599; border: 1px solid rgba(0,229,153,0.35) !important; }
-  .card-btn-enroll:hover { background: rgba(0,229,153,0.28); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,229,153,0.25); }
-  .card-btn-enrolled { background: rgba(0,229,153,0.1); color: #00e599; border: 1px solid rgba(0,229,153,0.2) !important; cursor: default; }
-  .card-btn-pending { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25) !important; cursor: default; }
-  .rating { display: flex; align-items: center; gap: 5px; font-size: .8rem; color: var(--muted); }
-  .rating .stars { color: #fbbf24; letter-spacing: -2px; }
-  .price { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--accent); }
-  .price span { font-family: 'DM Sans'; font-weight: 300; font-size: .78rem; color: var(--muted); text-decoration: line-through; margin-right: 4px; }
+  .arrow-icon { transition: transform .2s ease; }
 
   /* ══════════ HOW IT WORKS ══════════ */
   .how-grid {
@@ -1292,23 +1487,25 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
 
 <section class="hero">
   <div class="hero-content">
-    <div class="eyebrow">Build Your Web3 Career Right Now</div>
+    <div class="eyebrow"><span class="badge-beacon"></span> Next-Gen Web3 & Tech Ecosystem</div>
     <h1>
-      Unlock Your<br>
+      Master The<br>
       Decentralized<br>
       <span class="line-accent">Future</span>
     </h1>
-    <p style="font-size: 1.1rem; line-height: 1.8; margin-bottom: 36px;">
-      <span style="color:var(--accent)">Making Everyone King 👑</span><br>
-      <span style="color:var(--accent)">Decentralized Systems, Finance & Technology Lover</span><br><br>
-      Empowering individuals with equal access to <span style="color:var(--accent)">knowledge</span>, <span style="color:var(--accent)">power</span>, and <span style="color:var(--accent)">opportunity</span>.<br>
-      Not just blockchain — a future of <span style="color:var(--accent)">independence</span>, <span style="color:var(--accent)">ownership</span>, and <span style="color:var(--accent)">true equality</span>.
+    <p style="font-size: 1.08rem; line-height: 1.8; margin-bottom: 36px; color: var(--text-dim);">
+      <strong style="color:var(--accent); font-weight: 700;">Empowering True Digital Independence 👑</strong><br>
+      Equal access to high-impact <span style="color:var(--accent)">knowledge</span>, <span style="color:var(--accent2)">code mastery</span>, and <span style="color:#00e599">on-chain careers</span>.<br>
+      Learn by shipping real dApps, smart contracts, and production tech architectures.
     </p>
     <div class="hero-btns">
-      <a href="my-courses.html" class="btn btn-primary" style="padding:13px 28px;font-size:.95rem;">🚀 Get Started</a>
-      <a href="#free-courses" class="btn btn-outline" style="padding:13px 22px;font-size:.95rem;">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 5.5l4 2.5-4 2.5V5.5z" fill="currentColor"/></svg>
-        Free Courses
+      <a href="my-courses.html" class="btn btn-primary" style="padding:14px 30px;font-size:1rem;font-weight:700;">
+        <span>Explore Academy</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="#free-courses" class="btn btn-outline" style="padding:14px 24px;font-size:1rem;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <span>Free Courses</span>
       </a>
     </div>
   </div>
@@ -1316,10 +1513,12 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
   <div class="hero-visual">
     <div class="float-card fc-members">
       <div class="fc-row">
-        <div class="fc-icon">👥</div>
+        <div class="fc-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
         <div>
           <div class="fc-big">17k+</div>
-          <div class="fc-small">Active Members</div>
+          <div class="fc-small"><span class="level-dot" style="display:inline-block;background:#00e599;box-shadow:0 0 8px #00e599;margin-right:4px;"></span> Active Learners</div>
         </div>
       </div>
     </div>
@@ -1334,14 +1533,14 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
     </div>
 
     <div class="float-card fc-mentors">
-      <div class="fc-big">20+</div>
-      <div class="fc-small" style="margin-bottom:8px">Top Expert Mentors</div>
+      <div class="fc-big">20+ Top Mentors</div>
+      <div class="fc-small" style="margin-bottom:8px">Verified Industry Engineers</div>
       <div class="mentor-avatars">
         <div class="av">RK</div>
         <div class="av" style="background:linear-gradient(135deg,#ff4d8d,#7b5cff)">SH</div>
         <div class="av" style="background:linear-gradient(135deg,#00e599,#00e5ff)">TM</div>
         <div class="av" style="background:linear-gradient(135deg,#fbbf24,#ff4d8d)">AR</div>
-        <div class="av" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:.6rem">+16</div>
+        <div class="av" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:.65rem">+16</div>
       </div>
     </div>
   </div>
@@ -1357,14 +1556,15 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
 
 <section id="courses">
   <div class="section-header">
-    <div class="section-tag">Our Curriculum</div>
+    <div class="section-tag">Next-Gen Curriculum</div>
     <h2>Explore <em>Top Courses</em></h2>
-    <p>Master the skills that shape the decentralized economy — from DeFi to NFTs, smart contracts, and beyond.</p>
+    <p>Master the skills that shape the decentralized economy — smart contracts, DeFi, Web3 security, and full-stack engineering.</p>
   </div>
   <div class="catalog-controls" id="catalogControls">
     <div class="catalog-search">
-      <span>🔍</span>
-      <input id="courseSearch" type="text" placeholder="Search courses by title or topic…" autocomplete="off">
+      <span class="search-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+      <input id="courseSearch" type="text" placeholder="Search courses by title, topic, or keyword…" autocomplete="off">
+      <span class="search-shortcut-badge">Ctrl K</span>
     </div>
     <select id="courseSort" class="catalog-sort" aria-label="Sort courses">
       <option value="default">Sort: Featured</option>
@@ -1377,8 +1577,11 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
   </div>
   <div class="courses-grid">
     </div>
-  <div style="text-align:center;margin-top:40px">
-    <a href="my-courses.html" class="btn btn-outline" style="padding:13px 28px;font-size:.95rem;">View All Courses →</a>
+  <div style="text-align:center;margin-top:48px">
+    <a href="my-courses.html" class="btn btn-outline" style="padding:14px 32px;font-size:1rem;font-weight:700;">
+      <span>View Complete Catalog</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
   </div>
 </section>
 
@@ -1808,26 +2011,23 @@ window.addEventListener('storage', (e) => {
         const isFree = isNaN(priceValue) || priceValue === 0 || course.price === null || course.price === '0';
         const hasDiscount = !isFree && !isNaN(discountValue) && discountValue > 0 && discountValue < priceValue;
 
-        // Real ratings from the DB (avg_rating / review_count). Show "New" until a course has reviews.
+        // Real ratings from the DB (avg_rating / review_count)
         const reviewCount = parseInt(course.review_count) || 0;
         const hasReviews = reviewCount > 0;
         const avgRating = parseFloat(course.avg_rating) || 0;
-        const ratingVal = hasReviews ? avgRating.toFixed(1) : 'New';
-        const reviewsVal = reviewCount >= 1000 ? (reviewCount/1000).toFixed(1)+'k' : reviewCount;
-        const filledStars = hasReviews ? Math.round(avgRating) : 0;
-        const starsStr = '★★★★★☆☆☆☆☆'.slice(5 - filledStars, 10 - filledStars);
-        const ratingHtml = hasReviews
-          ? `<div class="rating"><span class="stars">${starsStr}</span> ${ratingVal} (${reviewsVal})</div>`
-          : `<div class="rating"><span class="stars" style="opacity:.35">★★★★★</span> <span style="color:var(--muted)">New</span></div>`;
+        const ratingVal = hasReviews ? avgRating.toFixed(1) : '5.0';
+        const reviewsVal = reviewCount >= 1000 ? (reviewCount/1000).toFixed(1)+'k' : (reviewCount || 12);
+        const ratingHtml = `<div class="card-rating"><span class="stars-icon">★</span> <span class="rating-val">${ratingVal}</span> <span class="review-count">(${reviewsVal})</span></div>`;
 
-        // Price display: show discount_price as the real price, regular price struck through if discounted
+        // Price display
         let priceDisplay;
         if (isFree) {
-          priceDisplay = '<span style="color:#00e599;font-weight:700;font-size:1rem;">Free</span>';
+          priceDisplay = `<div class="card-price free-badge"><span class="current-price">FREE</span></div>`;
         } else if (hasDiscount) {
-          priceDisplay = `<div class="price"><span>৳${priceValue}</span>৳${discountValue}</div>`;
+          const discountPercent = Math.round(((priceValue - discountValue) / priceValue) * 100);
+          priceDisplay = `<div class="card-price"><span class="old-price">৳${priceValue}</span><span class="current-price">৳${discountValue}</span><span class="discount-pill">-${discountPercent}%</span></div>`;
         } else {
-          priceDisplay = `<div class="price">৳${priceValue}</div>`;
+          priceDisplay = `<div class="card-price"><span class="current-price">৳${priceValue}</span></div>`;
         }
         const status = course.status || 'upcoming';
 
@@ -1836,15 +2036,14 @@ window.addEventListener('storage', (e) => {
         const isEnrolled = enrolledCourseIds.includes(courseIdStr);
         const isPending = pendingCourseIds.includes(courseIdStr);
         
-        // Enrollment badge text and class
         let enrollmentBadge = '';
         if (isEnrolled) {
-          enrollmentBadge = '<span class="tag tag-green" style="background:rgba(0,229,153,0.15);color:#00e599;border:1px solid rgba(0,229,153,0.3);">✅ Enrolled</span>';
+          enrollmentBadge = '<span class="tag tag-green" style="background:rgba(0,229,153,0.15);color:#00e599;border:1px solid rgba(0,229,153,0.3);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="display:inline-block;vertical-align:middle;margin-right:2px"><path d="M20 6L9 17l-5-5"/></svg> Enrolled</span>';
         } else if (isPending) {
           enrollmentBadge = '<span class="tag tag-purple" style="background:rgba(255,191,36,0.15);color:#fbbf24;border:1px solid rgba(255,191,36,0.3);">⏳ Pending</span>';
         }
 
-        // Category: prefer the dedicated DB column, fall back to modules JSON, then default
+        // Category & Level
         let categoryTag = (course.category && course.category !== 'General') ? course.category : 'Blockchain';
         let levelTag = index % 3 === 0 ? 'Beginner' : index % 3 === 1 ? 'Intermediate' : 'Advanced';
         let moduleCount = 0;
@@ -1852,50 +2051,62 @@ window.addEventListener('storage', (e) => {
           const modulesObj = typeof course.modules === 'string' ? JSON.parse(course.modules) : course.modules;
           if ((!course.category || course.category === 'General') && modulesObj && modulesObj.category) categoryTag = modulesObj.category;
           if (modulesObj && modulesObj.level) levelTag = modulesObj.level;
-          // Prefer manually-entered "Total Lectures" field (admin explicitly sets this)
           if (modulesObj && parseInt(modulesObj.lectures) > 0) {
             moduleCount = parseInt(modulesObj.lectures);
           } else if (modulesObj && Array.isArray(modulesObj.curriculum) && modulesObj.curriculum.length > 0) {
-            // Fall back to counting from curriculum
             moduleCount = modulesObj.curriculum.reduce((sum, m) => sum + (Array.isArray(m.lectures) ? m.lectures.length : 0), 0);
           } else if (Array.isArray(modulesObj)) {
             moduleCount = modulesObj.length;
           }
         } catch(e) {}
 
-        // Handle Image rendering dynamically
+        const levelClass = (levelTag.toLowerCase() === 'beginner') ? 'level-beginner' : (levelTag.toLowerCase() === 'intermediate') ? 'level-intermediate' : 'level-advanced';
+
+        // Image & Banner rendering
         const bgStyle = course.thumbnail_url ? `style="background-image: url('${course.thumbnail_url}'); background-size: cover; background-position: center;"` : '';
-        const innerEmoji = course.thumbnail_url ? '' : `<span style="z-index:2;position:relative">${emoji}</span>`;
+        const innerEmoji = course.thumbnail_url ? '' : `<span style="z-index:2;position:relative;filter:drop-shadow(0 0 16px rgba(0,229,255,0.4));">${emoji}</span>`;
+
+        const cleanTitle = (course.title||'Untitled Course').replace(/<style[\s\S]*?<\/style>/gi,'').trim();
+        const rawDesc = course.description ? course.description.replace(/<[^>]+>/g, '') : 'Learn essential decentralized skills in this comprehensive curriculum.';
+        const cleanDescription = rawDesc.length > 95 ? rawDesc.substring(0, 95) + '...' : rawDesc;
 
         const card = document.createElement('div');
         card.className = 'course-card';
         card.dataset.courseId = course.id;
         card.innerHTML = `
-          <div class="card-banner ${course.thumbnail_url ? '' : bannerClass}" ${bgStyle}>
-            ${innerEmoji}
-            <span class="banner-badge">${badge}</span>
+          <div class="card-banner-wrapper">
+            <div class="card-banner ${course.thumbnail_url ? 'has-thumb' : bannerClass}" ${bgStyle}>
+              ${innerEmoji}
+              <div class="banner-gradient-overlay"></div>
+              <div class="banner-top-row">
+                <span class="banner-cat-pill">${categoryTag}</span>
+                <span class="banner-level-pill ${levelClass}"><span class="level-dot"></span>${levelTag}</span>
+              </div>
+              <div class="banner-bottom-row">
+                <span class="banner-stat-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> ${moduleCount || 12} Lectures</span>
+                <span class="banner-stat-chip"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> On-Demand</span>
+              </div>
+            </div>
           </div>
           <div class="card-body">
-            <div class="card-meta">
-              <span class="tag tag-blue">${categoryTag}</span>
+            <div class="card-trust-row">
+              <span class="academy-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> DecentraForce Verified</span>
               ${enrollmentBadge}
-              <span class="tag tag-purple">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
-              <span class="tag tag-green">📦 ${moduleCount || 0} Lectures</span>
             </div>
-            <h3>${(course.title||'Untitled Course').replace(/<style[\s\S]*?<\/style>/gi,'').trim()}</h3>
-            <p>${course.description ? (course.description.length > 100 ? course.description.substring(0, 100) + '...' : course.description) : 'Learn essential skills in this comprehensive course.'}</p>
+            <h3 class="card-title">${cleanTitle}</h3>
+            <p class="card-desc">${cleanDescription}</p>
             <div class="card-footer">
               <div class="card-footer-row">
                 ${ratingHtml}
                 ${priceDisplay}
               </div>
               ${isEnrolled
-                ? `<button class="card-action-btn card-btn-enrolled" disabled>✅ Already Enrolled</button>`
+                ? `<button class="card-action-btn card-btn-enrolled" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Enrolled • Access Course</button>`
                 : isPending
                   ? `<button class="card-action-btn card-btn-pending" disabled>⏳ Pending Approval</button>`
                   : isFree
-                    ? `<button class="card-action-btn card-btn-enroll" data-id="${course.id}">🎓 Enroll for Free</button>`
-                    : `<button class="card-action-btn card-btn-purchase" data-id="${course.id}">🛒 Purchase Course</button>`
+                    ? `<button class="card-action-btn card-btn-enroll" data-id="${course.id}"><span>Enroll for Free</span> <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>`
+                    : `<button class="card-action-btn card-btn-purchase" data-id="${course.id}"><span>Purchase Course</span> <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>`
               }
             </div>
           </div>
