@@ -12,7 +12,25 @@
 <link rel="apple-touch-icon" href="/assets/favicon-180x180.png">
 <link rel="mask-icon" href="/assets/favicon.svg" color="#7b5cff">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1394339712274662');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 
 <title>My Courses — DecentraForce</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -253,12 +271,15 @@
   .tabs {
     display: flex; align-items: center; gap: 0; background: var(--surface);
     border: 1px solid var(--border); border-radius: 12px; padding: 5px;
-    width: fit-content; margin-bottom: 28px; animation: fadeUp .6s .1s cubic-bezier(.16,1,.3,1) both;
+    width: fit-content; max-width: 100%; margin-bottom: 28px;
+    overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    animation: fadeUp .6s .1s cubic-bezier(.16,1,.3,1) both;
   }
+  .tabs::-webkit-scrollbar { display: none; }
   .tab-btn {
     padding: 10px 22px; border-radius: 9px; font-size: .88rem; font-weight: 500;
     color: var(--muted); cursor: pointer; border: none; background: transparent;
-    transition: all .2s; white-space: nowrap;
+    transition: all .2s; white-space: nowrap; flex-shrink: 0;
   }
   .tab-btn.active {
     background: linear-gradient(135deg, var(--accent2), var(--accent));
@@ -276,10 +297,10 @@
   .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
   /* ─── COURSES GRID & CARDS ─── */
-  .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+  .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 20px; }
 
   /* Certificates grid */
-  .cert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+  .cert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 20px; }
   .cert-card {
     position: relative; background: linear-gradient(160deg, #0f1a38, #0b1226);
     border: 1px solid rgba(212,175,55,.35); border-radius: 16px; padding: 22px 22px 18px;
@@ -447,7 +468,7 @@
     pointer-events: all;
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 860px) {
     :root { --sidebar-w: 0px; }
     .sidebar { display: none; position: fixed; top: 0; left: 0; height: 100%; width: 260px; z-index: 65; transform: translateX(-100%); transition: transform 0.3s ease; }
     .sidebar.mob-open { display: flex !important; transform: translateX(0); }
@@ -455,8 +476,11 @@
     .main { margin-left: 0; }
     .page-body { padding: 20px 16px; }
     .courses-grid { grid-template-columns: 1fr; }
+    .cert-grid { grid-template-columns: 1fr; }
     .topbar { padding: 0 16px; }
     .student-id-badge { display: none; }
+    .tabs { max-width: 100%; }
+    .tab-btn { padding: 9px 16px; font-size: 0.84rem; }
     
     /* Modal responsive improvements */
     .modal { max-width: 95%; margin: 10px; }
@@ -475,6 +499,8 @@
     .page-body { padding: 16px 12px; }
     .page-title { font-size: 1.4rem; }
     .page-subtitle { font-size: 0.85rem; }
+    .tabs { padding: 4px; gap: 2px; margin-bottom: 20px; }
+    .tab-btn { padding: 8px 12px; font-size: 0.78rem; }
     .courses-grid { gap: 14px; }
     .card-thumb { height: 140px; font-size: 2.2rem; }
     .card-body { padding: 16px; }

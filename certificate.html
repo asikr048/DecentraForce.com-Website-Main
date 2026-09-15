@@ -3,6 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1394339712274662');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 <title>Certificate — DecentraForce</title>
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="icon" type="image/png" href="/assets/favicon.png">
@@ -40,6 +58,7 @@
   body {
     font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text);
     min-height: 100vh; padding: 32px 16px 60px; line-height: 1.6;
+    overflow-x: hidden;
   }
   .blob { position: fixed; border-radius: 50%; filter: blur(130px); pointer-events: none; z-index: 0; }
   .blob-1 { width: 560px; height: 560px; background: rgba(123,92,255,.16); top: -180px; right: -120px; }
@@ -124,12 +143,28 @@
   }
 
   @media (max-width: 640px) {
-    .cert { padding: 36px 24px; }
-    .cert-title { font-size: 2rem; }
-    .cert-name { font-size: 1.8rem; min-width: 0; }
-    .cert-course { font-size: 1.15rem; }
-    .cert-footer { flex-direction: column; align-items: center; text-align: center; }
+    .cert { padding: 36px 20px; }
+    .cert::before { inset: 10px; }
+    .cert::after { inset: 14px; }
+    .cert-title { font-size: 1.85rem; }
+    .cert-name { font-size: 1.6rem; min-width: 0; width: 100%; max-width: 280px; word-break: break-word; }
+    .cert-course { font-size: 1.1rem; }
+    .cert-footer { flex-direction: column; align-items: center; text-align: center; gap: 20px; margin-top: 28px; }
+    .cert-seal { width: 76px; height: 76px; font-size: .5rem; }
     .cert-meta, .cert-sign { text-align: center; }
+    .cert-sign .cs-line { min-width: 0; width: 140px; }
+  }
+
+  @media (max-width: 400px) {
+    body { padding: 20px 10px 40px; }
+    .cert { padding: 28px 14px; border-radius: 12px; }
+    .cert::before { inset: 6px; }
+    .cert::after { inset: 10px; }
+    .cert-title { font-size: 1.55rem; }
+    .cert-name { font-size: 1.35rem; }
+    .cert-course { font-size: 0.95rem; }
+    .cert-kicker { font-size: 0.7rem; letter-spacing: 0.2em; }
+    .actions .btn { width: 100%; justify-content: center; }
   }
 </style>
 </head>

@@ -13,6 +13,24 @@
     <link rel="mask-icon" href="/assets/favicon.svg" color="#7b5cff">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1394339712274662');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
     <title>DecentraForce Video Course</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -32,8 +50,8 @@
 </head>
 <body class="bg-gray-100">
     <div class="flex min-h-screen">
-        <!-- Left Sidebar (Fixed, 250px wide) -->
-        <div class="w-64 bg-white fixed h-full shadow-md">
+        <!-- Left Sidebar (Fixed, 250px wide on desktop) -->
+        <div class="hidden md:block w-64 bg-white fixed h-full shadow-md z-20">
             <!-- Logo Area -->
             <div class="p-6 border-b">
                 <h1 class="text-2xl font-bold text-blue-600">N<span class="text-gray-900">onAcademy</span></h1>
@@ -64,7 +82,7 @@
         </div>
         
         <!-- Main Content Area -->
-        <div class="flex-1 ml-64">
+        <div class="flex-1 md:ml-64 w-full min-w-0">
             <!-- Top Header -->
             <header class="bg-white border-b border-gray-200 py-4 px-6 flex items-center justify-between">
                 <div class="flex-1 text-center">
@@ -212,4 +230,16 @@
                                         <h3 class="font-medium">Module 3: Part 3 - JavaScript</h3>
                                         <p class="text-sm text-gray-500">03:10:45 hours • 20 lectures</p>
                                     </div>
-                                    <svg class="w-5 h-5 text-gray-500" fill="none"
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

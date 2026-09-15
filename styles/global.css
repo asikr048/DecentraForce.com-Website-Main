@@ -33,6 +33,10 @@
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
   --transition-slow: 350ms ease;
+
+  /* Responsive Layout & Container */
+  --container-max-width: 1280px;
+  --section-padding-x: max(5%, calc((100% - var(--container-max-width)) / 2));
 }
 
 *, *::before, *::after {
@@ -157,7 +161,7 @@ nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 5%;
+  padding: 0 var(--section-padding-x, 5%);
   height: 70px;
   background: rgba(5,10,24,.7);
   backdrop-filter: blur(20px);
@@ -1061,4 +1065,75 @@ nav {
 .success-check {
   display: inline-block;
   animation: checkmark 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ══════════ RESPONSIVE UTILITIES & HELPERS ══════════ */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.touch-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.touch-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.section-container {
+  width: 100%;
+  max-width: var(--container-max-width, 1280px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Feedback system mobile overrides */
+@media (max-width: 640px) {
+  .feedback-button {
+    top: auto;
+    bottom: 20px;
+    right: 16px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    box-shadow: 0 4px 0 #008eb3, 0 10px 20px rgba(0, 0, 0, 0.4);
+  }
+  
+  .feedback-toast {
+    left: 16px;
+    right: 16px;
+    bottom: 20px;
+    max-width: calc(100% - 32px);
+    width: auto;
+    padding: 14px 20px;
+    font-size: 0.9rem;
+  }
+
+  .feedback-modal {
+    max-width: 100%;
+    margin: 10px;
+    border-radius: var(--radius-lg);
+  }
+
+  .feedback-modal-header {
+    padding: 16px 20px;
+  }
+
+  .feedback-modal-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .feedback-modal-body {
+    padding: 20px;
+  }
+
+  .feedback-modal-actions {
+    flex-direction: column;
+  }
+
+  .feedback-modal-actions .feedback-btn {
+    width: 100%;
+  }
 }

@@ -318,7 +318,7 @@ function initMobileMenu() {
     // Create mobile menu toggle if not exists
     if (!document.querySelector('.mobile-menu-toggle')) {
         const nav = document.querySelector('nav');
-        if (!nav) return;
+        if (!nav || document.getElementById('mobileDrawer') || document.querySelector('.mobile-drawer')) return;
         
         const toggle = document.createElement('button');
         toggle.className = 'mobile-menu-toggle';
