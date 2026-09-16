@@ -216,7 +216,8 @@
       .p-7 { padding: 16px 14px; }
       .page-title { font-size: 1.2rem; }
       .page-subtitle { font-size: 0.78rem; }
-      .grid-cols-3 { grid-template-columns: 1fr 1fr !important; }
+      .grid-cols-2, .grid-cols-3, .grid-cols-4 { grid-template-columns: 1fr !important; }
+      .col-span-2, .col-span-3, .col-span-4 { grid-column: span 1 / span 1 !important; }
       .stat-card { padding: 14px; }
       .data-table th { display: none; }
       .data-table, .data-table tbody, .data-table tr, .data-table td { display: block; width: 100%; }
@@ -711,7 +712,7 @@
           <h1 class="page-title">Assignments</h1>
           <p class="page-subtitle">Create assignments visible to enrolled students in their course view</p>
         </div>
-        <div class="grid grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div class="card">
             <div class="card-header">
               <div class="card-icon bg-[rgba(0,229,255,0.08)]"><svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></div>
@@ -732,7 +733,7 @@
                 <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Description</label>
                 <textarea id="assignmentDescription" placeholder="Detailed instructions…" class="admin-input" rows="3" style="resize:vertical;"></textarea>
               </div>
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Max Marks</label>
                   <input type="number" id="assignmentMaxMarks" placeholder="100" value="100" min="1" class="admin-input">
@@ -746,7 +747,7 @@
             </div>
           </div>
 
-          <div class="card col-span-2">
+          <div class="card lg:col-span-2">
             <div class="card-header justify-between">
               <div class="flex items-center gap-2.5">
                 <div class="card-icon bg-[rgba(0,229,255,0.08)]"><svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
@@ -766,7 +767,7 @@
         <div class="mt-8">
           <h2 class="text-base font-bold text-white mb-1" style="font-family:'Syne',sans-serif;">🏅 Give Bonus Points</h2>
           <p class="text-xs text-[#4a6080] mb-5">Award bonus marks/points to any student on any course — appears on leaderboard and in their marks view.</p>
-          <div class="grid grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="card">
               <div class="card-body space-y-4">
                 <div>
@@ -2743,7 +2744,7 @@ function fmtDate(iso) {
       <!-- Exam form -->
       <div id="examFormArea">
         <input type="hidden" id="examId">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;margin-bottom:16px;">
           <div>
             <label style="display:block;font-size:.75rem;font-weight:700;color:#6a80a0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Exam Title</label>
             <input id="examTitle" type="text" placeholder="e.g., Final Assessment" style="width:100%;background:#050a18;border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:10px 14px;color:#e8eeff;font-size:.88rem;outline:none;">
@@ -2756,7 +2757,7 @@ function fmtDate(iso) {
             </select>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;margin-bottom:16px;">
           <div>
             <label style="display:block;font-size:.75rem;font-weight:700;color:#6a80a0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Total Marks</label>
             <input id="examTotalMarks" type="number" placeholder="100" value="100" min="1" style="width:100%;background:#050a18;border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:10px 14px;color:#e8eeff;font-size:.88rem;outline:none;">
@@ -2769,7 +2770,7 @@ function fmtDate(iso) {
         <!-- Advanced config (MCQ exams) -->
         <div id="examConfigArea" style="background:#0a1228;border:1px solid rgba(0,229,255,.08);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
           <div style="font-size:.72rem;font-weight:700;color:#6a80a0;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Exam Rules</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:12px;margin-bottom:12px;">
             <div>
               <label style="display:block;font-size:.7rem;color:#6a80a0;margin-bottom:5px;">Pass Marks</label>
               <input id="examPassMarks" type="number" min="0" placeholder="optional" style="width:100%;background:#050a18;border:1px solid rgba(0,229,255,.12);border-radius:8px;padding:8px 10px;color:#e8eeff;font-size:.85rem;outline:none;">
