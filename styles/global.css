@@ -207,16 +207,17 @@ nav {
   letter-spacing: -.5px;
 }
 .logo-icon {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--accent2), var(--accent));
-  border-radius: var(--radius-md);
+  width: 38px;
+  height: 38px;
+  background: url('../assets/favicon.svg') no-repeat center / contain;
+  border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: .8rem;
-  font-weight: 900;
-  color: #fff;
-  box-shadow: var(--shadow-glow);
+  font-size: 0;
+  color: transparent;
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  box-shadow: 0 0 24px rgba(0, 229, 255, 0.45);
+  flex-shrink: 0;
 }
 .logo span {
   color: var(--accent);

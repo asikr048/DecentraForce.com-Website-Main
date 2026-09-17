@@ -141,11 +141,12 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
     overflow: hidden;
   }
   .logo-icon {
-    width: 32px; height: 32px; flex-shrink: 0;
-    background: linear-gradient(135deg, var(--accent2), var(--accent));
-    border-radius: 7px; display: grid; place-items: center;
-    font-size: .72rem; font-weight: 900; color: #fff;
-    box-shadow: 0 0 16px rgba(123,92,255,.5);
+    width: 34px; height: 34px; flex-shrink: 0;
+    background: url('assets/favicon.svg') no-repeat center / contain;
+    border-radius: 50%; display: grid; place-items: center;
+    font-size: 0; color: transparent;
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    box-shadow: 0 0 20px rgba(0,229,255,.45);
   }
   .logo-text-block { display: flex; flex-direction: column; line-height: 1.1; overflow: hidden; transition: opacity 0.25s, max-width 0.3s; max-width: 160px; }
   .logo-line1 { font-size: 0.95rem; letter-spacing: -.02em; color: var(--text); }
