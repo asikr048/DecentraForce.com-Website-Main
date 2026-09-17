@@ -61,7 +61,7 @@
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 max(5%, calc((100% - 1240px) / 2)); height: 72px;
+      padding: 0 max(32px, calc((100% - 1440px) / 2)); height: 72px;
       background: rgba(5, 10, 24, 0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
       border-bottom: 1px solid var(--border);
     }
@@ -102,7 +102,7 @@
       background: radial-gradient(ellipse 70% 50% at 50% -10%, rgba(0, 229, 255, 0.16), transparent 70%),
                   radial-gradient(circle at 85% 15%, rgba(123, 92, 255, 0.18), transparent 50%),
                   #050a18;
-      padding: 105px max(5%, calc((100% - 1240px) / 2)) 48px;
+      padding: 105px max(32px, calc((100% - 1440px) / 2)) 48px;
       border-bottom: 1px solid var(--border);
       position: relative; overflow: hidden;
     }
@@ -114,7 +114,7 @@
       opacity: 0.75;
     }
     .hero-container {
-      max-width: 1240px; margin: 0 auto;
+      max-width: 100%; margin: 0 auto;
       display: flex; flex-direction: column; gap: 16px;
       position: relative; z-index: 1;
     }
@@ -208,13 +208,30 @@
 
     /* === WIDE LAYOUT GRID === */
     .course-layout {
-      display: grid; grid-template-columns: 1fr 390px; gap: 44px;
-      max-width: 1240px; margin: 0 auto;
-      padding: 44px max(5%, calc((100% - 1240px) / 2)) 100px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 36px;
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 40px max(32px, calc((100% - 1440px) / 2)) 100px;
       align-items: start;
+      box-sizing: border-box;
+      width: 100%;
+    }
+    @media (max-width: 1200px) {
+      .course-layout {
+        grid-template-columns: minmax(0, 1fr) 350px;
+        gap: 28px;
+        padding: 36px max(24px, calc((100% - 1200px) / 2)) 80px;
+      }
     }
     @media (max-width: 1024px) {
-      .course-layout { display: flex; flex-direction: column; gap: 36px; padding: 32px 20px 80px; }
+      .course-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+        padding: 28px 20px 70px;
+      }
       .mobile-purchase-card { display: block !important; order: 1; width: 100%; margin-bottom: 4px; }
       .course-layout > aside { display: none; }
       .content-column { order: 2; width: 100%; }
@@ -224,7 +241,7 @@
     .mobile-purchase-card { display: none; }
 
     /* === LEFT COLUMN: TABS & CONTENT === */
-    .content-column { min-width: 0; }
+    .content-column { min-width: 0; width: 100%; }
     .tabs-wrapper {
       margin-bottom: 32px;
       overflow-x: auto;
@@ -308,10 +325,12 @@
 
     /* High-end Executive Blueprint Card */
     .desc-highlight {
+      width: 100%;
+      box-sizing: border-box;
       background: linear-gradient(155deg, rgba(16, 28, 58, 0.75) 0%, rgba(9, 16, 36, 0.9) 100%);
       border: 1px solid rgba(0, 229, 255, 0.24);
       border-radius: 18px;
-      padding: 26px 30px;
+      padding: 28px 32px;
       margin-bottom: 30px;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
       position: relative;
@@ -762,7 +781,8 @@
     .modal-close:hover { color: var(--accent); border-color: var(--accent); }
     .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
     @media (max-width: 980px) {
-      .course-layout { padding: 30px 16px 60px; }
+      .course-layout { padding: 24px 16px 60px; }
+      .desc-highlight { padding: 22px 20px; }
       .course-hero { padding: 90px 16px 36px; }
       .hero-container { width: 100%; }
       .hero-breadcrumb { font-size: 0.76rem; }
@@ -782,7 +802,11 @@
       .meta-chip { padding: 5px 10px; font-size: 0.78rem; }
       .tabs { width: 100%; justify-content: flex-start; }
       .tab { padding: 8px 14px; font-size: 0.84rem; }
-      .desc-highlight { padding: 20px 18px; }
+      .course-layout { padding: 18px 12px 60px; }
+      .desc-highlight { padding: 18px 16px; border-radius: 14px; }
+      .desc-highlight-body { font-size: 0.94rem; line-height: 1.7; }
+      .blueprint-tags { gap: 6px; margin-top: 14px; padding-top: 12px; }
+      .blueprint-tag { font-size: 0.74rem; padding: 4px 10px; }
       .price-display { font-size: 2.1rem; }
       .btn-purchase { font-size: 0.98rem; padding: 13px; }
     }
