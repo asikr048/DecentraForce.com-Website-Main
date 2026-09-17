@@ -11,7 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script src="scripts/feedback.js"></script>
   <script src="scripts/floating-feedback.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
   <script>
     const EMAILJS_SERVICE_ID  = 'service_wn7dn1f';
     const EMAILJS_TEMPLATE_ID = 'template_2067o6n';
@@ -428,7 +428,7 @@
             Add Course
           </button>
         </div>
-        <div id="coursesGrid" class="grid grid-cols-2 gap-6"></div>
+        <div id="coursesGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5"></div>
         <div id="coursesEmpty" class="hidden card p-14 text-center text-[#3d5070]">
           <p class="text-base font-semibold mb-1">No courses yet</p>
           <p class="text-sm">Click "Add Course" to create your first course.</p>
@@ -1389,9 +1389,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (typeof initDefaultMentors === 'function') initDefaultMentors();
   if (typeof initDefaultCourses === 'function') initDefaultCourses();
 
-  // Restore last active tab after refresh
+  // Restore last active tab after refresh (supports hash like #courses or sessionStorage)
   try {
-    const savedTab = sessionStorage.getItem('adminActiveTab');
+    const hashTab = (window.location.hash || '').replace(/^#/, '');
+    const savedTab = (hashTab && ALL_TABS.includes(hashTab)) ? hashTab : sessionStorage.getItem('adminActiveTab');
     if (savedTab && ALL_TABS.includes(savedTab)) {
       showTab(savedTab);
     }
@@ -1741,7 +1742,7 @@ function renderCoursesGrid() {
   empty.classList.add('hidden');
 
   grid.innerHTML = allCourses.map(c => {
-    let stats = { lectures:0, exercises:0, assignments:0 };
+    let stats = { lectures:0, exercises:0, assignments:0, category:'' };
     let curriculum = [];
     try {
       const p = typeof c.modules==='string'?JSON.parse(c.modules):c.modules;
@@ -1759,39 +1760,81 @@ function renderCoursesGrid() {
     // Quote-free title for inline onclick handlers — an apostrophe in a course
     // title would otherwise break out of the attribute and kill the buttons.
     const safeTitle = plainTitle(c.title).replace(/['"\`]/g, '');
+    const category = stats.category || (c.category || '');
+
     return `
-    <div class="card overflow-hidden flex flex-col hover:border-[rgba(0,229,255,0.2)] transition-colors group">
-      ${c.thumbnail_url
-        ? `<img src="${esc(c.thumbnail_url)}" class="w-full h-44 object-cover" alt="" onerror="this.style.display='none'">`
-        : `<div class="w-full h-44 bg-gradient-to-br from-[#0a1228] to-bg flex items-center justify-center">
-             <span class="text-accent2 font-black text-3xl opacity-30">${plainTitle(c.title).charAt(0)}</span>
-           </div>`}
-      <div class="p-5 flex-1 flex flex-col">
-        <div class="flex items-start justify-between gap-3 mb-3">
-          <h3 class="font-black text-white text-base leading-snug" style="font-family:'Syne',sans-serif;">${plainTitle(c.title)}</h3>
-          <span class="badge ${statusMap[status]||'badge-blue'} flex-shrink-0">${status}</span>
+    <div class="card overflow-hidden flex flex-col hover:border-[rgba(0,229,255,0.3)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.4)] transition-all duration-200 group rounded-2xl bg-[#0d1630]">
+      <!-- Compact Image Thumbnail with Floating Badges -->
+      <div class="relative w-full h-36 bg-[#080e22] overflow-hidden flex-shrink-0">
+        ${c.thumbnail_url
+          ? `<img src="${esc(c.thumbnail_url)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="" onerror="this.style.display='none'">`
+          : `<div class="w-full h-full bg-gradient-to-br from-[#0a1228] to-bg flex items-center justify-center">
+               <span class="text-accent2 font-black text-2xl opacity-30">${plainTitle(c.title).charAt(0)}</span>
+             </div>`}
+        <div class="absolute inset-0 bg-gradient-to-t from-[#0d1630] via-transparent to-transparent opacity-80"></div>
+        <div class="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+          <span class="badge ${statusMap[status]||'badge-blue'} backdrop-blur-md text-[11px] shadow-sm">${status}</span>
         </div>
-        <p class="text-xs text-[#4a6080] mb-4 flex-1">${esc((c.description||'').substring(0,75))}${(c.description||'').length>75?'…':''}</p>
-        <div class="flex flex-wrap gap-1.5 mb-4">
-          ${[['📹',lectureDisplay,'Lectures'],['⌨',stats.exercises||0,'Exercises'],['📋',stats.assignments||0,'Assignments']].map(([icon,n,label])=>`
-            <span class="bg-[#0a1228] text-[#4a6080] px-2.5 py-1 rounded-md text-xs border border-[rgba(0,229,255,0.06)] font-medium">${icon} ${esc(n)} ${label}</span>`).join('')}
+        ${category ? `<span class="absolute top-2.5 left-2.5 bg-[#050a18]/85 backdrop-blur-md text-[#00e5ff] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[rgba(0,229,255,0.25)] tracking-wide">${esc(category)}</span>` : ''}
+      </div>
+
+      <!-- Card Body -->
+      <div class="p-4 flex-1 flex flex-col justify-between">
+        <div>
+          <!-- Title with Clean Typography & Tooltip -->
+          <h3 class="font-bold text-white text-sm leading-snug line-clamp-2 mb-1.5 group-hover:text-accent transition-colors" style="font-family:'Plus Jakarta Sans',sans-serif;" title="${esc(plainTitle(c.title))}">
+            ${plainTitle(c.title)}
+          </h3>
+          <p class="text-xs text-[#7d8fb3] line-clamp-2 leading-relaxed mb-3">
+            ${esc(plainTitle(c.description || '')) || 'No course description provided.'}
+          </p>
         </div>
-        <div class="flex items-center justify-between mb-4">
-          <span class="text-accent font-black text-sm">৳${esc(c.price||'0')}</span>
-          <span class="text-xs text-[#3d5070]">${esc(c.enrolled_count||0)} enrolled</span>
-        </div>
-        <div class="flex gap-2 flex-wrap">
-          ${currentUserRole !== 'task_manager' ? `<button onclick="openEditCourse(${c.id})" class="flex-1 bg-[#0a1228] border border-[rgba(0,229,255,0.1)] text-white py-2 rounded-lg text-xs font-bold hover:border-[rgba(0,229,255,0.3)] hover:text-accent transition-colors">EDIT</button>` : ''}
-          ${currentUserRole !== 'task_manager' ? `<button onclick="deleteCourse(${c.id})" class="flex-1 bg-[rgba(255,77,141,0.06)] border border-[rgba(255,77,141,0.2)] text-accent3 py-2 rounded-lg text-xs font-bold hover:bg-[rgba(255,77,141,0.12)] transition-colors">DELETE</button>` : ''}
-          ${currentUserRole === 'task_manager' ? `<span class="flex-1 text-center py-2 text-xs text-[#3d5070]">View Only</span>` : ''}
-        </div>
-        <div class="flex gap-2 mt-1.5">
-          <button onclick="openManageExam(${c.id},'${safeTitle}')" class="flex-1 bg-[rgba(123,92,255,0.08)] border border-[rgba(123,92,255,0.25)] text-[#a98fff] py-2 rounded-lg text-xs font-bold hover:bg-[rgba(123,92,255,0.16)] transition-colors">🎯 EXAM</button>
-          <button onclick="openManageMarks(${c.id},'${safeTitle}')" class="flex-1 bg-[rgba(0,229,255,0.06)] border border-[rgba(0,229,255,0.2)] text-accent py-2 rounded-lg text-xs font-bold hover:bg-[rgba(0,229,255,0.12)] transition-colors">📊 MARKS</button>
-          <button onclick="openManageResources(${c.id},'${safeTitle}')" class="flex-1 bg-[rgba(255,200,0,0.06)] border border-[rgba(255,200,0,0.2)] text-yellow-400 py-2 rounded-lg text-xs font-bold hover:bg-[rgba(255,200,0,0.12)] transition-colors">🔗 RESOURCES</button>
-        </div>
-        <div class="flex gap-2 mt-1.5">
-          <button onclick="openSubmissions(${c.id},'${safeTitle}')" class="flex-1 bg-[rgba(0,229,153,0.06)] border border-[rgba(0,229,153,0.2)] text-[#00e599] py-2 rounded-lg text-xs font-bold hover:bg-[rgba(0,229,153,0.12)] transition-colors">📥 SUBMISSIONS</button>
+
+        <div>
+          <!-- Compact Metadata Pills -->
+          <div class="flex items-center justify-between text-[11px] text-[#5a7095] py-2 border-y border-[rgba(0,229,255,0.06)] mb-3">
+            <span class="flex items-center gap-1"><span class="text-text font-semibold">${lectureDisplay}</span> Lectures</span>
+            <span class="w-1 h-1 rounded-full bg-[rgba(0,229,255,0.25)]"></span>
+            <span class="flex items-center gap-1"><span class="text-text font-semibold">${stats.exercises||0}</span> Exercises</span>
+            <span class="w-1 h-1 rounded-full bg-[rgba(0,229,255,0.25)]"></span>
+            <span class="flex items-center gap-1"><span class="text-text font-semibold">${stats.assignments||0}</span> Tasks</span>
+          </div>
+
+          <!-- Price & Students -->
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-accent font-black text-sm">৳${esc(c.price||'0')}</span>
+              ${c.discount_price ? `<span class="text-[11px] text-[#4a6080] line-through">৳${esc(c.discount_price)}</span>` : ''}
+            </div>
+            <span class="text-[11px] text-[#7d8fb3] font-medium flex items-center gap-1">
+              <svg class="w-3 h-3 text-[#5a7095]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+              ${esc(c.enrolled_count||0)} enrolled
+            </span>
+          </div>
+
+          <!-- Actions Toolbar -->
+          <div class="space-y-1.5 pt-1">
+            <!-- Row 1: Primary Edit + Delete -->
+            <div class="flex gap-1.5">
+              ${currentUserRole !== 'task_manager' ? `
+                <button onclick="openEditCourse(${c.id})" class="flex-1 bg-[rgba(0,229,255,0.08)] border border-[rgba(0,229,255,0.2)] text-accent hover:bg-accent hover:text-[#050a18] py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  Edit Course
+                </button>
+                <button onclick="deleteCourse(${c.id})" class="bg-[rgba(255,77,141,0.08)] border border-[rgba(255,77,141,0.22)] text-accent3 hover:bg-accent3 hover:text-white py-1.5 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center" title="Delete Course">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              ` : `<span class="flex-1 text-center py-1.5 text-xs text-[#3d5070]">View Only</span>`}
+            </div>
+
+            <!-- Row 2: Secondary Quick Links (Exam, Marks, Resources, Submissions) -->
+            <div class="grid grid-cols-4 gap-1">
+              <button onclick="openManageExam(${c.id},'${safeTitle}')" class="bg-[rgba(123,92,255,0.08)] border border-[rgba(123,92,255,0.22)] text-[#b49eff] hover:bg-[rgba(123,92,255,0.22)] py-1.5 px-1 rounded-md text-[11px] font-semibold transition-all text-center truncate" title="Exams">🎯 Exam</button>
+              <button onclick="openManageMarks(${c.id},'${safeTitle}')" class="bg-[rgba(0,229,255,0.06)] border border-[rgba(0,229,255,0.2)] text-accent hover:bg-[rgba(0,229,255,0.18)] py-1.5 px-1 rounded-md text-[11px] font-semibold transition-all text-center truncate" title="Marks">📊 Marks</button>
+              <button onclick="openManageResources(${c.id},'${safeTitle}')" class="bg-[rgba(255,200,0,0.06)] border border-[rgba(255,200,0,0.2)] text-yellow-400 hover:bg-[rgba(255,200,0,0.18)] py-1.5 px-1 rounded-md text-[11px] font-semibold transition-all text-center truncate" title="Resources">🔗 Files</button>
+              <button onclick="openSubmissions(${c.id},'${safeTitle}')" class="bg-[rgba(0,229,153,0.06)] border border-[rgba(0,229,153,0.2)] text-[#00e599] hover:bg-[rgba(0,229,153,0.18)] py-1.5 px-1 rounded-md text-[11px] font-semibold transition-all text-center truncate" title="Submissions">📥 Tasks</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>`;
