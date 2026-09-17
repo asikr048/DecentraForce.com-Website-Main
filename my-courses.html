@@ -302,7 +302,12 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
   .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
   /* ─── COURSES GRID & CARDS ─── */
-  .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 20px; }
+  .courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 390px));
+    gap: 26px;
+    align-items: stretch;
+  }
 
   /* Certificates grid */
   .cert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 20px; }
@@ -323,61 +328,369 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
   .cert-card .cc-btn-primary:hover { filter:brightness(1.06); }
   .cert-card .cc-btn-ghost { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
   .cert-card .cc-btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* ══ Next-Gen Course Card ══ */
   .course-card {
-    background: linear-gradient(160deg, rgba(16, 28, 56, 0.82) 0%, rgba(9, 16, 36, 0.96) 100%);
+    background: linear-gradient(160deg, rgba(16, 28, 56, 0.85) 0%, rgba(9, 16, 36, 0.96) 100%);
     border: 1px solid rgba(0, 229, 255, 0.16);
     border-radius: 20px;
     overflow: hidden;
     transition: transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s ease, border-color .35s ease;
-    cursor: pointer; position: relative;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: column;
     animation: fadeUp .5s cubic-bezier(.16,1,.3,1) both;
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     box-shadow: 0 16px 45px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
   }
   .course-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    opacity: 0; transition: opacity .35s ease; z-index: 5;
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(0, 229, 255, 0.8) 50%, transparent 100%);
+    opacity: 0;
+    transition: opacity .35s ease;
+    z-index: 5;
   }
   .course-card:hover {
     transform: translateY(-6px) scale(1.008);
-    box-shadow: 0 24px 65px rgba(0,0,0,.65), 0 0 35px rgba(0,229,255,.2);
-    border-color: rgba(0,229,255,.35);
+    box-shadow: 0 26px 70px rgba(0,0,0,.68), 0 0 35px rgba(0,229,255,.22);
+    border-color: rgba(0,229,255,.38);
   }
   .course-card:hover::before { opacity: 1; }
-  .card-thumbnail { width: 100%; aspect-ratio: 16/9; overflow: hidden; position: relative; background: var(--surface2); display: flex; align-items: center; justify-content: center; }
-  .thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; transition: transform .4s ease; }
-  .course-card:hover .thumb-placeholder { transform: scale(1.06); }
-  .thumb-bg-1 { background: radial-gradient(circle at 70% 30%, rgba(0,229,255,.2), transparent 70%), linear-gradient(135deg, #0d1a3a 0%, #1a0d3a 50%, #0d1a2a 100%); }
-  .thumb-glow { position: absolute; inset: 0; background: radial-gradient(circle at 70% 30%, rgba(0,229,255,.12), transparent 65%); pointer-events: none; }
-  .card-badge { position: absolute; top: 10px; left: 10px; background: rgba(5,10,24,.75); backdrop-filter: blur(8px); border: 1px solid rgba(0,229,255,0.25); border-radius: 999px; padding: 4px 12px; font-size: .68rem; font-weight: 700; letter-spacing: 0.04em; }
-  .badge-nano { color: var(--accent); }
 
-  .card-body { padding: 20px 22px 22px; }
-  .card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.15rem; line-height: 1.4; margin-bottom: 14px; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); transition: color .2s; }
+  /* ── Banner & Thumbnail ── */
+  .card-banner-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    background: var(--surface2);
+  }
+  .card-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .5s cubic-bezier(.16,1,.3,1);
+  }
+  .course-card:hover .card-banner-img {
+    transform: scale(1.06);
+  }
+  .card-banner-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.2rem;
+    transition: transform .5s cubic-bezier(.16,1,.3,1);
+  }
+  .course-card:hover .card-banner-placeholder {
+    transform: scale(1.06);
+  }
+  .card-banner-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(5,10,24,0.12) 0%, rgba(5,10,24,0.45) 50%, rgba(9,16,36,0.96) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .banner-top-row {
+    position: absolute;
+    top: 12px; left: 14px; right: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .banner-cat-pill {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    background: rgba(5, 10, 24, 0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--accent);
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  .banner-cat-pill.pill-free {
+    color: #00e599;
+    border-color: rgba(0, 229, 153, 0.35);
+  }
+  .banner-cat-pill.pill-enrolled {
+    color: #a78bfa;
+    border-color: rgba(167, 139, 250, 0.35);
+  }
+  .banner-level-pill {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: .7rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(5, 10, 24, 0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #00e599;
+    border: 1px solid rgba(0, 229, 153, 0.35);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  .banner-level-pill .level-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #00e599;
+    box-shadow: 0 0 8px #00e599;
+  }
+
+  .banner-bottom-row {
+    position: absolute;
+    bottom: 10px; left: 14px; right: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .banner-stat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: rgba(5, 10, 24, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 229, 255, 0.28);
+    font-size: .72rem;
+    font-weight: 600;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+
+  /* ── Card Body ── */
+  .card-body {
+    padding: 20px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    background: linear-gradient(180deg, rgba(14, 24, 52, 0.4) 0%, rgba(9, 16, 36, 0.95) 100%);
+  }
+  .card-trust-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .academy-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .74rem;
+    font-weight: 700;
+    color: #00e5ff;
+    letter-spacing: .02em;
+    text-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    line-height: 1.38;
+    color: #ffffff;
+    margin-bottom: 10px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.85rem;
+    transition: color .2s ease;
+  }
   .course-card:hover .card-title { color: #00e5ff; }
-  .card-title * { font-size: inherit !important; line-height: inherit !important; font-weight: inherit !important; }
-  .card-stats { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .stat-pill { display: flex; align-items: center; gap: 6px; background: rgba(5,10,24,0.75); border: 1px solid rgba(0,229,255,0.25); padding: 5px 12px; border-radius: 8px; font-size: .78rem; font-weight: 600; color: #f1f5f9; }
-  
-  .card-progress { margin-top: 14px; }
+  .card-description {
+    font-size: .88rem;
+    color: #cbd5e1;
+    line-height: 1.55;
+    font-weight: 400;
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.75rem;
+  }
+
+  /* ── Progress for enrolled ── */
+  .card-progress { margin-bottom: 14px; }
   .progress-label { display: flex; justify-content: space-between; font-size: .75rem; color: var(--muted); margin-bottom: 6px; }
   .progress-track { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
   .progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)); box-shadow: 0 0 10px rgba(0,229,255,.6); transition: width 1s cubic-bezier(.16,1,.3,1); }
 
-  .card-footer { padding: 14px 22px; border-top: 1px solid rgba(0,229,255,0.1); display: flex; align-items: center; justify-content: space-between; background: rgba(5,10,24,.4); }
-  .continue-btn {
-    display: flex; align-items: center; gap: 8px;
-    background: linear-gradient(135deg, var(--accent2), var(--accent));
-    color: #fff; border: none; padding: 9px 18px; border-radius: 10px;
-    font-family: 'Plus Jakarta Sans', sans-serif; font-size: .84rem; font-weight: 700;
-    cursor: pointer; transition: all .25s ease; text-decoration: none;
-    box-shadow: 0 4px 16px rgba(123,92,255,.35);
+  /* ── Card Footer & Pricing ── */
+  .card-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(0, 229, 255, 0.14);
   }
-  .continue-btn:hover {
+  .card-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .card-rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .84rem;
+  }
+  .stars-icon {
+    color: #fbbf24;
+    font-size: .95rem;
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.5));
+  }
+  .rating-val { font-weight: 800; color: #ffffff; }
+  .review-count { color: #94a3b8; font-size: .78rem; font-weight: 500; }
+
+  .card-price {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+  }
+  .card-price .current-price {
+    font-size: 1.28rem;
+    color: #00e5ff;
+    letter-spacing: -.02em;
+    text-shadow: 0 0 16px rgba(0, 229, 255, 0.45);
+    font-weight: 800;
+  }
+  .card-price .old-price {
+    font-size: .85rem;
+    font-weight: 500;
+    color: #94a3b8;
+    text-decoration: line-through;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .discount-pill {
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: .7rem;
+    font-weight: 800;
+    background: rgba(255, 77, 141, 0.2);
+    color: #ff609a;
+    border: 1px solid rgba(255, 77, 141, 0.4);
+    letter-spacing: .02em;
+  }
+  .card-price.free-badge .current-price {
+    color: #00e599;
+    text-shadow: 0 0 16px rgba(0, 229, 153, 0.5);
+  }
+
+  /* ── Action Buttons ── */
+  .card-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 18px;
+    border-radius: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: .88rem;
+    cursor: pointer;
+    border: none;
+    transition: all .25s ease;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-btn-purchase {
+    background: linear-gradient(135deg, var(--accent2) 0%, #5b35f6 40%, var(--accent) 100%);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(123, 92, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  .card-btn-purchase::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  .card-btn-purchase:hover::before {
+    animation: btnShimmer 1.5s ease-in-out infinite;
+  }
+  @keyframes btnShimmer {
+    0% { transform: translateX(-150%) skewX(-20deg); }
+    100% { transform: translateX(150%) skewX(-20deg); }
+  }
+  .card-btn-purchase:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,229,255,.4), 0 0 20px rgba(123,92,255,.5);
+    box-shadow: 0 8px 26px rgba(0, 229, 255, 0.4), 0 0 25px rgba(123, 92, 255, 0.45);
   }
+  .card-btn-purchase:hover .arrow-icon { transform: translateX(3px); }
+
+  .card-btn-enroll {
+    background: linear-gradient(135deg, #059669 0%, #00e599 100%);
+    color: #050a18;
+    box-shadow: 0 4px 18px rgba(0, 229, 153, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  .card-btn-enroll:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 26px rgba(0, 229, 153, 0.5);
+  }
+  .card-btn-enroll:hover .arrow-icon { transform: translateX(3px); }
+
+  .card-btn-continue {
+    background: linear-gradient(135deg, #00e5ff 0%, #7b5cff 100%);
+    color: #050a18;
+    font-weight: 800;
+    box-shadow: 0 4px 18px rgba(0, 229, 255, 0.35);
+  }
+  .card-btn-continue:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 26px rgba(0, 229, 255, 0.5);
+  }
+  .card-btn-continue:hover .arrow-icon { transform: translateX(3px); }
+
+  .card-btn-whatsapp {
+    background: rgba(37, 211, 102, 0.15);
+    color: #25d366;
+    border: 1px solid rgba(37, 211, 102, 0.4);
+    box-shadow: 0 2px 10px rgba(37, 211, 102, 0.15);
+    margin-top: 8px;
+  }
+  .card-btn-whatsapp:hover {
+    background: #25d366;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+  }
+
+  .card-btn-pending {
+    background: rgba(251, 191, 36, 0.12);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    cursor: default;
+  }
+  .arrow-icon { transition: transform .2s ease; }
 
   /* Button styles for modal */
   .btn {
@@ -895,7 +1208,7 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
 
   /* ── Prevent double-tap zoom on interactive elements ── */
   button, a, .tab-btn, .nav-btn, .control-btn, .nav-item,
-  .continue-btn, .save-btn, .btn-coupon, .card-course {
+  .continue-btn, .card-action-btn, .save-btn, .btn-coupon, .card-course, .course-card {
     touch-action: manipulation !important;
   }
 
@@ -1817,87 +2130,158 @@ async function renderCourses() {
       const title = rawTitle.replace(/<style[\s\S]*?<\/style>/gi, '').trim();
       const plainTitleText = title.replace(/<[^>]+>/g, '').trim() || 'Untitled Course';
       const description = course.description || 'Learn essential skills in this comprehensive course.';
+      const plainDescText = description.replace(/<[^>]+>/g, '').trim();
       const price = parseFloat(course.price) || 0;
       const discountPrice = parseFloat(course.discount_price) || 0;
       const hasDiscount = price > 0 && discountPrice > 0 && discountPrice < price;
-      const effectivePrice = hasDiscount ? discountPrice : price;
       const whatsapp = course.whatsapp || '';
+      const moduleCount = getModuleCount(course);
       
       const isEnrolled = window._approvedCourseIds && window._approvedCourseIds.has(courseId.toString());
       const isPending = pendingCourseIds.includes(courseId.toString());
+      const isFree = (price === 0 && discountPrice === 0) || type === 'Free';
       
-      // Determine status badge
-      let statusText = 'Premium';
-      let statusClass = 'nano';
-      if (type === 'Enrolled') {
-        statusText = 'Enrolled';
-        statusClass = 'sub';
-      } else if (isEnrolled) {
-        statusText = 'Enrolled';
-        statusClass = 'sub';
-      } else if (type === 'Free') {
-        statusText = 'Free';
-        statusClass = 'free';
-      } else if (isPending) {
-        statusText = 'Pending Approval';
-        statusClass = 'nano';
+      // Determine badge & pill
+      let catText = 'PREMIUM';
+      let catClass = '';
+      if (isEnrolled || type === 'Enrolled') {
+        catText = 'ENROLLED';
+        catClass = 'pill-enrolled';
+      } else if (isFree) {
+        catText = 'FREE';
+        catClass = 'pill-free';
       }
       
-      // Price display: real price = discount_price if set, else price. Show original price struck through.
-      let priceDisplay;
-      if (price === 0) {
-        priceDisplay = 'Free';
+      // Level
+      const courseLevel = course.level || 'All Levels';
+      
+      // Price HTML
+      let priceHtml;
+      if (isEnrolled) {
+        priceHtml = `<div class="card-price"><span class="current-price" style="font-size:0.92rem;color:#00e599;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block;vertical-align:middle;margin-right:4px;"><path d="M20 6L9 17l-5-5"/></svg>Enrolled</span></div>`;
+      } else if (isFree) {
+        priceHtml = `<div class="card-price free-badge"><span class="current-price">Free</span></div>`;
       } else if (hasDiscount) {
-        priceDisplay = `<span style="text-decoration:line-through;color:var(--muted);font-size:0.8rem;margin-right:4px;">৳${price}</span><span style="font-weight:700;color:var(--accent)">৳${discountPrice}</span>`;
+        const discountPercent = Math.round((1 - discountPrice / price) * 100);
+        priceHtml = `
+          <div class="card-price">
+            <span class="old-price">৳${price}</span>
+            <span class="current-price">৳${discountPrice}</span>
+            <span class="discount-pill">-${discountPercent}%</span>
+          </div>`;
       } else {
-        priceDisplay = `৳${price}`;
+        priceHtml = `<div class="card-price"><span class="current-price">৳${price}</span></div>`;
       }
       
+      // Action buttons
+      let actionButtonsHtml = '';
+      if (isEnrolled) {
+        actionButtonsHtml = `
+          <button class="card-action-btn card-btn-continue open-course-btn" data-course-id="${courseId}">
+            <span>Continue Learning</span>
+            <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+          ${whatsapp ? `
+            <a href="${escapeHtml(whatsapp)}" target="_blank" class="card-action-btn card-btn-whatsapp" onclick="event.stopPropagation()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+              <span>Join WhatsApp Group</span>
+            </a>
+          ` : ''}
+        `;
+      } else if (isPending) {
+        actionButtonsHtml = `<button class="card-action-btn card-btn-pending" disabled>⏳ Pending Approval</button>`;
+      } else if (isFree) {
+        actionButtonsHtml = `
+          <button class="card-action-btn card-btn-enroll enroll-free-btn" data-course-id="${courseId}">
+            <span>Enroll for Free</span>
+            <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        `;
+      } else {
+        const courseStatus = course.status || 'ongoing';
+        if (courseStatus === 'completed') {
+          actionButtonsHtml = `<button class="card-action-btn card-btn-pending" disabled>Closed</button>`;
+        } else if (courseStatus === 'upcoming') {
+          actionButtonsHtml = `<button class="card-action-btn card-btn-pending" disabled>Coming Soon</button>`;
+        } else {
+          actionButtonsHtml = `
+            <button class="card-action-btn card-btn-purchase buy-now-btn" data-course-id="${courseId}">
+              <span>Purchase Course</span>
+              <svg class="arrow-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          `;
+        }
+      }
+
       const thumbnailUrl = course.thumbnail_url || '';
       const hasThumbnail = thumbnailUrl && thumbnailUrl.length > 10;
-      
+
       return `
-      <div class="course-card" style="animation-delay:.05s">
-        <div class="card-thumbnail">
+      <div class="course-card" data-course-id="${courseId}">
+        <div class="card-banner-wrapper">
           ${hasThumbnail
-            ? `<img src="${thumbnailUrl}" alt="${escapeHtml(plainTitleText)}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-               <div class="thumb-placeholder thumb-bg-${Math.floor(Math.random() * 3) + 1}" style="display:none;position:absolute;inset:0;">
+            ? `<img class="card-banner-img" src="${thumbnailUrl}" alt="${escapeHtml(plainTitleText)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+               <div class="card-banner-placeholder thumb-bg-${Math.floor(Math.random() * 3) + 1}" style="display:none;">
                  ${getEmojiForCourse(title)}
                </div>`
-            : `<div class="thumb-placeholder thumb-bg-${Math.floor(Math.random() * 3) + 1}">
+            : `<div class="card-banner-placeholder thumb-bg-${Math.floor(Math.random() * 3) + 1}">
                  ${getEmojiForCourse(title)}
                </div>`
           }
-          <div class="thumb-glow"></div>
-          <span class="card-badge badge-${statusClass}">
-            ${statusText}
-          </span>
-        </div>
-        <div class="card-body">
-          <div class="card-title">${title}</div>
-          <p class="card-description">${escapeHtml(description.substring(0, 100))}${description.length > 100 ? '...' : ''}</p>
-          <div class="card-stats">
-            <div class="stat-pill">📦 ${getModuleCount(course)} Lecture</div>
-            ${effectivePrice > 0 && type !== 'Enrolled' && !isEnrolled ? `<div class="stat-pill">💰 ${priceDisplay}</div>` : ''}
-            ${whatsapp && type === 'Enrolled' ? `<div class="stat-pill">💬 WhatsApp Group</div>` : ''}
+          <div class="card-banner-overlay"></div>
+          <div class="banner-top-row">
+            <span class="banner-cat-pill ${catClass}">${catText}</span>
+            <span class="banner-level-pill"><span class="level-dot"></span>${courseLevel}</span>
           </div>
-          ${type === 'Enrolled' ? `
+          <div class="banner-bottom-row">
+            <span class="banner-stat-chip">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              ${moduleCount || 12} Lectures
+            </span>
+            <span class="banner-stat-chip">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              On-Demand
+            </span>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="card-trust-row">
+            <span class="academy-badge">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              DecentraForce Verified
+            </span>
+            ${isEnrolled ? '<span class="banner-cat-pill pill-enrolled" style="font-size:0.65rem;padding:2px 8px;">Active</span>' : ''}
+          </div>
+
+          <h3 class="card-title" title="${escapeHtml(plainTitleText)}">${title}</h3>
+          <p class="card-description">${escapeHtml(plainDescText)}</p>
+
+          ${isEnrolled ? `
           <div class="card-progress">
             <div class="progress-label"><span>Progress</span><span>0%</span></div>
             <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           </div>
           ` : ''}
-        </div>
-        <div class="card-footer">
-          <div class="card-rating"><span class="stars">★★★★★</span> 4.9</div>
-          ${getCourseButton(course, isEnrolled ? 'Enrolled' : type, isPending)}
+
+          <div class="card-footer">
+            <div class="card-footer-row">
+              <div class="card-rating">
+                <span class="stars-icon">★★★★★</span>
+                <span class="rating-val">4.9</span>
+                <span class="review-count">(120+)</span>
+              </div>
+              ${priceHtml}
+            </div>
+            ${actionButtonsHtml}
+          </div>
         </div>
       </div>
-      `
+      `;
     }).join('');
 
-    // Attach event listeners
-    // Always wire up open-course-btn (enrolled cards appear in all tabs)
+    // Wire up event listeners
+    // 1. Open course button (for enrolled courses)
     container.querySelectorAll('.open-course-btn').forEach(btn => {
       btn.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -1907,112 +2291,59 @@ async function renderCourses() {
       });
     });
 
-    if (type === 'Premium') {
-      container.querySelectorAll('.buy-now-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (!currentUser) { showLoginPrompt(); return; }
-          const courseId = this.dataset.courseId;
+    // 2. Buy Now button (opens checkout modal if logged in, else login prompt)
+    container.querySelectorAll('.buy-now-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!currentUser) { showLoginPrompt(); return; }
+        const courseId = this.dataset.courseId;
+        const course = courses.find(c => (c.id || '').toString() === courseId.toString());
+        if (course && typeof openCheckoutModal === 'function') {
+          openCheckoutModal(course);
+        } else {
           window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
-        });
-      });
-      
-      // Add click handler to premium course cards
-      container.querySelectorAll('.course-card').forEach(card => {
-        const openBtn = card.querySelector('.open-course-btn');
-        const buyBtn  = card.querySelector('.buy-now-btn');
-        const courseId = (openBtn || buyBtn)?.dataset.courseId;
-        if (courseId) {
-          card.style.cursor = 'pointer';
-          card.addEventListener('click', function(e) {
-            if (e.target.closest('.open-course-btn') || e.target.closest('.buy-now-btn') || e.target.closest('a')) return;
-            if (openBtn) {
-              const course = courses.find(c => (c.id || '').toString() === courseId.toString());
-              if (course) openCourseContent(courseId, course.title);
-            } else {
-              window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
-            }
-          });
         }
       });
-    }
-    
-    if (type === 'Free') {
-      container.querySelectorAll('.enroll-free-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (!currentUser) { showLoginPrompt(); return; }
-          const courseId = this.dataset.courseId;
-          const course = courses.find(c => (c.id || '').toString() === courseId.toString());
-          if (course) enrollFreeCourse(courseId, course.title);
-        });
-      });
+    });
 
-      // Free tab card click — enrolled cards open course, others go to details
-      container.querySelectorAll('.course-card').forEach(card => {
-        const openBtn = card.querySelector('.open-course-btn');
-        const enrollBtn = card.querySelector('.enroll-free-btn');
-        const courseId = (openBtn || enrollBtn)?.dataset.courseId;
-        if (courseId) {
-          card.style.cursor = 'pointer';
-          card.addEventListener('click', function(e) {
-            if (e.target.closest('.open-course-btn') || e.target.closest('.enroll-free-btn') || e.target.closest('a')) return;
-            if (openBtn) {
-              const course = courses.find(c => (c.id || '').toString() === courseId.toString());
-              if (course) openCourseContent(courseId, course.title);
-            } else {
-              window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
-            }
-          });
-        }
+    // 3. Enroll Free button
+    container.querySelectorAll('.enroll-free-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!currentUser) { showLoginPrompt(); return; }
+        const courseId = this.dataset.courseId;
+        const course = courses.find(c => (c.id || '').toString() === courseId.toString());
+        if (course) enrollFreeCourse(courseId, course.title);
       });
-    }
-    
-    if (type === 'Enrolled') {
-      container.querySelectorAll('.course-card').forEach(card => {
-        const courseId = card.querySelector('.open-course-btn')?.dataset.courseId;
-        if (courseId) {
-          card.style.cursor = 'pointer';
-          card.addEventListener('click', function(e) {
-            if (e.target.closest('.open-course-btn') || e.target.closest('a')) return;
+    });
+
+    // 4. Entire Card click handler
+    container.querySelectorAll('.course-card').forEach(card => {
+      const courseId = card.dataset.courseId;
+      if (courseId) {
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('.card-action-btn') || e.target.closest('a') || e.target.closest('button')) return;
+          const isUserEnrolled = window._approvedCourseIds && window._approvedCourseIds.has(courseId.toString());
+          if (isUserEnrolled) {
             const course = courses.find(c => (c.id || '').toString() === courseId.toString());
-            if (course) openCourseContent(courseId, course.title);
-          });
-        }
-      });
-    }
+            openCourseContent(courseId, course ? course.title : '');
+          } else {
+            window.location.href = `course-details.html?id=${encodeURIComponent(courseId)}`;
+          }
+        });
+      }
+    });
   }
 
-function getCourseButton(course, type, isPending) {
+  function getCourseButton(course, type, isPending) {
     const courseId = course.id || '';
-    const whatsapp = course.whatsapp || '';
-    const status = course.status || 'ongoing'; // Default to ongoing
-
-    // Determine button based on course type
     if (type === 'Enrolled' || type === 'Purchased') {
-      let buttons = `<button class="continue-btn open-course-btn" data-course-id="${courseId}" style="cursor:pointer">▶ Continue</button>`;
-      if (whatsapp) {
-        buttons += `<a href="${escapeHtml(whatsapp)}" target="_blank" class="continue-btn" style="margin-left:8px; background:#25D366; color:white; border:none; box-shadow:0 0 10px rgba(37,211,102,0.3);">WhatsApp</a>`;
-      }
-      return `<div style="display:flex; justify-content:flex-end;">${buttons}</div>`;
-      
+      return `<button class="card-action-btn card-btn-continue open-course-btn" data-course-id="${courseId}"><span>Continue Learning</span></button>`;
     } else if (type === 'Free') {
-      // Free courses render the Enroll Now button
-      return `<button class="continue-btn enroll-free-btn" data-course-id="${courseId}" style="cursor:pointer">🎓 Enroll Now</button>`;
-      
+      return `<button class="card-action-btn card-btn-enroll enroll-free-btn" data-course-id="${courseId}"><span>Enroll for Free</span></button>`;
     } else if (type === 'Premium') {
-      // Premium Paid Courses handling
-      if (isPending) {
-        return `<span class="continue-btn disabled" style="cursor:default; opacity:0.8; background:#fbbf24; color:#000;">⏳ Pending Approval</span>`;
-      } else {
-        if (status === 'completed') {
-          return `<span class="continue-btn disabled" style="cursor:default; opacity:0.6">Closed</span>`;
-        } else if (status === 'upcoming') {
-          return `<span class="continue-btn secondary" style="cursor:default; opacity:0.8">Coming Soon</span>`;
-        } else {
-          return `<button class="continue-btn buy-now-btn" data-course-id="${courseId}" style="cursor:pointer;">Purchase</button>`;
-        }
-      }
+      if (isPending) return `<button class="card-action-btn card-btn-pending" disabled>⏳ Pending Approval</button>`;
+      return `<button class="card-action-btn card-btn-purchase buy-now-btn" data-course-id="${courseId}"><span>Purchase Course</span></button>`;
     }
     return '';
   }
