@@ -21,6 +21,7 @@
   src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
   /></noscript>
   <!-- End Meta Pixel Code -->
+  <script src="/scripts/pixel-events.js" defer></script>
   <title>Course Details — DecentraForce</title>
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1391,6 +1392,11 @@
         return;
       }
 
+      // Meta Pixel: Trigger ViewContent for Course Visit
+      if (window.DFTracker) {
+        window.DFTracker.trackCourseView(activeCourse);
+      }
+
       // 1. Populate Hero & Badges
       // Use innerHTML so HTML written in admin panel renders properly (e.g. <span>, <em>, <strong>)
       const rawTitle = activeCourse.title || 'Untitled Course';
@@ -1988,6 +1994,10 @@
         .then(function(res) { return res.json(); })
         .then(function(data) {
           if (data.success) {
+            // Meta Pixel: Trigger Purchase Event
+            if (window.DFTracker) {
+              window.DFTracker.trackPurchase(activeCourse, priceVal, transactionId);
+            }
             if (activeCourse.whatsapp) window.open(activeCourse.whatsapp, '_blank');
             showPendingSuccess();
           } else {
@@ -2054,6 +2064,10 @@
   // === MODAL LOGIC (Exact match to requirements) ===
   var _checkoutBodyHTML = null; // cached original body for restore
   function openCheckoutModal(course, price) {
+    // Meta Pixel: Trigger InitiateCheckout Event
+    if (window.DFTracker) {
+      window.DFTracker.trackInitiateCheckout(course, price);
+    }
     const pg = document.getElementById('checkoutModal');
     const body = pg.querySelector('.checkout-body');
 

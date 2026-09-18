@@ -21,6 +21,7 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<script src="/scripts/pixel-events.js" defer></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2186,6 +2187,11 @@ window.addEventListener('storage', (e) => {
       const discountPrice = parseFloat(course.discount_price) || 0;
       basePrice = (discountPrice > 0) ? discountPrice : regularPrice;
 
+      // Meta Pixel: Trigger InitiateCheckout
+      if (window.DFTracker) {
+        window.DFTracker.trackInitiateCheckout(course, basePrice);
+      }
+
       const modal = document.getElementById('checkoutModal');
       const title = document.getElementById('modalCourseTitle');
       const desc = document.getElementById('modalCourseDesc');
@@ -2300,6 +2306,10 @@ window.addEventListener('storage', (e) => {
         .then(response => response.json())
         .then(data => {
           if (data.success) {
+            // Meta Pixel: Trigger Purchase Event
+            if (window.DFTracker) {
+              window.DFTracker.trackPurchase(activeCourse, basePrice, transactionId);
+            }
             closeCheckoutModal();
             if (activeCourse.whatsapp) {
               window.open(activeCourse.whatsapp, '_blank');

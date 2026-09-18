@@ -31,6 +31,7 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<script src="/scripts/pixel-events.js" defer></script>
 <title>Create Account - DecentraForce</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -634,6 +635,10 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
       .then(response => response.json())
       .then(data => {
         if (data.success) {
+          // Meta Pixel: Trigger CompleteRegistration
+          if (window.DFTracker) {
+            window.DFTracker.trackRegistration();
+          }
           // Show inline success message, then redirect to login
           showRegisterAlert('✓ Account created successfully! Taking you to the login page…', true);
           submitBtn.textContent = 'Account created!';

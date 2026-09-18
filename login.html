@@ -31,6 +31,7 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<script src="/scripts/pixel-events.js" defer></script>
 <title>Log In - DecentraForce</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -602,6 +603,10 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
       .then(response => response.json())
       .then(data => {
         if (data.success) {
+          // Meta Pixel: Trigger Login
+          if (window.DFTracker) {
+            window.DFTracker.trackLogin();
+          }
           // Redirect based on role
           window.location.href = _returnUrl || data.redirectUrl || 'index.html';
         } else {
