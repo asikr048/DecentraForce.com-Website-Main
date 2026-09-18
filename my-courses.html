@@ -31,7 +31,7 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
-<script src="/scripts/pixel-events.js" defer></script>
+<script src="/scripts/pixel-events.js"></script>
 
 <title>My Courses — DecentraForce</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2113,6 +2113,16 @@ async function renderCourses() {
     localStorage.setItem('purchases', JSON.stringify(purchases));
     
     // Meta Pixel: Trigger Lead / Free Enrollment
+    try {
+      if (typeof window.fbq === 'function') {
+        window.fbq('track', 'Lead', {
+          content_name: (courseTitle || 'Free Course').replace(/<[^>]+>/g, '').trim(),
+          content_ids: [String(courseId || '')],
+          content_category: 'Free Course Enrollment'
+        });
+        console.log('[Meta Pixel] Lead fired directly for free course:', courseTitle);
+      }
+    } catch (err) { console.warn('Lead trigger error:', err); }
     if (window.DFTracker) {
       window.DFTracker.trackFreeEnroll({ id: courseId, title: courseTitle });
     }
@@ -2451,6 +2461,18 @@ async function renderCourses() {
     basePrice = (discountPrice > 0) ? discountPrice : regularPrice;
 
     // Meta Pixel: Trigger InitiateCheckout
+    try {
+      if (typeof window.fbq === 'function') {
+        window.fbq('track', 'InitiateCheckout', {
+          content_name: (course.title || 'Course').replace(/<[^>]+>/g, '').trim(),
+          content_ids: [String(course.id || '')],
+          content_type: 'product',
+          value: parseFloat(basePrice || 0),
+          currency: 'BDT'
+        });
+        console.log('[Meta Pixel] InitiateCheckout fired directly:', course.title);
+      }
+    } catch (err) { console.warn('InitiateCheckout error:', err); }
     if (window.DFTracker) {
       window.DFTracker.trackInitiateCheckout(course, basePrice);
     }
@@ -2564,6 +2586,19 @@ async function renderCourses() {
         .then(data => {
           if (data.success) {
             // Meta Pixel: Trigger Purchase Event
+            try {
+              if (typeof window.fbq === 'function') {
+                window.fbq('track', 'Purchase', {
+                  content_name: (activeCourse.title || 'Course').replace(/<[^>]+>/g, '').trim(),
+                  content_ids: [String(activeCourse.id || '')],
+                  content_type: 'product',
+                  value: parseFloat(basePrice || 0),
+                  currency: 'BDT',
+                  transaction_id: String(transactionId || '')
+                });
+                console.log('[Meta Pixel] Purchase fired directly:', basePrice, transactionId);
+              }
+            } catch (err) { console.warn('Purchase trigger error:', err); }
             if (window.DFTracker) {
               window.DFTracker.trackPurchase(activeCourse, basePrice, transactionId);
             }

@@ -31,7 +31,7 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
-<script src="/scripts/pixel-events.js" defer></script>
+<script src="/scripts/pixel-events.js"></script>
 <title>Create Account - DecentraForce</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -636,6 +636,12 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
       .then(data => {
         if (data.success) {
           // Meta Pixel: Trigger CompleteRegistration
+          try {
+            if (typeof window.fbq === 'function') {
+              window.fbq('track', 'CompleteRegistration', { status: 'success' });
+              console.log('[Meta Pixel] CompleteRegistration fired directly');
+            }
+          } catch (err) { console.warn('Registration trigger error:', err); }
           if (window.DFTracker) {
             window.DFTracker.trackRegistration();
           }
