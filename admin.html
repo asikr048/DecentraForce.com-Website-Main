@@ -275,8 +275,8 @@
         Purchases
       </button>
       <button onclick="showTab('coupons',true)" class="tab-btn" data-tab="coupons">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-        Coupons
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        Refer & Coupons
       </button>
       <button onclick="showTab('assignments',true)" class="tab-btn" data-tab="assignments">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -610,59 +610,174 @@
         </div>
       </div>
 
-      <!-- ═══ COUPONS ═══ -->
+      <!-- ═══ REFER & COUPONS ═══ -->
       <div id="tab-coupons" class="hidden">
-        <div class="mb-7">
-          <h1 class="page-title">Coupon Management</h1>
-          <p class="page-subtitle">Create and manage discount coupons</p>
+        <div class="mb-6">
+          <h1 class="page-title">Refer & Coupon Management</h1>
+          <p class="page-subtitle">Generate promotional referral links, track visitor clicks & sales conversions, and configure discount coupons</p>
         </div>
-        <div class="grid grid-cols-2 gap-6">
-          <div class="card">
-            <div class="card-header">
-              <div class="card-icon bg-[rgba(0,229,255,0.08)]"><svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></div>
-              <h2 class="text-sm font-bold text-white">Create Coupon</h2>
+
+        <!-- Sub-Tabs Switcher -->
+        <div class="flex items-center gap-2 mb-6 bg-[#0a1228] p-1.5 rounded-xl border border-[rgba(0,229,255,0.1)] w-fit">
+          <button type="button" onclick="switchReferCouponTab('referrals')" id="subtabBtnReferrals" class="px-5 py-2.5 rounded-lg text-xs font-bold transition-all bg-[rgba(0,229,255,0.12)] text-accent border border-[rgba(0,229,255,0.3)] flex items-center gap-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+            Referral Links & Tracking
+          </button>
+          <button type="button" onclick="switchReferCouponTab('coupons')" id="subtabBtnCoupons" class="px-5 py-2.5 rounded-lg text-xs font-bold transition-all text-[#6a80a0] hover:text-white border border-transparent flex items-center gap-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+            Discount Coupons
+          </button>
+        </div>
+
+        <!-- ── SUB-PANEL 1: REFERRAL LINKS ── -->
+        <div id="subpanelReferrals">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left: Generate Referral Link Form -->
+            <div class="card lg:col-span-1">
+              <div class="card-header">
+                <div class="card-icon bg-[rgba(0,229,255,0.08)]"><svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg></div>
+                <h2 class="text-sm font-bold text-white">Create Referral Link</h2>
+              </div>
+              <div class="card-body space-y-4">
+                <div>
+                  <label class="block text-xs font-bold text-[#6a80a0] mb-1.5 uppercase tracking-wider">Promoter / Campaign Name</label>
+                  <input type="text" id="referralName" placeholder="e.g., Shakib Tech, YouTube Review" class="admin-input" maxlength="60">
+                  <p class="text-[11px] text-[#3d5070] mt-1">Name of the promoter, affiliate, or channel</p>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-[#6a80a0] mb-1.5 uppercase tracking-wider">Target Course</label>
+                  <select id="referralCourse" class="admin-input">
+                    <option value="all">All Courses (Homepage)</option>
+                  </select>
+                  <p class="text-[11px] text-[#3d5070] mt-1">Directs visitor straight to this course page</p>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-[#6a80a0] mb-1.5 uppercase tracking-wider">Custom Code / Tag (Optional)</label>
+                  <input type="text" id="referralCode" placeholder="e.g., SHAKIB (leave blank to auto-generate)" class="admin-input" maxlength="20" style="text-transform:uppercase;">
+                  <p class="text-[11px] text-[#3d5070] mt-1">Leave empty to auto-generate a unique tag</p>
+                </div>
+                <button onclick="createReferralLink()" class="btn-primary w-full py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                  Generate Referral Link
+                </button>
+
+                <div class="p-3 bg-[#050a18] rounded-lg border border-[rgba(0,229,255,0.08)] text-xs text-[#5a7095] space-y-1">
+                  <div class="font-bold text-accent text-[11px] flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    How tracking works:
+                  </div>
+                  <p>1. When visitors click the link, a <b>visit</b> is recorded.</p>
+                  <p>2. If they purchase, the referral code attaches to the order and records a <b>purchase</b>.</p>
+                </div>
+              </div>
             </div>
-            <div class="card-body space-y-5">
-              <div>
-                <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Coupon Code</label>
-                <input type="text" id="couponCode" placeholder="e.g., SUMMER50" class="admin-input" maxlength="20">
-                <p class="text-xs text-[#3d5070] mt-1">Letters, numbers, hyphens only</p>
+
+            <!-- Right: Referral Links & Performance Table -->
+            <div class="card lg:col-span-2 flex flex-col">
+              <div class="card-header justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="card-icon bg-[rgba(0,229,255,0.08)]"><svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div>
+                  <div>
+                    <h2 class="text-sm font-bold text-white">Active Referral Links & Conversions</h2>
+                    <p class="text-xs text-[#4a6080]">Real-time visitor clicks & purchases</p>
+                  </div>
+                </div>
+                <button onclick="refreshReferrals()" class="text-[#4a6080] hover:text-accent transition-colors flex items-center gap-1.5 text-xs font-bold">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  Refresh
+                </button>
               </div>
-              <div>
-                <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Discount %</label>
-                <input type="number" id="couponDiscount" placeholder="e.g., 50" class="admin-input" min="1" max="100">
-                <p class="text-xs text-[#3d5070] mt-1">Leave empty if using a fixed new price instead</p>
+
+              <!-- Quick Metrics Bar -->
+              <div class="grid grid-cols-4 gap-2 p-4 border-b border-[rgba(0,229,255,0.06)] bg-[#091124]">
+                <div class="text-center">
+                  <div class="text-[11px] text-[#5a7095] uppercase font-bold">Total Links</div>
+                  <div class="text-base font-extrabold text-white mt-0.5" id="refTotalLinks">0</div>
+                </div>
+                <div class="text-center border-l border-[rgba(0,229,255,0.06)]">
+                  <div class="text-[11px] text-[#5a7095] uppercase font-bold">Total Visits</div>
+                  <div class="text-base font-extrabold text-accent mt-0.5" id="refTotalVisits">0</div>
+                </div>
+                <div class="text-center border-l border-[rgba(0,229,255,0.06)]">
+                  <div class="text-[11px] text-[#5a7095] uppercase font-bold">Purchases</div>
+                  <div class="text-base font-extrabold text-green-400 mt-0.5" id="refTotalPurchases">0</div>
+                </div>
+                <div class="text-center border-l border-[rgba(0,229,255,0.06)]">
+                  <div class="text-[11px] text-[#5a7095] uppercase font-bold">Avg Conv. Rate</div>
+                  <div class="text-base font-extrabold text-purple-400 mt-0.5" id="refAvgConv">0%</div>
+                </div>
               </div>
-              <div>
-                <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">New Price (&#2547;)</label>
-                <input type="number" id="couponNewPrice" placeholder="e.g., 999" class="admin-input" min="0">
-                <p class="text-xs text-[#3d5070] mt-1">Fixed price after coupon &mdash; overrides discount % display</p>
+
+              <div class="card-body flex-1 overflow-x-auto p-0">
+                <table class="data-table">
+                  <thead><tr>
+                    <th>Promoter / Tag</th>
+                    <th>Target Course</th>
+                    <th>Referral URL</th>
+                    <th class="text-center">Visits</th>
+                    <th class="text-center">Purchases</th>
+                    <th class="text-center">Conv.</th>
+                    <th>Action</th>
+                  </tr></thead>
+                  <tbody id="referralsListBody">
+                    <tr><td colspan="7" class="text-center py-10 text-[#3d5070] text-sm">Loading referral links...</td></tr>
+                  </tbody>
+                </table>
               </div>
-              <div>
-                <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Target Course</label>
-                <select id="couponCourse" class="admin-input">
-                  <option value="all">All Courses</option>
-                </select>
-              </div>
-              <button onclick="createCoupon()" class="btn-primary w-full py-3 rounded-lg text-sm font-bold">Create Coupon</button>
             </div>
           </div>
+        </div>
 
-          <div class="card">
-            <div class="card-header justify-between">
-              <div class="flex items-center gap-2.5">
-                <div class="card-icon bg-[rgba(0,229,255,0.08)]"><svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
-                <h2 class="text-sm font-bold text-white">Active Coupons</h2>
+        <!-- ── SUB-PANEL 2: DISCOUNT COUPONS ── -->
+        <div id="subpanelCoupons" class="hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-icon bg-[rgba(0,229,255,0.08)]"><svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></div>
+                <h2 class="text-sm font-bold text-white">Create Coupon</h2>
               </div>
-              <button onclick="refreshCoupons()" class="text-[#4a6080] hover:text-accent transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              </button>
+              <div class="card-body space-y-4">
+                <div>
+                  <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Coupon Code</label>
+                  <input type="text" id="couponCode" placeholder="e.g., SUMMER50" class="admin-input" maxlength="20" style="text-transform:uppercase;">
+                  <p class="text-xs text-[#3d5070] mt-1">Letters, numbers, hyphens only</p>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Discount %</label>
+                  <input type="number" id="couponDiscount" placeholder="e.g., 50" class="admin-input" min="1" max="100">
+                  <p class="text-xs text-[#3d5070] mt-1">Leave empty if using a fixed new price instead</p>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">New Price (৳)</label>
+                  <input type="number" id="couponNewPrice" placeholder="e.g., 999" class="admin-input" min="0">
+                  <p class="text-xs text-[#3d5070] mt-1">Fixed price after coupon &mdash; overrides discount % display</p>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-[#6a80a0] mb-2 uppercase tracking-wider">Target Course</label>
+                  <select id="couponCourse" class="admin-input">
+                    <option value="all">All Courses</option>
+                  </select>
+                </div>
+                <button onclick="createCoupon()" class="btn-primary w-full py-3 rounded-lg text-sm font-bold">Create Coupon</button>
+              </div>
             </div>
-            <div class="card-body">
-              <div id="couponsList" class="space-y-3 max-h-80 overflow-y-auto">
-                <div class="text-center py-8 text-[#3d5070] text-sm">No coupons created yet.</div>
+
+            <div class="card">
+              <div class="card-header justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="card-icon bg-[rgba(0,229,255,0.08)]"><svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
+                  <h2 class="text-sm font-bold text-white">Active Coupons</h2>
+                </div>
+                <button onclick="refreshCoupons()" class="text-[#4a6080] hover:text-accent transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </button>
               </div>
-              <p class="text-xs text-[#3d5070] border-t border-[rgba(0,229,255,0.06)] pt-3 mt-4">Coupons are stored in the database.</p>
+              <div class="card-body">
+                <div id="couponsList" class="space-y-3 max-h-96 overflow-y-auto">
+                  <div class="text-center py-8 text-[#3d5070] text-sm">No coupons created yet.</div>
+                </div>
+                <p class="text-xs text-[#3d5070] border-t border-[rgba(0,229,255,0.06)] pt-3 mt-4">Coupons are stored in the database.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -691,11 +806,11 @@
           <div class="overflow-x-auto">
             <table class="data-table">
               <thead><tr>
-                <th>Course</th><th>Sender</th><th>Transaction ID</th><th>Coupon</th><th>Status</th><th>Date</th><th>Actions</th>
+                <th>Course</th><th>Sender</th><th>Transaction ID</th><th>Coupon / Refer</th><th>Status</th><th>Date</th><th>Actions</th>
               </tr></thead>
               <tbody id="purchasesTableBody">
                 <tr id="purchasesEmpty">
-                  <td colspan="6" class="text-center py-14 text-[#3d5070]">
+                  <td colspan="7" class="text-center py-14 text-[#3d5070]">
                     <p class="font-semibold mb-1">No purchases found</p>
                     <p class="text-xs">Purchase requests will appear here when users buy.</p>
                   </td>
@@ -1452,7 +1567,7 @@ async function logout() {
 const ALL_TABS = ['overview','users','courses','add-course','coupons','purchases','feedback','mentors','footer','section-order','profile','assignments','roles'];
 const BREADCRUMBS = {
   'overview': 'Dashboard', 'users': 'Users', 'courses': 'Courses',
-  'add-course': 'Courses → Add Course', 'coupons': 'Coupons', 'purchases': 'Purchases',
+  'add-course': 'Courses → Add Course', 'coupons': 'Refer & Coupons', 'purchases': 'Purchases',
   'feedback': 'Feedback', 'mentors': 'Mentors', 'footer': 'Footer',
   'section-order': 'Section Order', 'profile': 'Settings', 'assignments': 'Assignments', 'roles': 'Role Management'
 };
@@ -1475,7 +1590,7 @@ function showTab(name, persist) {
   if (name === 'mentors') renderMentorsList();
   if (name === 'section-order') { renderSectionOrderList(); renderCourseOrderList(); renderMentorOrderList(); renderFeedbackOrderList(); }
   if (name === 'purchases') loadPurchases();
-  if (name === 'coupons') { renderCouponsList(); populateCouponCourseDropdown(); }
+  if (name === 'coupons') { renderCouponsList(); populateCouponCourseDropdown(); renderReferralsList(); populateReferralCourseDropdown(); }
   if (name === 'assignments') { populateAssignmentCourseDropdown(); initPointsDropdowns(); dbLoadAssignments(); }
   if (name === 'footer') loadFooterSettings();
   if (name === 'roles') renderRolesTab();
@@ -2162,6 +2277,229 @@ function populateCouponCourseDropdown() {
   if(sel&&allCourses) sel.innerHTML='<option value="all">All Courses</option>'+allCourses.map(c=>`<option value="${c.id}">${plainTitle(c.title)}</option>`).join('');
 }
 
+/* ─── REFERRALS ─── */
+function switchReferCouponTab(tab) {
+  const panelRef = document.getElementById('subpanelReferrals');
+  const panelCpn = document.getElementById('subpanelCoupons');
+  const btnRef = document.getElementById('subtabBtnReferrals');
+  const btnCpn = document.getElementById('subtabBtnCoupons');
+
+  if (tab === 'referrals') {
+    if (panelRef) panelRef.classList.remove('hidden');
+    if (panelCpn) panelCpn.classList.add('hidden');
+    if (btnRef) {
+      btnRef.className = 'px-5 py-2.5 rounded-lg text-xs font-bold transition-all bg-[rgba(0,229,255,0.12)] text-accent border border-[rgba(0,229,255,0.3)] flex items-center gap-2';
+    }
+    if (btnCpn) {
+      btnCpn.className = 'px-5 py-2.5 rounded-lg text-xs font-bold transition-all text-[#6a80a0] hover:text-white border border-transparent flex items-center gap-2';
+    }
+    renderReferralsList();
+  } else {
+    if (panelRef) panelRef.classList.add('hidden');
+    if (panelCpn) panelCpn.classList.remove('hidden');
+    if (btnRef) {
+      btnRef.className = 'px-5 py-2.5 rounded-lg text-xs font-bold transition-all text-[#6a80a0] hover:text-white border border-transparent flex items-center gap-2';
+    }
+    if (btnCpn) {
+      btnCpn.className = 'px-5 py-2.5 rounded-lg text-xs font-bold transition-all bg-[rgba(0,229,255,0.12)] text-accent border border-[rgba(0,229,255,0.3)] flex items-center gap-2';
+    }
+    renderCouponsList();
+  }
+}
+
+function populateReferralCourseDropdown() {
+  const sel = document.getElementById('referralCourse');
+  if (sel && allCourses) {
+    sel.innerHTML = '<option value="all">All Courses (Homepage)</option>' +
+      allCourses.map(c => `<option value="${c.id}">${plainTitle(c.title)}</option>`).join('');
+  }
+}
+
+function getReferralUrl(ref) {
+  const origin = window.location.origin;
+  if (ref && ref.course_id) {
+    return `${origin}/course-details.html?id=${encodeURIComponent(ref.course_id)}&ref=${encodeURIComponent(ref.code)}`;
+  }
+  return `${origin}/index.html?ref=${encodeURIComponent(ref ? ref.code : '')}`;
+}
+
+function copyReferralUrl(url) {
+  if (!url) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Referral link copied! 📋', 'success');
+    }).catch(() => {
+      fallbackCopyText(url);
+    });
+  } else {
+    fallbackCopyText(url);
+  }
+}
+
+function fallbackCopyText(text) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Referral link copied! 📋', 'success');
+  } catch (err) {
+    showToast('Failed to copy. Please copy manually.', 'error');
+  }
+}
+
+async function createReferralLink() {
+  const nameEl = document.getElementById('referralName');
+  const courseEl = document.getElementById('referralCourse');
+  const codeEl = document.getElementById('referralCode');
+
+  const name = nameEl ? nameEl.value.trim() : '';
+  const course_id = courseEl ? courseEl.value : 'all';
+  const custom_code = codeEl ? codeEl.value.trim() : '';
+
+  if (!name) return showToast('Promoter / Campaign name required', 'error');
+
+  try {
+    const res = await fetch('/api/admin/referrals', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, course_id, custom_code })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (nameEl) nameEl.value = '';
+      if (codeEl) codeEl.value = '';
+      showToast(`Referral link for "${name}" created! 🔗`, 'success');
+      renderReferralsList();
+    } else {
+      showToast(data.error || 'Failed to create referral link', 'error');
+    }
+  } catch {
+    showToast('Network error creating referral link', 'error');
+  }
+}
+
+async function renderReferralsList() {
+  const tbody = document.getElementById('referralsListBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-[#3d5070] text-sm">Loading referral links...</td></tr>';
+
+  try {
+    const res = await fetch('/api/admin/referrals', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-accent3 text-sm">Failed to load referral links.</td></tr>';
+      return;
+    }
+
+    const refs = data.referrals || [];
+
+    // Update Quick Metric counters
+    const totalLinks = refs.length;
+    let totalVisits = 0;
+    let totalPurchases = 0;
+
+    refs.forEach(r => {
+      totalVisits += (parseInt(r.visits) || 0);
+      totalPurchases += (parseInt(r.purchases) || 0);
+    });
+
+    const avgConv = totalVisits > 0 ? ((totalPurchases / totalVisits) * 100).toFixed(1) + '%' : '0%';
+
+    const countEl = document.getElementById('refTotalLinks');
+    const visitEl = document.getElementById('refTotalVisits');
+    const purEl = document.getElementById('refTotalPurchases');
+    const convEl = document.getElementById('refAvgConv');
+
+    if (countEl) countEl.textContent = totalLinks;
+    if (visitEl) visitEl.textContent = totalVisits;
+    if (purEl) purEl.textContent = totalPurchases;
+    if (convEl) convEl.textContent = avgConv;
+
+    if (!refs.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-12 text-[#3d5070] text-sm">No referral links created yet. Use the form on the left to generate one.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = refs.map(x => {
+      const url = getReferralUrl(x);
+      const visits = parseInt(x.visits) || 0;
+      const purchases = parseInt(x.purchases) || 0;
+      const rate = visits > 0 ? ((purchases / visits) * 100).toFixed(1) + '%' : '0%';
+      const courseBadge = x.course_id
+        ? `<span class="badge badge-blue truncate max-w-[170px] inline-block align-middle" title="${esc(x.course_title || 'Course #' + x.course_id)}">${esc(plainTitle(x.course_title || 'Course #' + x.course_id))}</span>`
+        : `<span class="badge badge-gray">All Courses</span>`;
+
+      return `
+        <tr>
+          <td>
+            <div class="font-bold text-white text-sm">${esc(x.name)}</div>
+            <div class="inline-flex items-center gap-1 font-mono text-[11px] text-accent mt-0.5">
+              <span class="text-[#4a6080]">TAG:</span> <span class="font-semibold">${esc(x.code)}</span>
+            </div>
+          </td>
+          <td>
+            ${courseBadge}
+            <div class="text-[11px] text-[#4a6080] mt-0.5">${fmtDate(x.created_at)}</div>
+          </td>
+          <td>
+            <div class="flex items-center gap-1.5 max-w-[260px]">
+              <input type="text" readonly value="${esc(url)}" class="admin-input !py-1 !px-2 !text-xs font-mono truncate text-[#8fa3bf] bg-[#050a18] select-all cursor-pointer" onclick="this.select()" title="Click to select">
+              <button type="button" onclick="copyReferralUrl('${esc(url)}')" title="Copy Link" class="p-1.5 rounded-lg bg-[rgba(0,229,255,0.1)] hover:bg-[rgba(0,229,255,0.2)] text-accent border border-[rgba(0,229,255,0.2)] transition-all flex-shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              </button>
+            </div>
+          </td>
+          <td class="text-center font-bold text-cyan-400 font-mono text-sm">
+            <span class="inline-block px-2.5 py-0.5 rounded bg-[rgba(0,229,255,0.06)] border border-[rgba(0,229,255,0.15)]">${visits}</span>
+          </td>
+          <td class="text-center font-bold text-green-400 font-mono text-sm">
+            <span class="inline-block px-2.5 py-0.5 rounded bg-[rgba(0,229,153,0.06)] border border-[rgba(0,229,153,0.15)]">${purchases}</span>
+          </td>
+          <td class="text-center font-bold text-purple-400 font-mono text-xs">
+            ${rate}
+          </td>
+          <td>
+            <button onclick="deleteReferralLink(${x.id})" class="text-accent3 hover:text-red-300 text-xs font-bold transition-colors">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-accent3 text-sm">Network error loading referrals.</td></tr>';
+  }
+}
+
+async function deleteReferralLink(id) {
+  if (!confirm('Delete this referral link? Stored visit and purchase counts will be removed.')) return;
+  try {
+    const res = await fetch('/api/admin/referrals', {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Referral link deleted', 'success');
+      renderReferralsList();
+    } else {
+      showToast(data.error || 'Failed', 'error');
+    }
+  } catch {
+    showToast('Network error', 'error');
+  }
+}
+
+function refreshReferrals() {
+  renderReferralsList();
+}
+
 /* ─── PURCHASES ─── */
 let allPurchases = [];
 
@@ -2194,7 +2532,9 @@ function renderPurchasesList() {
         <div class="text-xs text-[#3d5070]">${esc(p.payment_method||'')}</div>
       </td>
       <td>
-        ${p.coupon_code ? `<div class="font-mono text-xs text-green-400 font-bold">${esc(p.coupon_code)}</div><div class="text-xs text-[#3d5070]">&#2547;${p.coupon_price||'&#8212;'}</div>` : '<div class="text-xs text-[#3d5070]">&#8212;</div>'}
+        ${p.coupon_code ? `<div class="font-mono text-xs text-green-400 font-bold">${esc(p.coupon_code)}</div><div class="text-xs text-[#3d5070]">&#2547;${p.coupon_price||'&#8212;'}</div>` : ''}
+        ${p.referral_code ? `<div class="inline-flex items-center gap-1 font-mono text-[11px] text-cyan-400 bg-[rgba(0,229,255,0.08)] px-1.5 py-0.5 rounded ${p.coupon_code ? 'mt-1' : ''} font-semibold" title="Referred by tag: ${esc(p.referral_code)}"><svg class="w-3 h-3 inline text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>${esc(p.referral_code)}</div>` : ''}
+        ${!p.coupon_code && !p.referral_code ? '<div class="text-xs text-[#3d5070]">&#8212;</div>' : ''}
       </td>
       <td><span class="badge ${p.status==='approved'?'badge-green':p.status==='rejected'?'badge-gray':'badge-blue'}">${(p.status||'pending').toUpperCase()}</span></td>
       <td class="text-[#4a6080] text-sm">${fmtDate(p.created_at)}</td>

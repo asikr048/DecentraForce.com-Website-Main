@@ -1721,6 +1721,25 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
 <!-- SECTION ORDER CONTROL -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // Referral link click tracking
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var ref = params.get('ref') || params.get('referral');
+    if (ref) {
+      var cleanRef = ref.trim().toUpperCase();
+      localStorage.setItem('df_referral_code', cleanRef);
+      var sKey = 'df_ref_ping_' + cleanRef + '_home';
+      if (!sessionStorage.getItem(sKey)) {
+        sessionStorage.setItem(sKey, '1');
+        fetch('/api/_public/referral-click', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: cleanRef, course_id: null })
+        }).catch(function() {});
+      }
+    }
+  } catch(e) {}
+
   var DEFAULT_ORDER = ['courses','free-courses','testimonials-section','mentors-section'];
   try {
     var stored = localStorage.getItem('homepageSectionOrder');

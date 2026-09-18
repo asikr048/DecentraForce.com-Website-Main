@@ -170,6 +170,83 @@ async function adminCoupons(req, res) {
   return res.status(405).json({ error: 'Method not allowed' });
 }
 
+// ── PUBLIC: POST /api/_public/referral-click ───────────────────────────────────
+async function trackReferralClick(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+  const { code, course_id } = req.body || {};
+  if (!code) return res.status(400).json({ success: false, error: 'Referral code required' });
+
+  const cleanCode = String(code).toUpperCase().trim();
+  try {
+    const r = await query(
+      `UPDATE referrals
+       SET visits = COALESCE(visits, 0) + 1
+       WHERE UPPER(code) = $1
+       RETURNING id, name, code, visits, purchases`,
+      [cleanCode]
+    );
+
+    if (!r.rows.length) {
+      return res.status(404).json({ success: false, error: 'Referral code not found' });
+    }
+
+    return res.status(200).json({ success: true, referral: r.rows[0] });
+  } catch (err) {
+    console.error('trackReferralClick error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+// ── ADMIN: GET/POST/DELETE /api/admin/referrals ───────────────────────────────
+async function adminReferrals(req, res) {
+  const admin = await requireStaff(req, res); if (!admin) return;
+
+  if (req.method === 'GET') {
+    const r = await query(`
+      SELECT r.*, co.title AS course_title
+      FROM referrals r
+      LEFT JOIN courses co ON r.course_id = co.id
+      ORDER BY r.created_at DESC
+    `);
+    return res.status(200).json({ success: true, referrals: r.rows });
+  }
+
+  if (req.method === 'POST') {
+    const { name, course_id, custom_code } = req.body || {};
+    if (!name || !name.trim()) return res.status(400).json({ success: false, error: 'Name is required' });
+
+    let code = (custom_code || '').toUpperCase().trim().replace(/[^A-Z0-9_-]/g, '');
+    if (!code) {
+      // Auto-generate a clean unique code based on name + random digits
+      const base = name.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) || 'REF';
+      code = `${base}${Math.floor(100 + Math.random() * 900)}`;
+    }
+
+    const existing = await query('SELECT id FROM referrals WHERE UPPER(code) = $1', [code]);
+    if (existing.rows.length) {
+      return res.status(400).json({ success: false, error: `Referral code "${code}" already exists. Please choose a different custom code.` });
+    }
+
+    const targetCourseId = course_id && course_id !== 'all' ? parseInt(course_id) : null;
+    const r = await query(
+      `INSERT INTO referrals (name, code, course_id, visits, purchases, created_at)
+       VALUES ($1, $2, $3, 0, 0, NOW()) RETURNING *`,
+      [name.trim(), code, targetCourseId]
+    );
+
+    return res.status(201).json({ success: true, referral: r.rows[0] });
+  }
+
+  if (req.method === 'DELETE') {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ success: false, error: 'ID required' });
+    await query('DELETE FROM referrals WHERE id=$1', [id]);
+    return res.status(200).json({ success: true, message: 'Referral link deleted' });
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
+}
+
 // ── PUBLIC: POST /api/purchases ─────────────────────────────────────
 async function createPurchase(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
@@ -185,7 +262,7 @@ async function createPurchase(req, res) {
   if (!userResult.rows.length) return res.status(401).json({ success: false, error: 'Invalid or expired session' });
   
   const user = userResult.rows[0];
-  const { course_id, sender_number, transaction_id, payment_method, coupon_code, coupon_price } = req.body || {};
+  const { course_id, sender_number, transaction_id, payment_method, coupon_code, coupon_price, referral_code } = req.body || {};
   
   if (!course_id) return res.status(400).json({ success: false, error: 'Course ID required' });
   if (!sender_number) return res.status(400).json({ success: false, error: 'Sender number required' });
@@ -209,13 +286,23 @@ async function createPurchase(req, res) {
     return res.status(400).json({ success: false, error: 'You already have a pending purchase for this course. Please wait for approval.' });
   }
 
-  // Insert purchase with pending status, including optional coupon info
+  // Insert purchase with pending status, including optional coupon info and referral code
+  const cleanRef = referral_code ? String(referral_code).toUpperCase().trim() : null;
   const result = await query(
-    `INSERT INTO purchases (user_id, course_id, sender_number, transaction_id, payment_method, status, coupon_code, coupon_price)
-     VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7) RETURNING *`,
+    `INSERT INTO purchases (user_id, course_id, sender_number, transaction_id, payment_method, status, coupon_code, coupon_price, referral_code)
+     VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7, $8) RETURNING *`,
     [user.id, course_id, sender_number, transaction_id, payment_method || 'unknown',
-     coupon_code ? coupon_code.toUpperCase().trim() : null, coupon_price || null]
+     coupon_code ? coupon_code.toUpperCase().trim() : null, coupon_price || null, cleanRef]
   );
+
+  // If referral code used, increment purchases count in referrals table
+  if (cleanRef) {
+    try {
+      await query(`UPDATE referrals SET purchases = COALESCE(purchases, 0) + 1 WHERE UPPER(code) = $1`, [cleanRef]);
+    } catch (e) {
+      console.error('Failed to update referral purchases count:', e);
+    }
+  }
   
   return res.status(201).json({ success: true, purchase: result.rows[0] });
 }
@@ -1581,6 +1668,16 @@ async function runBootMigration() {
     await query(`ALTER TABLE coupons ADD COLUMN IF NOT EXISTS course_id INTEGER`);
     await query(`ALTER TABLE purchases ADD COLUMN IF NOT EXISTS coupon_code VARCHAR(50)`);
     await query(`ALTER TABLE purchases ADD COLUMN IF NOT EXISTS coupon_price NUMERIC(10,2)`);
+    await query(`CREATE TABLE IF NOT EXISTS referrals (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      code VARCHAR(50) UNIQUE NOT NULL,
+      course_id INTEGER,
+      visits INT DEFAULT 0,
+      purchases INT DEFAULT 0,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )`);
+    await query(`ALTER TABLE purchases ADD COLUMN IF NOT EXISTS referral_code VARCHAR(50)`);
 
     // ── Feature additions: categories, progress, certificates, reviews ──────────
     await query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS category VARCHAR(60) DEFAULT 'General'`);
@@ -1862,6 +1959,7 @@ export default async function handler(req, res) {
     if (path.endsWith('/_public/testimonials')  || path.endsWith('/public/testimonials'))  return await publicTestimonials(req, res);
     if (path.endsWith('/_public/reviews')       || path.endsWith('/public/reviews'))       return await publicReviews(req, res);
     if (path.endsWith('/_public/verify-certificate') || path.endsWith('/public/verify-certificate')) return await verifyCertificate(req, res);
+    if (path.endsWith('/_public/referral-click') || path.endsWith('/public/referral-click')) return await trackReferralClick(req, res);
 
     // Learner features (require login)
     if (path.endsWith('/user/progress'))       return await userProgress(req, res);
@@ -1873,6 +1971,7 @@ export default async function handler(req, res) {
     // IMPORTANT: specific routes checked before generic /purchases to avoid endsWith overlap
     if (path.endsWith('/admin/purchases'))     return await adminPurchases(req, res);
     if (path.endsWith('/admin/coupons'))       return await adminCoupons(req, res);
+    if (path.endsWith('/admin/referrals'))     return await adminReferrals(req, res);
     if (path.endsWith('/user/purchases'))      return await userPurchases(req, res);
     if (path.endsWith('/purchases'))           return await createPurchase(req, res);
 
