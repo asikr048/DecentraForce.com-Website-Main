@@ -656,6 +656,18 @@
                   <input type="text" id="referralCode" placeholder="e.g., SHAKIB (leave blank to auto-generate)" class="admin-input" maxlength="20" style="text-transform:uppercase;">
                   <p class="text-[11px] text-[#3d5070] mt-1">Leave empty to auto-generate a unique tag</p>
                 </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-bold text-[#6a80a0] mb-1.5 uppercase tracking-wider">Discount % (Optional)</label>
+                    <input type="number" id="referralDiscount" placeholder="e.g., 20" min="1" max="100" class="admin-input">
+                    <p class="text-[11px] text-[#3d5070] mt-1">% off course price</p>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-[#6a80a0] mb-1.5 uppercase tracking-wider">New Price ৳ (Optional)</label>
+                    <input type="number" id="referralNewPrice" placeholder="e.g., 999" min="0" class="admin-input">
+                    <p class="text-[11px] text-[#3d5070] mt-1">Fixed price for buyer</p>
+                  </div>
+                </div>
                 <button onclick="createReferralLink()" class="btn-primary w-full py-3 rounded-lg text-sm font-bold flex items-center justify-center gap-2">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                   Generate Referral Link
@@ -664,10 +676,11 @@
                 <div class="p-3 bg-[#050a18] rounded-lg border border-[rgba(0,229,255,0.08)] text-xs text-[#5a7095] space-y-1">
                   <div class="font-bold text-accent text-[11px] flex items-center gap-1">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    How tracking works:
+                    How tracking & discounts work:
                   </div>
                   <p>1. When visitors click the link, a <b>visit</b> is recorded.</p>
-                  <p>2. If they purchase, the referral code attaches to the order and records a <b>purchase</b>.</p>
+                  <p>2. If a discount is set, the course price is <b>automatically discounted</b> for them.</p>
+                  <p>3. When they purchase, the referral code and discounted price attach to the order.</p>
                 </div>
               </div>
             </div>
@@ -713,6 +726,7 @@
                   <thead><tr>
                     <th>Promoter / Tag</th>
                     <th>Target Course</th>
+                    <th>Discount</th>
                     <th>Referral URL</th>
                     <th class="text-center">Visits</th>
                     <th class="text-center">Purchases</th>
@@ -720,7 +734,7 @@
                     <th>Action</th>
                   </tr></thead>
                   <tbody id="referralsListBody">
-                    <tr><td colspan="7" class="text-center py-10 text-[#3d5070] text-sm">Loading referral links...</td></tr>
+                    <tr><td colspan="8" class="text-center py-10 text-[#3d5070] text-sm">Loading referral links...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -2356,24 +2370,36 @@ async function createReferralLink() {
   const nameEl = document.getElementById('referralName');
   const courseEl = document.getElementById('referralCourse');
   const codeEl = document.getElementById('referralCode');
+  const discEl = document.getElementById('referralDiscount');
+  const priceEl = document.getElementById('referralNewPrice');
 
   const name = nameEl ? nameEl.value.trim() : '';
   const course_id = courseEl ? courseEl.value : 'all';
   const custom_code = codeEl ? codeEl.value.trim() : '';
+  const discount_percent = discEl ? discEl.value.trim() : '';
+  const new_price = priceEl ? priceEl.value.trim() : '';
 
   if (!name) return showToast('Promoter / Campaign name required', 'error');
+  if (discount_percent && (isNaN(parseInt(discount_percent)) || parseInt(discount_percent) < 1 || parseInt(discount_percent) > 100)) {
+    return showToast('Discount must be 1–100%', 'error');
+  }
+  if (new_price && (isNaN(parseFloat(new_price)) || parseFloat(new_price) < 0)) {
+    return showToast('New price cannot be negative', 'error');
+  }
 
   try {
     const res = await fetch('/api/admin/referrals', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, course_id, custom_code })
+      body: JSON.stringify({ name, course_id, custom_code, discount_percent, new_price })
     });
     const data = await res.json();
     if (data.success) {
       if (nameEl) nameEl.value = '';
       if (codeEl) codeEl.value = '';
+      if (discEl) discEl.value = '';
+      if (priceEl) priceEl.value = '';
       showToast(`Referral link for "${name}" created! 🔗`, 'success');
       renderReferralsList();
     } else {
@@ -2387,13 +2413,13 @@ async function createReferralLink() {
 async function renderReferralsList() {
   const tbody = document.getElementById('referralsListBody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-[#3d5070] text-sm">Loading referral links...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-[#3d5070] text-sm">Loading referral links...</td></tr>';
 
   try {
     const res = await fetch('/api/admin/referrals', { credentials: 'include' });
     const data = await res.json();
     if (!data.success) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-accent3 text-sm">Failed to load referral links.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-accent3 text-sm">Failed to load referral links.</td></tr>';
       return;
     }
 
@@ -2422,7 +2448,7 @@ async function renderReferralsList() {
     if (convEl) convEl.textContent = avgConv;
 
     if (!refs.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-12 text-[#3d5070] text-sm">No referral links created yet. Use the form on the left to generate one.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-12 text-[#3d5070] text-sm">No referral links created yet. Use the form on the left to generate one.</td></tr>';
       return;
     }
 
@@ -2435,6 +2461,12 @@ async function renderReferralsList() {
         ? `<span class="badge badge-blue truncate max-w-[170px] inline-block align-middle" title="${esc(x.course_title || 'Course #' + x.course_id)}">${esc(plainTitle(x.course_title || 'Course #' + x.course_id))}</span>`
         : `<span class="badge badge-gray">All Courses</span>`;
 
+      const discountBadge = x.discount_percent
+        ? `<span class="badge badge-green font-mono font-bold">${x.discount_percent}% OFF</span>`
+        : (x.new_price !== null && x.new_price !== undefined
+          ? `<span class="badge badge-blue font-mono font-bold">&#2547;${x.new_price}</span>`
+          : `<span class="text-xs text-[#3d5070]">&#8212;</span>`);
+
       return `
         <tr>
           <td>
@@ -2446,6 +2478,9 @@ async function renderReferralsList() {
           <td>
             ${courseBadge}
             <div class="text-[11px] text-[#4a6080] mt-0.5">${fmtDate(x.created_at)}</div>
+          </td>
+          <td>
+            ${discountBadge}
           </td>
           <td>
             <div class="flex items-center gap-1.5 max-w-[260px]">
@@ -2471,7 +2506,7 @@ async function renderReferralsList() {
       `;
     }).join('');
   } catch {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-accent3 text-sm">Network error loading referrals.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-accent3 text-sm">Network error loading referrals.</td></tr>';
   }
 }
 

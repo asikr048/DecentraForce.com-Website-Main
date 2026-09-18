@@ -1335,23 +1335,42 @@
   document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const courseId = urlParams.get('id');
-    const refCode = urlParams.get('ref') || urlParams.get('referral');
+    let activeReferral = null;
+    const refCode = urlParams.get('ref') || urlParams.get('referral') || localStorage.getItem('df_referral_code');
 
-    // Track referral visit
+    // Track referral visit & load referral discount data
     if (refCode) {
       const cleanRef = refCode.trim().toUpperCase();
       try {
         localStorage.setItem('df_referral_code', cleanRef);
         const sessionKey = 'df_ref_ping_' + cleanRef + '_' + (courseId || 'general');
-        if (!sessionStorage.getItem(sessionKey)) {
+        const alreadyPinged = !!sessionStorage.getItem(sessionKey);
+        if (!alreadyPinged) {
           sessionStorage.setItem(sessionKey, '1');
-          fetch('/api/_public/referral-click', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code: cleanRef, course_id: courseId ? parseInt(courseId) : null })
-          }).catch(() => {});
         }
-      } catch(e) {}
+
+        const refRes = await fetch('/api/_public/referral-click', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: cleanRef,
+            course_id: courseId ? parseInt(courseId) : null,
+            check_only: alreadyPinged
+          })
+        });
+        const refData = await refRes.json();
+        if (refData && refData.success && refData.referral) {
+          activeReferral = refData.referral;
+          try {
+            localStorage.setItem('df_referral_data', JSON.stringify(refData.referral));
+          } catch(e) {}
+        }
+      } catch(e) {
+        try {
+          const cached = localStorage.getItem('df_referral_data');
+          if (cached) activeReferral = JSON.parse(cached);
+        } catch(err) {}
+      }
     }
 
     if (!courseId) {
@@ -1507,6 +1526,29 @@
       let priceVal = discountPrice > 0 ? discountPrice : regularPrice;
       const basePrice = priceVal; // store original for coupon display
       let appliedCouponCode = null;
+      let isReferralDiscountApplied = false;
+
+      // Check if active referral gives a discount for this course
+      const refAppliesToCourse = activeReferral && (!activeReferral.course_id || parseInt(activeReferral.course_id) === parseInt(activeCourse.id));
+      let referralDiscountNote = '';
+
+      if (refAppliesToCourse) {
+        let refPrice = null;
+        if (activeReferral.new_price !== null && activeReferral.new_price !== undefined) {
+          refPrice = parseFloat(activeReferral.new_price);
+        } else if (activeReferral.discount_percent) {
+          refPrice = Math.round(basePrice * (1 - activeReferral.discount_percent / 100));
+        }
+
+        if (refPrice !== null && !isNaN(refPrice) && refPrice < priceVal) {
+          priceVal = refPrice;
+          isReferralDiscountApplied = true;
+          const discText = activeReferral.discount_percent
+            ? `${activeReferral.discount_percent}% OFF`
+            : `৳${refPrice}`;
+          referralDiscountNote = `🎁 Referral Discount (${activeReferral.name || activeReferral.code}): ${discText}`;
+        }
+      }
 
       function renderPriceHTML(current, orig, customSavings) {
         if (current === 0) {
@@ -1523,7 +1565,8 @@
           }
           const saved = orig - current;
           noteHTML = `<div class="price-savings-note">⚡ Save ৳${saved} &bull; Instant Access</div>`;
-        } else if (customSavings) {
+        }
+        if (customSavings) {
           noteHTML = `<div class="price-savings-note">${customSavings}</div>`;
         }
         return `
@@ -1535,7 +1578,8 @@
         `;
       }
       
-      const priceHTML = renderPriceHTML(priceVal, (discountPrice > 0 && regularPrice > discountPrice) ? regularPrice : 0);
+      const origRef = (regularPrice > priceVal) ? regularPrice : (basePrice > priceVal ? basePrice : 0);
+      const priceHTML = renderPriceHTML(priceVal, origRef, referralDiscountNote);
       const cardPriceEl = document.getElementById('cardPrice');
       if (cardPriceEl) {
         // Replace innerHTML of cardPriceContainer if exists, or cardPrice
@@ -1601,6 +1645,7 @@
           }
           priceVal = newPrice;
           appliedCouponCode = code;
+          isReferralDiscountApplied = false;
 
           // Update price displays with coupon savings
           const origRef = basePrice > newPrice ? basePrice : ((discountPrice > 0 && regularPrice > discountPrice) ? regularPrice : 0);
@@ -1936,7 +1981,7 @@
             transaction_id: transactionId,
             payment_method: paymentMethod,
             coupon_code: appliedCouponCode || undefined,
-            coupon_price: appliedCouponCode ? priceVal : undefined,
+            coupon_price: (appliedCouponCode || isReferralDiscountApplied) ? priceVal : undefined,
             referral_code: localStorage.getItem('df_referral_code') || undefined
           })
         })

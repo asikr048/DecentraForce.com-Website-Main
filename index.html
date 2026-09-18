@@ -1729,14 +1729,19 @@ document.addEventListener('DOMContentLoaded', function() {
       var cleanRef = ref.trim().toUpperCase();
       localStorage.setItem('df_referral_code', cleanRef);
       var sKey = 'df_ref_ping_' + cleanRef + '_home';
-      if (!sessionStorage.getItem(sKey)) {
+      var alreadyPinged = !!sessionStorage.getItem(sKey);
+      if (!alreadyPinged) {
         sessionStorage.setItem(sKey, '1');
-        fetch('/api/_public/referral-click', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: cleanRef, course_id: null })
-        }).catch(function() {});
       }
+      fetch('/api/_public/referral-click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: cleanRef, course_id: null, check_only: alreadyPinged })
+      }).then(function(res) { return res.json(); }).then(function(data) {
+        if (data && data.success && data.referral) {
+          try { localStorage.setItem('df_referral_data', JSON.stringify(data.referral)); } catch(e) {}
+        }
+      }).catch(function() {});
     }
   } catch(e) {}
 

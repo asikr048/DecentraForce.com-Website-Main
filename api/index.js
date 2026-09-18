@@ -173,18 +173,27 @@ async function adminCoupons(req, res) {
 // ── PUBLIC: POST /api/_public/referral-click ───────────────────────────────────
 async function trackReferralClick(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
-  const { code, course_id } = req.body || {};
+  const { code, course_id, check_only } = req.body || {};
   if (!code) return res.status(400).json({ success: false, error: 'Referral code required' });
 
   const cleanCode = String(code).toUpperCase().trim();
   try {
-    const r = await query(
-      `UPDATE referrals
-       SET visits = COALESCE(visits, 0) + 1
-       WHERE UPPER(code) = $1
-       RETURNING id, name, code, visits, purchases`,
-      [cleanCode]
-    );
+    let r;
+    if (check_only) {
+      r = await query(
+        `SELECT id, name, code, course_id, discount_percent, new_price, visits, purchases
+         FROM referrals WHERE UPPER(code) = $1`,
+        [cleanCode]
+      );
+    } else {
+      r = await query(
+        `UPDATE referrals
+         SET visits = COALESCE(visits, 0) + 1
+         WHERE UPPER(code) = $1
+         RETURNING id, name, code, course_id, discount_percent, new_price, visits, purchases`,
+        [cleanCode]
+      );
+    }
 
     if (!r.rows.length) {
       return res.status(404).json({ success: false, error: 'Referral code not found' });
@@ -212,7 +221,7 @@ async function adminReferrals(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { name, course_id, custom_code } = req.body || {};
+    const { name, course_id, custom_code, discount_percent, new_price } = req.body || {};
     if (!name || !name.trim()) return res.status(400).json({ success: false, error: 'Name is required' });
 
     let code = (custom_code || '').toUpperCase().trim().replace(/[^A-Z0-9_-]/g, '');
@@ -227,11 +236,23 @@ async function adminReferrals(req, res) {
       return res.status(400).json({ success: false, error: `Referral code "${code}" already exists. Please choose a different custom code.` });
     }
 
+    const discPct = (discount_percent !== undefined && discount_percent !== null && discount_percent !== '')
+      ? parseInt(discount_percent) : null;
+    const fixedPrice = (new_price !== undefined && new_price !== null && new_price !== '')
+      ? parseFloat(new_price) : null;
+
+    if (discPct !== null && (isNaN(discPct) || discPct < 1 || discPct > 100)) {
+      return res.status(400).json({ success: false, error: 'Discount must be between 1% and 100%' });
+    }
+    if (fixedPrice !== null && (isNaN(fixedPrice) || fixedPrice < 0)) {
+      return res.status(400).json({ success: false, error: 'New price cannot be negative' });
+    }
+
     const targetCourseId = course_id && course_id !== 'all' ? parseInt(course_id) : null;
     const r = await query(
-      `INSERT INTO referrals (name, code, course_id, visits, purchases, created_at)
-       VALUES ($1, $2, $3, 0, 0, NOW()) RETURNING *`,
-      [name.trim(), code, targetCourseId]
+      `INSERT INTO referrals (name, code, course_id, discount_percent, new_price, visits, purchases, created_at)
+       VALUES ($1, $2, $3, $4, $5, 0, 0, NOW()) RETURNING *`,
+      [name.trim(), code, targetCourseId, discPct, fixedPrice]
     );
 
     return res.status(201).json({ success: true, referral: r.rows[0] });
@@ -1673,11 +1694,15 @@ async function runBootMigration() {
       name VARCHAR(100) NOT NULL,
       code VARCHAR(50) UNIQUE NOT NULL,
       course_id INTEGER,
+      discount_percent INT,
+      new_price NUMERIC(10,2),
       visits INT DEFAULT 0,
       purchases INT DEFAULT 0,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     )`);
     await query(`ALTER TABLE purchases ADD COLUMN IF NOT EXISTS referral_code VARCHAR(50)`);
+    await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS discount_percent INTEGER`);
+    await query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS new_price NUMERIC(10,2)`);
 
     // ── Feature additions: categories, progress, certificates, reviews ──────────
     await query(`ALTER TABLE courses ADD COLUMN IF NOT EXISTS category VARCHAR(60) DEFAULT 'General'`);
