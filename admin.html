@@ -286,7 +286,7 @@
       <p class="nav-group-label mt-4 mb-2">Content</p>
       <button onclick="showTab('feedback',true)" class="tab-btn" data-tab="feedback">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-        Feedback
+        Feedback &amp; Contact
       </button>
       <button onclick="showTab('mentors',true)" class="tab-btn" data-tab="mentors">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -940,11 +940,53 @@
         </div>
       </div>
 
-      <!-- ═══ FEEDBACK ═══ -->
+      <!-- ═══ FEEDBACK & CONTACT ═══ -->
       <div id="tab-feedback" class="hidden">
-        <div class="mb-7">
-          <h1 class="page-title">Feedback</h1>
-          <p class="page-subtitle">Manage testimonials and user feedback</p>
+        <div class="mb-7 flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 class="page-title">Feedback &amp; Contact</h1>
+            <p class="page-subtitle">Manage homepage WhatsApp contact link, student feedback inbox, and testimonials</p>
+          </div>
+        </div>
+
+        <!-- ═══ PERSONAL WHATSAPP CONTACT SETTINGS ═══ -->
+        <div class="card mb-6 border border-[rgba(0,229,153,0.3)] bg-gradient-to-r from-[rgba(0,229,153,0.06)] via-[rgba(5,10,24,0.8)] to-[rgba(0,229,255,0.05)]">
+          <div class="card-header justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+              <div class="card-icon bg-[rgba(0,229,153,0.15)] text-[#00e599]">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.52 3.48A11.93 11.93 0 0012.06 0C5.46 0 .09 5.37.09 11.97c0 2.11.55 4.16 1.6 5.97L0 24l6.23-1.63a11.9 11.9 0 005.83 1.51h.01c6.6 0 11.97-5.37 11.97-11.97 0-3.2-1.25-6.21-3.52-8.43zM12.06 21.87h-.01c-1.8 0-3.57-.48-5.11-1.4l-.37-.22-3.8 1 1.01-3.7-.24-.38a9.92 9.92 0 01-1.52-5.2c0-5.5 4.47-9.97 9.98-9.97 2.66 0 5.17 1.04 7.05 2.92a9.92 9.92 0 012.92 7.05c0 5.5-4.48 9.97-9.97 9.97zm5.47-7.48c-.3-.15-1.78-.88-2.06-.98-.28-.1-.48-.15-.68.15-.2.3-.78.98-.95 1.18-.18.2-.35.23-.65.08-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.18-.3-.02-.46.13-.61.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.52-.08-.15-.68-1.63-.93-2.24-.24-.59-.49-.51-.68-.52h-.58c-.2 0-.52.08-.8.38-.27.3-1.05 1.02-1.05 2.5 0 1.47 1.07 2.9 1.22 3.1.15.2 2.11 3.22 5.11 4.52.71.31 1.27.5 1.7.64.72.23 1.37.2 1.88.12.58-.09 1.78-.73 2.03-1.43.25-.7.25-1.3.18-1.43-.08-.13-.28-.2-.58-.35z"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-white">Homepage Personal WhatsApp Contact Link</h2>
+                <p class="text-xs text-[#6a80a0]">When students click "Contact" on the homepage floating bar or modal, this personal WhatsApp chat opens directly.</p>
+              </div>
+            </div>
+            <div id="contactWhatsappStatusBadge">
+              <span class="badge badge-gray">Loading...</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+              <div class="flex-1">
+                <input type="text" id="adminContactWhatsapp" placeholder="e.g. https://wa.me/88017XXXXXXXX or +88017XXXXXXXX" class="admin-input font-mono text-sm">
+              </div>
+              <div class="flex gap-2">
+                <button onclick="saveAdminContactWhatsapp()" class="btn-primary py-2 px-5 rounded-lg text-sm font-bold flex items-center gap-2 whitespace-nowrap" style="background: linear-gradient(135deg, #00cc88, #00e599); color: #050a18;">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  Save Contact Link
+                </button>
+                <button onclick="testAdminContactWhatsapp()" class="px-4 py-2 bg-surface2 border border-[rgba(0,229,255,0.15)] text-[#e8eeff] hover:text-white rounded-lg text-sm font-semibold flex items-center gap-2 hover:border-[#00e5ff] transition-all whitespace-nowrap">
+                  <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                  Test Link
+                </button>
+              </div>
+            </div>
+            <p class="text-xs text-[#4a6080] mt-2">
+              💡 Supports direct links like <code class="text-[#00e5ff]">https://wa.me/8801700000000</code>, group links like <code class="text-[#00e5ff]">https://chat.whatsapp.com/...</code>, or phone numbers with country code (e.g. <code class="text-[#00e5ff]">+8801700000000</code>).
+            </p>
+          </div>
         </div>
         <div class="grid grid-cols-3 gap-6">
           <!-- Form -->
@@ -1517,6 +1559,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (typeof initDefaultFeedbacks === 'function') initDefaultFeedbacks();
   if (typeof initDefaultMentors === 'function') initDefaultMentors();
   if (typeof initDefaultCourses === 'function') initDefaultCourses();
+  if (typeof loadAdminContactWhatsapp === 'function') loadAdminContactWhatsapp();
 
   // Restore last active tab after refresh (supports hash like #courses or sessionStorage)
   try {
@@ -1582,7 +1625,7 @@ const ALL_TABS = ['overview','users','courses','add-course','coupons','purchases
 const BREADCRUMBS = {
   'overview': 'Dashboard', 'users': 'Users', 'courses': 'Courses',
   'add-course': 'Courses → Add Course', 'coupons': 'Refer & Coupons', 'purchases': 'Purchases',
-  'feedback': 'Feedback', 'mentors': 'Mentors', 'footer': 'Footer',
+  'feedback': 'Feedback & Contact', 'mentors': 'Mentors', 'footer': 'Footer',
   'section-order': 'Section Order', 'profile': 'Settings', 'assignments': 'Assignments', 'roles': 'Role Management'
 };
 
@@ -1600,7 +1643,12 @@ function showTab(name, persist) {
     try { sessionStorage.setItem('adminActiveTab', name); } catch(e) {}
   }
 
-  if (name === 'feedback') { if (typeof initDefaultFeedbacks==='function') initDefaultFeedbacks(); renderFeedbacksList(); refreshUserFeedbacks(); }
+  if (name === 'feedback') { 
+    if (typeof initDefaultFeedbacks==='function') initDefaultFeedbacks(); 
+    renderFeedbacksList(); 
+    refreshUserFeedbacks(); 
+    loadAdminContactWhatsapp();
+  }
   if (name === 'mentors') renderMentorsList();
   if (name === 'section-order') { renderSectionOrderList(); renderCourseOrderList(); renderMentorOrderList(); renderFeedbackOrderList(); }
   if (name === 'purchases') loadPurchases();
@@ -2703,6 +2751,62 @@ function markUserFeedbackAsRead(id) {
 function deleteUserFeedbackUI(id) {
   if(!confirm('Delete user feedback?')) return;
   if(window.FloatingFeedback?.deleteUserFeedback) { const ok=window.FloatingFeedback.deleteUserFeedback(id); if(ok){showToast('Deleted','success');renderUserFeedbacksList();}else showToast('Failed','error'); }
+}
+
+/* ─── WHATSAPP CONTACT SETTINGS ─── */
+function loadAdminContactWhatsapp() {
+  const input = document.getElementById('adminContactWhatsapp');
+  const badge = document.getElementById('contactWhatsappStatusBadge');
+  if (!input) return;
+  const link = (typeof getContactWhatsappLink === 'function')
+    ? getContactWhatsappLink()
+    : (localStorage.getItem('contactWhatsappLink') || '');
+  input.value = link;
+  if (badge) {
+    if (link && link !== '#') {
+      badge.innerHTML = '<span class="badge badge-green flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#00e599] animate-pulse"></span> Active Link</span>';
+    } else {
+      badge.innerHTML = '<span class="badge badge-yellow">Not Configured</span>';
+    }
+  }
+}
+
+function saveAdminContactWhatsapp() {
+  const input = document.getElementById('adminContactWhatsapp');
+  if (!input) return;
+  let val = input.value.trim();
+  if (!val) {
+    if (typeof saveContactWhatsappLink === 'function') saveContactWhatsappLink('');
+    else localStorage.setItem('contactWhatsappLink', '');
+    loadAdminContactWhatsapp();
+    showToast('Contact WhatsApp link cleared', 'info');
+    return;
+  }
+  let formatted = (typeof formatWhatsAppLink === 'function') ? formatWhatsAppLink(val) : val;
+  if (typeof saveContactWhatsappLink === 'function') {
+    saveContactWhatsappLink(formatted);
+  } else {
+    localStorage.setItem('contactWhatsappLink', formatted);
+  }
+  input.value = formatted;
+  loadAdminContactWhatsapp();
+  showToast('WhatsApp contact link saved successfully!', 'success');
+}
+
+function testAdminContactWhatsapp() {
+  const input = document.getElementById('adminContactWhatsapp');
+  let val = input ? input.value.trim() : '';
+  if (!val) {
+    val = (typeof getContactWhatsappLink === 'function')
+      ? getContactWhatsappLink()
+      : (localStorage.getItem('contactWhatsappLink') || '');
+  }
+  if (!val || val === '#' || val === 'https://wa.me/' || val === 'https://wa.me') {
+    showToast('Please enter a WhatsApp phone number or link first', 'error');
+    return;
+  }
+  let formatted = (typeof formatWhatsAppLink === 'function') ? formatWhatsAppLink(val) : val;
+  window.open(formatted, '_blank', 'noopener,noreferrer');
 }
 
 /* ─── MENTORS ─── */

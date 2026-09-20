@@ -4,6 +4,69 @@
  */
 
 const USER_FEEDBACKS_KEY = 'userFeedbacks';
+const CONTACT_WHATSAPP_KEY = 'contactWhatsappLink';
+
+/**
+ * Get personal WhatsApp contact link from localStorage
+ * @returns {string} WhatsApp link or empty string
+ */
+function getContactWhatsappLink() {
+    try {
+        const link = localStorage.getItem(CONTACT_WHATSAPP_KEY);
+        return link ? link.trim() : '';
+    } catch (error) {
+        console.error('Error reading contactWhatsappLink from localStorage:', error);
+        return '';
+    }
+}
+
+/**
+ * Format any WhatsApp link or phone number into a valid wa.me URL
+ * @param {string} input - URL or raw phone number
+ * @returns {string} Formatted WhatsApp URL
+ */
+function formatWhatsAppLink(input) {
+    if (!input) return '';
+    const trimmed = input.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        return trimmed;
+    }
+    // Remove all non-digits except a leading plus if present
+    const digits = trimmed.replace(/[^\d]/g, '');
+    if (digits) {
+        return `https://wa.me/${digits}`;
+    }
+    return trimmed;
+}
+
+/**
+ * Save personal WhatsApp contact link to localStorage
+ * @param {string} link - Link or phone number
+ * @returns {boolean} Success status
+ */
+function saveContactWhatsappLink(link) {
+    try {
+        const formatted = formatWhatsAppLink(link);
+        localStorage.setItem(CONTACT_WHATSAPP_KEY, formatted);
+        return true;
+    } catch (error) {
+        console.error('Error saving contactWhatsappLink to localStorage:', error);
+        return false;
+    }
+}
+
+/**
+ * Open the configured personal WhatsApp link in a new tab
+ */
+function openPersonalWhatsApp() {
+    const raw = getContactWhatsappLink();
+    const url = formatWhatsAppLink(raw);
+    if (!url || url === '#' || url === 'https://wa.me/' || url === 'https://wa.me') {
+        showToast('WhatsApp contact link is not configured yet. Please set it in Admin Panel -> Feedback & Contact.', 'error');
+        return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+}
 
 /**
  * Get all user feedbacks from localStorage
@@ -89,8 +152,8 @@ function getUnreadFeedbackCount() {
     return feedbacks.filter(f => !f.read).length;
 }
 
-// DOM Elements
 let feedbackButton, feedbackModal, feedbackForm, feedbackModalClose, feedbackCancel, feedbackToast;
+let contactWhatsAppBtn, feedbackModalOpenBtn, modalWhatsAppDirectBtn;
 
 /**
  * Initialize the floating feedback system
@@ -104,17 +167,48 @@ function initFloatingFeedback() {
     feedbackCancel = document.getElementById('feedbackCancel');
     feedbackToast = document.getElementById('feedbackToast');
     
+    contactWhatsAppBtn = document.getElementById('contactWhatsAppBtn');
+    feedbackModalOpenBtn = document.getElementById('feedbackModalOpenBtn');
+    modalWhatsAppDirectBtn = document.getElementById('modalWhatsAppDirectBtn');
+
     if (!feedbackButton || !feedbackModal) {
         console.warn('Floating feedback elements not found');
         return;
     }
-    
-    // Open modal when button is clicked
-    feedbackButton.addEventListener('click', openFeedbackModal);
+
+    // Direct WhatsApp contact click from floating widget
+    if (contactWhatsAppBtn) {
+        contactWhatsAppBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openPersonalWhatsApp();
+        });
+    }
+
+    // Direct Feedback modal open from floating widget
+    if (feedbackModalOpenBtn) {
+        feedbackModalOpenBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openFeedbackModal();
+        });
+    }
+
+    // Direct WhatsApp contact click inside the modal
+    if (modalWhatsAppDirectBtn) {
+        modalWhatsAppDirectBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openPersonalWhatsApp();
+        });
+    }
+
+    // Fallback: If clicking container outside sub-buttons
+    feedbackButton.addEventListener('click', (e) => {
+        if (e.target.closest('#contactWhatsAppBtn')) return;
+        openFeedbackModal();
+    });
     
     // Close modal when close button is clicked
-    feedbackModalClose.addEventListener('click', closeFeedbackModal);
-    feedbackCancel.addEventListener('click', closeFeedbackModal);
+    if (feedbackModalClose) feedbackModalClose.addEventListener('click', closeFeedbackModal);
+    if (feedbackCancel) feedbackCancel.addEventListener('click', closeFeedbackModal);
     
     // Close modal when clicking outside
     feedbackModal.addEventListener('click', (e) => {
@@ -124,7 +218,7 @@ function initFloatingFeedback() {
     });
     
     // Handle form submission
-    feedbackForm.addEventListener('submit', handleFeedbackSubmit);
+    if (feedbackForm) feedbackForm.addEventListener('submit', handleFeedbackSubmit);
     
     // Close modal with Escape key
     document.addEventListener('keydown', (e) => {
@@ -133,7 +227,7 @@ function initFloatingFeedback() {
         }
     });
     
-    console.log('Floating feedback system initialized');
+    console.log('Floating Contact & Feedback system initialized');
 }
 
 /**
@@ -265,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Export functions for use in admin panel
+// Export functions for use across pages and admin panel
 if (typeof window !== 'undefined') {
     window.FloatingFeedback = {
         getAllUserFeedbacks,
@@ -273,6 +367,19 @@ if (typeof window !== 'undefined') {
         markFeedbackAsRead,
         deleteUserFeedback,
         getUnreadFeedbackCount,
+        getContactWhatsappLink,
+        saveContactWhatsappLink,
+        formatWhatsAppLink,
+        openPersonalWhatsApp,
+        openFeedbackModal,
+        closeFeedbackModal,
         initFloatingFeedback
     };
+
+    window.getContactWhatsappLink = getContactWhatsappLink;
+    window.saveContactWhatsappLink = saveContactWhatsappLink;
+    window.formatWhatsAppLink = formatWhatsAppLink;
+    window.openPersonalWhatsApp = openPersonalWhatsApp;
+    window.openFeedbackModal = openFeedbackModal;
+    window.closeFeedbackModal = closeFeedbackModal;
 }
