@@ -1253,32 +1253,80 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
     background: rgba(0,229,255,.08); color: var(--accent); border: 1px solid rgba(0,229,255,.2); margin-bottom: 10px;
   }
 
-  /* ══════════ FLOATING CONTACT & FEEDBACK SYSTEM ══════════ */
+  /* ══════════ FLOATING CONTACT & FEEDBACK AUTO-EXPAND SYSTEM ══════════ */
   .feedback-button {
     position: fixed;
     bottom: 30px;
     left: 30px;
     z-index: 1000;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 2px;
-    padding: 6px 8px;
-    background: rgba(10, 18, 40, 0.9);
-    backdrop-filter: blur(14px);
-    border: 1px solid rgba(0, 229, 255, 0.25);
     border-radius: 50px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 229, 255, 0.12);
     font-family: 'Syne', sans-serif;
     font-weight: 700;
-    cursor: default;
-    transition: all 0.25s ease;
     user-select: none;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-  .feedback-button:hover {
-    border-color: rgba(0, 229, 255, 0.5);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 229, 255, 0.22);
+
+  /* Collapsed Trigger State (Original 3D Button Feel) */
+  .feedback-button.collapsed {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 0 #008eb3, 0 15px 25px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    padding: 12px 20px;
+    gap: 10px;
+  }
+  .feedback-button.collapsed:hover {
     transform: translateY(-2px);
+    box-shadow: 0 8px 0 #008eb3, 0 20px 30px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(135deg, #8a6fff, #00f0ff);
   }
+  .feedback-button.collapsed:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #008eb3, 0 8px 15px rgba(0, 0, 0, 0.4);
+  }
+  .feedback-button.collapsed .cf-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .feedback-button.collapsed .cf-expanded-content {
+    display: none !important;
+  }
+
+  /* Auto-Expanded State (The capsule from user screenshot with smooth pop) */
+  .feedback-button.expanded {
+    background: rgba(10, 18, 40, 0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 229, 255, 0.35);
+    border-radius: 50px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 229, 255, 0.2);
+    padding: 6px 10px;
+    gap: 2px;
+    transform: translateY(-2px);
+    animation: cfExpandPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes cfExpandPop {
+    0% {
+      opacity: 0.6;
+      transform: scale(0.88) translateY(6px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(-2px);
+    }
+  }
+  .feedback-button.expanded .cf-trigger {
+    display: none !important;
+  }
+  .feedback-button.expanded .cf-expanded-content {
+    display: flex !important;
+    align-items: center;
+    gap: 2px;
+  }
+
   .cf-btn {
     display: inline-flex;
     align-items: center;
@@ -1318,6 +1366,27 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
     background: rgba(255, 255, 255, 0.15);
     margin: 0 2px;
   }
+  .cf-close-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    color: #8a9bb8;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 6px;
+    transition: all 0.2s ease;
+    padding: 0;
+  }
+  .cf-close-btn:hover {
+    background: rgba(255, 77, 141, 0.25);
+    color: #ff4d8d;
+    transform: rotate(90deg);
+  }
+
   .feedback-icon {
     display: flex;
     align-items: center;
@@ -1352,6 +1421,13 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
     .feedback-button {
       bottom: 20px;
       left: 16px;
+    }
+    .feedback-button.collapsed {
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      gap: 8px;
+    }
+    .feedback-button.expanded {
       padding: 5px 6px;
     }
     .cf-btn {
@@ -2829,26 +2905,43 @@ window.addEventListener('storage', (e) => {
   </div>
 </div>
 
-<div id="feedbackButton" class="feedback-button contact-feedback-container" aria-label="Contact and Feedback">
-  <button type="button" id="contactWhatsAppBtn" class="cf-btn cf-contact" title="Chat on Personal WhatsApp" onclick="event.stopPropagation();if(typeof openPersonalWhatsApp==='function'){openPersonalWhatsApp();}else{const l=localStorage.getItem('contactWhatsappLink');if(l)window.open(l,'_blank');}">
-    <div class="feedback-icon whatsapp-icon-wrap">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20.52 3.48A11.93 11.93 0 0012.06 0C5.46 0 .09 5.37.09 11.97c0 2.11.55 4.16 1.6 5.97L0 24l6.23-1.63a11.9 11.9 0 005.83 1.51h.01c6.6 0 11.97-5.37 11.97-11.97 0-3.2-1.25-6.21-3.52-8.43zM12.06 21.87h-.01c-1.8 0-3.57-.48-5.11-1.4l-.37-.22-3.8 1 1.01-3.7-.24-.38a9.92 9.92 0 01-1.52-5.2c0-5.5 4.47-9.97 9.98-9.97 2.66 0 5.17 1.04 7.05 2.92a9.92 9.92 0 012.92 7.05c0 5.5-4.48 9.97-9.97 9.97zm5.47-7.48c-.3-.15-1.78-.88-2.06-.98-.28-.1-.48-.15-.68.15-.2.3-.78.98-.95 1.18-.18.2-.35.23-.65.08-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.18-.3-.02-.46.13-.61.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.52-.08-.15-.68-1.63-.93-2.24-.24-.59-.49-.51-.68-.52h-.58c-.2 0-.52.08-.8.38-.27.3-1.05 1.02-1.05 2.5 0 1.47 1.07 2.9 1.22 3.1.15.2 2.11 3.22 5.11 4.52.71.31 1.27.5 1.7.64.72.23 1.37.2 1.88.12.58-.09 1.78-.73 2.03-1.43.25-.7.25-1.3.18-1.43-.08-.13-.28-.2-.58-.35z"/>
+<div id="feedbackButton" class="feedback-button collapsed" aria-label="Contact and Feedback">
+  <!-- Collapsed Trigger: Original 3D look with "Contact & Feedback" -->
+  <div class="cf-trigger" id="cfTrigger" title="Click to open Contact & Feedback options">
+    <div class="feedback-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0034 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.9C9.87812 3.30493 11.1801 2.99656 12.5 3H13C15.0843 3.11499 17.053 3.99477 18.5291 5.47087C20.0052 6.94696 20.885 8.91565 21 11V11.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <span class="feedback-label">Contact</span>
-  </button>
-  
-  <span class="cf-divider"></span>
-  
-  <button type="button" id="feedbackModalOpenBtn" class="cf-btn cf-feedback" title="Share Feedback" onclick="event.stopPropagation();if(typeof openFeedbackModal==='function')openFeedbackModal();">
-    <div class="feedback-icon feedback-icon-wrap">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0034 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.9C9.87812 3.30493 11.1801 2.99656 12.5 3H13C15.0843 3.11499 17.053 3.99477 18.5291 5.47087C20.0052 6.94696 20.885 8.91565 21 11V11.5Z"/>
-      </svg>
-    </div>
-    <span class="feedback-label">Feedback</span>
-  </button>
+    <span class="feedback-label">Contact &amp; Feedback</span>
+  </div>
+
+  <!-- Auto-Expanded State: The capsule with WhatsApp Contact, Feedback and Close -->
+  <div class="cf-expanded-content" id="cfExpandedContent">
+    <button type="button" id="contactWhatsAppBtn" class="cf-btn cf-contact" title="Chat on Personal WhatsApp" onclick="event.stopPropagation();if(typeof openPersonalWhatsApp==='function'){openPersonalWhatsApp();}else{const l=localStorage.getItem('contactWhatsappLink');if(l)window.open(l,'_blank');}">
+      <div class="feedback-icon whatsapp-icon-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.52 3.48A11.93 11.93 0 0012.06 0C5.46 0 .09 5.37.09 11.97c0 2.11.55 4.16 1.6 5.97L0 24l6.23-1.63a11.9 11.9 0 005.83 1.51h.01c6.6 0 11.97-5.37 11.97-11.97 0-3.2-1.25-6.21-3.52-8.43zM12.06 21.87h-.01c-1.8 0-3.57-.48-5.11-1.4l-.37-.22-3.8 1 1.01-3.7-.24-.38a9.92 9.92 0 01-1.52-5.2c0-5.5 4.47-9.97 9.98-9.97 2.66 0 5.17 1.04 7.05 2.92a9.92 9.92 0 012.92 7.05c0 5.5-4.48 9.97-9.97 9.97zm5.47-7.48c-.3-.15-1.78-.88-2.06-.98-.28-.1-.48-.15-.68.15-.2.3-.78.98-.95 1.18-.18.2-.35.23-.65.08-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.18-.3-.02-.46.13-.61.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.52-.08-.15-.68-1.63-.93-2.24-.24-.59-.49-.51-.68-.52h-.58c-.2 0-.52.08-.8.38-.27.3-1.05 1.02-1.05 2.5 0 1.47 1.07 2.9 1.22 3.1.15.2 2.11 3.22 5.11 4.52.71.31 1.27.5 1.7.64.72.23 1.37.2 1.88.12.58-.09 1.78-.73 2.03-1.43.25-.7.25-1.3.18-1.43-.08-.13-.28-.2-.58-.35z"/>
+        </svg>
+      </div>
+      <span class="feedback-label">Contact</span>
+    </button>
+    
+    <span class="cf-divider"></span>
+    
+    <button type="button" id="feedbackModalOpenBtn" class="cf-btn cf-feedback" title="Share Feedback" onclick="event.stopPropagation();if(typeof openFeedbackModal==='function')openFeedbackModal();">
+      <div class="feedback-icon feedback-icon-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0034 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.9C9.87812 3.30493 11.1801 2.99656 12.5 3H13C15.0843 3.11499 17.053 3.99477 18.5291 5.47087C20.0052 6.94696 20.885 8.91565 21 11V11.5Z"/>
+        </svg>
+      </div>
+      <span class="feedback-label">Feedback</span>
+    </button>
+
+    <button type="button" id="cfCollapseBtn" class="cf-close-btn" title="Collapse">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
 </div>
 
 <div id="feedbackModal" class="feedback-modal-overlay">

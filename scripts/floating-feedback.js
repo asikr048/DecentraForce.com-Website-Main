@@ -154,6 +154,7 @@ function getUnreadFeedbackCount() {
 
 let feedbackButton, feedbackModal, feedbackForm, feedbackModalClose, feedbackCancel, feedbackToast;
 let contactWhatsAppBtn, feedbackModalOpenBtn, modalWhatsAppDirectBtn;
+let cfTrigger, cfCollapseBtn;
 
 /**
  * Initialize the floating feedback system
@@ -167,6 +168,8 @@ function initFloatingFeedback() {
     feedbackCancel = document.getElementById('feedbackCancel');
     feedbackToast = document.getElementById('feedbackToast');
     
+    cfTrigger = document.getElementById('cfTrigger');
+    cfCollapseBtn = document.getElementById('cfCollapseBtn');
     contactWhatsAppBtn = document.getElementById('contactWhatsAppBtn');
     feedbackModalOpenBtn = document.getElementById('feedbackModalOpenBtn');
     modalWhatsAppDirectBtn = document.getElementById('modalWhatsAppDirectBtn');
@@ -176,11 +179,31 @@ function initFloatingFeedback() {
         return;
     }
 
+    // Auto-Expand: Clicking collapsed trigger expands options
+    if (cfTrigger) {
+        cfTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            feedbackButton.classList.remove('collapsed');
+            feedbackButton.classList.add('expanded');
+        });
+    }
+
+    // Collapse button: Clicking close icon collapses back
+    if (cfCollapseBtn) {
+        cfCollapseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            feedbackButton.classList.remove('expanded');
+            feedbackButton.classList.add('collapsed');
+        });
+    }
+
     // Direct WhatsApp contact click from floating widget
     if (contactWhatsAppBtn) {
         contactWhatsAppBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             openPersonalWhatsApp();
+            feedbackButton.classList.remove('expanded');
+            feedbackButton.classList.add('collapsed');
         });
     }
 
@@ -189,6 +212,8 @@ function initFloatingFeedback() {
         feedbackModalOpenBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             openFeedbackModal();
+            feedbackButton.classList.remove('expanded');
+            feedbackButton.classList.add('collapsed');
         });
     }
 
@@ -200,10 +225,12 @@ function initFloatingFeedback() {
         });
     }
 
-    // Fallback: If clicking container outside sub-buttons
-    feedbackButton.addEventListener('click', (e) => {
-        if (e.target.closest('#contactWhatsAppBtn')) return;
-        openFeedbackModal();
+    // Click outside floating button automatically collapses it
+    document.addEventListener('click', (e) => {
+        if (feedbackButton && !feedbackButton.contains(e.target)) {
+            feedbackButton.classList.remove('expanded');
+            feedbackButton.classList.add('collapsed');
+        }
     });
     
     // Close modal when close button is clicked
