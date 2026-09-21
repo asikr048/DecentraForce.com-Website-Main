@@ -22,12 +22,32 @@
   /></noscript>
   <!-- End Meta Pixel Code -->
   <script src="/scripts/pixel-events.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
   <title>Course Details — DecentraForce</title>
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
+
+  /* Copy chip button */
+  .btn-copy-chip {
+    padding: 5px 12px;
+    background: rgba(0, 229, 255, 0.12);
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    border-radius: 6px;
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .btn-copy-chip:hover {
+    background: rgba(0, 229, 255, 0.25);
+    border-color: var(--accent);
+    color: #fff;
+  }
 
   /* Keyboard focus visibility (a11y) */
   a:focus-visible, button:focus-visible, input:focus-visible,
@@ -1131,7 +1151,29 @@
 
         <!-- RIGHT: Form -->
         <div class="checkout-right">
-          <div class="checkout-section-label">Payment Details</div>
+          <div class="checkout-section-label">Account & Payment</div>
+
+          <!-- Logged in user info pill -->
+          <div id="checkoutAuthBadge" style="display:none;margin-bottom:16px;padding:12px 14px;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.22);border-radius:10px;font-size:0.83rem;">
+            <div style="color:var(--muted);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Purchasing as</div>
+            <div style="font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;">
+              <span style="color:#00e599;">●</span> <span id="checkoutUserBadge"></span>
+            </div>
+          </div>
+
+          <!-- Guest fields (auto account generation) -->
+          <div id="checkoutGuestFields">
+            <div class="checkout-form-field">
+              <label>Your Full Name</label>
+              <input type="text" id="buyerName" class="checkout-input" placeholder="e.g. Asikur Rahman">
+            </div>
+
+            <div class="checkout-form-field">
+              <label>Your Email Address *</label>
+              <input type="email" id="buyerEmail" class="checkout-input" placeholder="e.g. yourname@gmail.com">
+              <span style="font-size:0.73rem;color:var(--muted);margin-top:4px;display:block;">⚡ Your student account ID & password will be created for this email automatically.</span>
+            </div>
+          </div>
 
           <div class="checkout-form-field">
             <label>Payment Method *</label>
@@ -1981,12 +2023,29 @@
       function handlePaymentSubmit(e) {
         e.preventDefault();
         const btn = document.getElementById('modalConfirm');
-        const paymentMethod = document.getElementById('paymentMethod').value;
-        const senderNumber = document.getElementById('senderNumber').value.trim();
-        const transactionId = document.getElementById('transactionId').value.trim();
+        const paymentMethod = document.getElementById('paymentMethod')?.value;
+        const senderNumber = document.getElementById('senderNumber')?.value.trim();
+        const transactionId = document.getElementById('transactionId')?.value.trim();
+
+        const isLoggedIn = !!(window.auth && window.auth.isLoggedIn);
+        const buyerName = document.getElementById('buyerName')?.value.trim() || '';
+        const buyerEmail = document.getElementById('buyerEmail')?.value.trim() || '';
+
+        if (!isLoggedIn) {
+          if (!buyerEmail) {
+            alert('Please enter your email address so your student account and purchase receipt can be created.');
+            document.getElementById('buyerEmail')?.focus();
+            return;
+          }
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
+            alert('Please enter a valid email address.');
+            document.getElementById('buyerEmail')?.focus();
+            return;
+          }
+        }
 
         if (!paymentMethod || !senderNumber || !transactionId) {
-          alert('Please fill in all fields: Payment Method, Sender Number, and Transaction ID.');
+          alert('Please fill in all payment fields: Payment Method, Sender Number, and Transaction ID.');
           return;
         }
 
@@ -2002,6 +2061,8 @@
             sender_number: senderNumber,
             transaction_id: transactionId,
             payment_method: paymentMethod,
+            email: !isLoggedIn ? buyerEmail : undefined,
+            name: !isLoggedIn ? buyerName : undefined,
             coupon_code: appliedCouponCode || undefined,
             coupon_price: (appliedCouponCode || isReferralDiscountApplied) ? priceVal : undefined,
             referral_code: localStorage.getItem('df_referral_code') || undefined
@@ -2010,6 +2071,17 @@
         .then(function(res) { return res.json(); })
         .then(function(data) {
           if (data.success) {
+            // Update auth state in client if account was generated
+            if (data.account && window.auth) {
+              window.auth.currentUser = {
+                id: data.account.id,
+                username: data.account.username,
+                email: data.account.email
+              };
+              window.auth.isLoggedIn = true;
+              if (typeof window.auth.updateUI === 'function') window.auth.updateUI();
+            }
+
             // Meta Pixel: Trigger Purchase Event
             try {
               if (typeof window.fbq === 'function') {
@@ -2027,8 +2099,13 @@
             if (window.DFTracker) {
               window.DFTracker.trackPurchase(activeCourse, priceVal, transactionId);
             }
-            if (activeCourse.whatsapp) window.open(activeCourse.whatsapp, '_blank');
-            showPendingSuccess();
+
+            showPendingSuccess(data.purchase, data.account, activeCourse, {
+              paymentMethod: paymentMethod,
+              senderNumber: senderNumber,
+              transactionId: transactionId,
+              amount: priceVal
+            });
           } else {
             alert('Error: ' + (data.error || 'Payment failed. Try again.'));
             btn.textContent = 'Submit Payment ✓';
@@ -2044,15 +2121,8 @@
       }
       window._handlePaymentSubmit = handlePaymentSubmit;
 
-      // 5. Attach Purchase Action
+      // 5. Attach Purchase Action (Directly opens checkout without login roadblock)
       purchaseBtn.addEventListener('click', () => {
-        // Check if user is logged in
-        if (!window.auth || !window.auth.isLoggedIn) {
-          document.getElementById('loginPromptModal').classList.add('open');
-          document.body.style.overflow = 'hidden';
-          return;
-        }
-        
         if (priceVal === 0) {
            window.location.href = 'my-courses.html?tab=free';
         } else {
@@ -2060,13 +2130,8 @@
         }
       });
 
-      // Mobile purchase button — same logic
+      // Mobile purchase button — same direct flow
       mobilePurchaseBtn.addEventListener('click', () => {
-        if (!window.auth || !window.auth.isLoggedIn) {
-          document.getElementById('loginPromptModal').classList.add('open');
-          document.body.style.overflow = 'hidden';
-          return;
-        }
         if (priceVal === 0) {
           window.location.href = 'my-courses.html?tab=free';
         } else {
@@ -2089,6 +2154,212 @@
       document.getElementById('heroTitle').textContent = 'Failed to load details.';
     }
   });
+
+  // Helper: Attribute escape
+  function escAttr(str) {
+    return String(str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  window.escAttr = escAttr;
+
+  // Helper: Clipboard copy with UI feedback
+  window.copyToClipboard = function(text, btn) {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(function() {
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.style.color = '#00e599';
+        btn.style.borderColor = '#00e599';
+        setTimeout(function() {
+          btn.textContent = orig;
+          btn.style.color = '';
+          btn.style.borderColor = '';
+        }, 1500);
+      }
+    }).catch(function() {
+      alert('Copied: ' + text);
+    });
+  };
+
+  // Helper: Toggle inline password change form
+  window.togglePasswordChangeForm = function() {
+    const f = document.getElementById('passwordChangeForm');
+    const ic = document.getElementById('passToggleIcon');
+    if (!f) return;
+    if (f.style.display === 'none' || !f.style.display) {
+      f.style.display = 'block';
+      if (ic) ic.textContent = '▲ Close';
+    } else {
+      f.style.display = 'none';
+      if (ic) ic.textContent = '+ Set Password';
+    }
+  };
+
+  // Helper: Submit custom password
+  window.submitNewPassword = async function(tempPass) {
+    const p1 = document.getElementById('postNewPass')?.value || '';
+    const p2 = document.getElementById('postNewPass2')?.value || '';
+    const statusEl = document.getElementById('passChangeStatus');
+    const btn = document.getElementById('btnSetNewPass');
+
+    if (!p1 || !p2) {
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.color = '#ff4d8d';
+        statusEl.textContent = 'Please fill both password fields.';
+      }
+      return;
+    }
+    if (p1.length < 8) {
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.color = '#ff4d8d';
+        statusEl.textContent = 'Password must be at least 8 characters long.';
+      }
+      return;
+    }
+    if (p1 !== p2) {
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.color = '#ff4d8d';
+        statusEl.textContent = 'Passwords do not match.';
+      }
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+    }
+
+    try {
+      const res = await fetch('/api/user/update-profile', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'password',
+          currentPassword: tempPass,
+          newPassword: p1
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (statusEl) {
+          statusEl.style.display = 'block';
+          statusEl.style.color = '#00e599';
+          statusEl.textContent = '✓ Password changed successfully! You can now use this password anytime.';
+        }
+        const passValEl = document.getElementById('credPassword');
+        if (passValEl) passValEl.textContent = p1;
+        if (btn) {
+          btn.textContent = '✓ Updated';
+          btn.style.background = '#00e599';
+          btn.style.color = '#050a18';
+        }
+      } else {
+        if (statusEl) {
+          statusEl.style.display = 'block';
+          statusEl.style.color = '#ff4d8d';
+          statusEl.textContent = data.error || 'Failed to update password.';
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Try Again';
+        }
+      }
+    } catch (err) {
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.color = '#ff4d8d';
+        statusEl.textContent = 'Network error. Please try again.';
+      }
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Try Again';
+      }
+    }
+  };
+
+  // Helper: Generate and Download PDF
+  window.generateAndDownloadPDF = function() {
+    const container = document.getElementById('receiptPdfDocument');
+    if (!container) return;
+    const btn = document.getElementById('downloadPdfReceiptBtn');
+    const origBtnText = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.innerHTML = '⏳ Generating PDF...';
+      btn.disabled = true;
+    }
+
+    const d = window._currentReceiptData || {};
+    const trx = d.trxId || 'receipt';
+    const opt = {
+      margin: [8, 8, 8, 8],
+      filename: `DecentraForce-Purchase-${trx}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    if (typeof window.html2pdf === 'function') {
+      container.style.display = 'block';
+      window.html2pdf().set(opt).from(container).save().then(function() {
+        container.style.display = 'none';
+        if (btn) {
+          btn.innerHTML = '✓ Downloaded! Download Again';
+          btn.disabled = false;
+        }
+      }).catch(function(err) {
+        console.warn('html2pdf failed, falling back to printReceipt:', err);
+        container.style.display = 'none';
+        if (btn) {
+          btn.innerHTML = origBtnText;
+          btn.disabled = false;
+        }
+        window.printReceipt();
+      });
+    } else {
+      if (btn) {
+        btn.innerHTML = origBtnText;
+        btn.disabled = false;
+      }
+      window.printReceipt();
+    }
+  };
+
+  // Helper: Printable Receipt fallback
+  window.printReceipt = function() {
+    const container = document.getElementById('receiptPdfDocument');
+    if (!container) return;
+    const printWin = window.open('', '_blank', 'width=850,height=900');
+    if (!printWin) {
+      alert('Please allow popups in your browser to print or save the receipt PDF.');
+      return;
+    }
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>DecentraForce Purchase Receipt</title>
+        <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+        <style>
+          body { margin: 0; padding: 24px; font-family: 'Plus Jakarta Sans', sans-serif; background: #fff; color: #111; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        ${container.innerHTML}
+        <script>
+          window.onload = function() { window.print(); };
+        <\/script>
+      </body>
+      </html>
+    `);
+    printWin.document.close();
+  };
 
   // === MODAL LOGIC (Exact match to requirements) ===
   var _checkoutBodyHTML = null; // cached original body for restore
@@ -2116,6 +2387,21 @@
     if (_checkoutBodyHTML) { body.innerHTML = _checkoutBodyHTML; }
     else { _checkoutBodyHTML = body.innerHTML; }
 
+    // Check auth status to adjust checkout fields
+    const authBadge = document.getElementById('checkoutAuthBadge');
+    const guestFields = document.getElementById('checkoutGuestFields');
+    const userBadge = document.getElementById('checkoutUserBadge');
+    if (window.auth && window.auth.isLoggedIn && window.auth.currentUser) {
+      if (authBadge) authBadge.style.display = 'block';
+      if (guestFields) guestFields.style.display = 'none';
+      if (userBadge) {
+        userBadge.textContent = `${window.auth.currentUser.username} (${window.auth.currentUser.email || ''})`;
+      }
+    } else {
+      if (authBadge) authBadge.style.display = 'none';
+      if (guestFields) guestFields.style.display = 'block';
+    }
+
     // Populate course info
     const plainT = (course.title || 'Course Enrollment').replace(/<[^>]+>/g,'').trim();
     document.getElementById('modalCourseTitle').textContent = plainT;
@@ -2131,6 +2417,8 @@
     document.getElementById('paymentMethod').value = '';
     document.getElementById('senderNumber').value = '';
     document.getElementById('transactionId').value = '';
+    if (document.getElementById('buyerName')) document.getElementById('buyerName').value = '';
+    if (document.getElementById('buyerEmail')) document.getElementById('buyerEmail').value = '';
 
     // Re-attach submit listener (needed after innerHTML restore)
     var confirmBtn = document.getElementById('modalConfirm');
@@ -2157,41 +2445,262 @@
   document.getElementById('modalClose').addEventListener('click', closeCheckoutModal);
   document.getElementById('modalCancel2').addEventListener('click', closeCheckoutModal);
 
-  // handlePaymentSubmit is defined inside DOMContentLoaded and exposed as window._handlePaymentSubmit
-
-
-// === CURRICULUM ACCORDION ===
+  // === CURRICULUM ACCORDION ===
   function toggleModule(id) {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('open');
   }
 
-// === PENDING SUCCESS SCREEN ===
-  function showPendingSuccess() {
+  // === ENHANCED SUCCESS & RECEIPT SCREEN ===
+  function showPendingSuccess(purchaseData, accountData, courseData, payInfo) {
     const pg = document.getElementById('checkoutModal');
+    const course = courseData || activeCourse || {};
+    const courseTitle = (course.title || 'Course').replace(/<[^>]+>/g, '').trim();
+    const groupLink = course.whatsapp || 'https://wa.me/8801302201431';
+    const pay = payInfo || {};
+    const acct = accountData || (window.auth && window.auth.currentUser) || {};
+    const tempPass = acct.tempPassword || '';
+    const username = acct.username || 'student';
+    const email = acct.email || '';
+    const trxId = pay.transactionId || (purchaseData && purchaseData.transaction_id) || '';
+    const pMethod = (pay.paymentMethod || (purchaseData && purchaseData.payment_method) || 'bKash').toUpperCase();
+    const sNumber = pay.senderNumber || (purchaseData && purchaseData.sender_number) || '';
+    const amount = pay.amount || course.price || '';
+    const purchaseId = (purchaseData && purchaseData.id) || Date.now();
+    const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    window._currentReceiptData = {
+      purchaseId,
+      courseTitle,
+      groupLink,
+      username,
+      email,
+      tempPass,
+      trxId,
+      paymentMethod: pMethod,
+      senderNumber: sNumber,
+      amount,
+      dateStr
+    };
+
     pg.querySelector('.checkout-body').innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 60px);padding:32px 24px;text-align:center;max-width:480px;margin:0 auto;">
-        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,rgba(0,229,153,0.2),rgba(0,229,255,0.15));border:2px solid rgba(0,229,153,0.4);display:flex;align-items:center;justify-content:center;font-size:2.2rem;margin-bottom:24px;animation:pendingPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;">&#9203;</div>
-        <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;color:var(--text);margin-bottom:10px;">Payment Submitted!</h2>
-        <p style="color:var(--muted);font-size:0.92rem;line-height:1.65;margin-bottom:28px;">Your payment is under review. An admin will verify your transaction and grant access — usually within <strong style="color:var(--accent);">24 hours</strong>.</p>
-        <div style="width:100%;background:rgba(0,229,153,0.06);border:1px solid rgba(0,229,153,0.2);border-radius:12px;padding:18px 20px;margin-bottom:28px;text-align:left;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.05);">
-            <span style="font-size:0.78rem;color:var(--muted);">Course</span>
-            <span style="font-size:0.85rem;font-weight:600;color:var(--text);max-width:220px;text-align:right;" id="pendingCourseLabel"></span>
+      <div style="display:flex;flex-direction:column;align-items:center;min-height:calc(100vh - 60px);padding:32px 20px 48px;max-width:540px;margin:0 auto;width:100%;">
+        <!-- Celebration Badge -->
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,rgba(0,229,153,0.25),rgba(0,229,255,0.2));border:2px solid rgba(0,229,153,0.5);display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:16px;">
+          🎉
+        </div>
+
+        <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.55rem;color:var(--text);margin-bottom:6px;text-align:center;">
+          Payment Submitted!
+        </h2>
+        <p style="color:var(--muted);font-size:0.88rem;line-height:1.5;margin-bottom:20px;text-align:center;">
+          Your order has been registered and is pending quick admin verification. Your student account details are ready below.
+        </p>
+
+        <!-- Course & Order Status Card -->
+        <div style="width:100%;background:rgba(0,229,153,0.06);border:1px solid rgba(0,229,153,0.22);border-radius:14px;padding:16px 18px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.06);">
+            <span style="font-size:0.78rem;color:var(--muted);">Course Enrolled</span>
+            <span style="font-size:0.85rem;font-weight:700;color:var(--text);max-width:260px;text-align:right;">${escHTML(courseTitle)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:0.78rem;color:var(--muted);">Amount Paid</span>
+            <span style="font-size:0.95rem;font-weight:800;color:var(--accent);">৳${escHTML(String(amount))}</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:0.78rem;color:var(--muted);">Status</span>
-            <span style="font-size:0.82rem;font-weight:700;color:#f59e0b;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);padding:3px 10px;border-radius:20px;">&#9203; Pending Approval</span>
+            <span style="font-size:0.78rem;color:var(--muted);">TrxID</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:600;color:#cbd5e1;">${escHTML(trxId)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:0.78rem;color:var(--muted);">Access Status</span>
+            <span style="font-size:0.8rem;font-weight:700;color:#f59e0b;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);padding:2px 8px;border-radius:20px;">⏳ Pending Approval (Within 24h)</span>
           </div>
         </div>
-        <button onclick="window.location.href='my-courses.html'" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:0.95rem;cursor:pointer;margin-bottom:12px;">View My Courses</button>
-        <button onclick="closeCheckoutModal()" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--muted);font-size:0.88rem;cursor:pointer;">Back to Course</button>
+
+        <!-- Auto-Generated Student Account Credentials Box -->
+        <div style="width:100%;background:rgba(123,92,255,0.09);border:1px solid rgba(123,92,255,0.35);border-radius:14px;padding:18px 18px;margin-bottom:16px;text-align:left;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:1.15rem;">🔐</span>
+            <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.98rem;color:#fff;margin:0;">Student Account Credentials</h3>
+          </div>
+          <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;line-height:1.4;">
+            Use these credentials to log in at <a href="login.html" target="_blank" style="color:var(--accent);text-decoration:underline;">decentraforce.com/login.html</a>:
+          </p>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <!-- Account ID / Username -->
+            <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(5,10,24,0.7);padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+              <div>
+                <span style="font-size:0.7rem;color:var(--muted);display:block;text-transform:uppercase;">Account ID / Username</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:0.88rem;font-weight:700;color:var(--accent);">${escHTML(username)}</span>
+              </div>
+              <button onclick="copyToClipboard('${escAttr(username)}', this)" class="btn-copy-chip">Copy</button>
+            </div>
+
+            <!-- Email -->
+            ${email ? `
+            <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(5,10,24,0.7);padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+              <div>
+                <span style="font-size:0.7rem;color:var(--muted);display:block;text-transform:uppercase;">Registered Email</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;font-weight:600;color:var(--text);">${escHTML(email)}</span>
+              </div>
+              <button onclick="copyToClipboard('${escAttr(email)}', this)" class="btn-copy-chip">Copy</button>
+            </div>
+            ` : ''}
+
+            <!-- Auto-Generated Password -->
+            ${tempPass ? `
+            <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(5,10,24,0.7);padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+              <div>
+                <span style="font-size:0.7rem;color:var(--muted);display:block;text-transform:uppercase;">Auto-Generated Password</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:0.92rem;font-weight:700;color:#00e599;" id="credPassword">${escHTML(tempPass)}</span>
+              </div>
+              <button onclick="copyToClipboard('${escAttr(tempPass)}', this)" class="btn-copy-chip">Copy</button>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- Download PDF Receipt Document Button -->
+        <div style="width:100%;margin-bottom:16px;">
+          <button id="downloadPdfReceiptBtn" onclick="generateAndDownloadPDF()" style="width:100%;padding:13px;border:none;border-radius:12px;background:linear-gradient(135deg,#00e5ff 0%,#7b5cff 100%);color:#050a18;font-family:'Syne',sans-serif;font-weight:800;font-size:0.92rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 18px rgba(0,229,255,0.3);transition:all 0.2s ease;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Download Purchase Document (PDF)
+          </button>
+        </div>
+
+        <!-- Change Password & Personalize Account Section -->
+        <div style="width:100%;background:rgba(0,229,255,0.03);border:1px solid rgba(0,229,255,0.18);border-radius:14px;padding:14px 16px;margin-bottom:16px;text-align:left;">
+          <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="togglePasswordChangeForm()">
+            <div style="display:flex;align-items:center;gap:7px;">
+              <span style="font-size:1.1rem;">🔑</span>
+              <strong style="color:var(--text);font-size:0.86rem;">Change Password to Personalize Account</strong>
+            </div>
+            <span id="passToggleIcon" style="color:var(--accent);font-size:0.82rem;font-weight:700;">+ Set Password</span>
+          </div>
+          <div id="passwordChangeForm" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);">
+            <p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;">Set your own secret password (minimum 8 characters):</p>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <input type="password" id="postNewPass" class="checkout-input" style="padding:9px 12px;font-size:0.85rem;" placeholder="New password">
+              <input type="password" id="postNewPass2" class="checkout-input" style="padding:9px 12px;font-size:0.85rem;" placeholder="Confirm new password">
+              <button id="btnSetNewPass" onclick="submitNewPassword('${escAttr(tempPass)}')" style="padding:9px 14px;border:none;border-radius:8px;background:linear-gradient(135deg,#00e599,#00e5ff);color:#050a18;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;">Save My Password ✓</button>
+              <span id="passChangeStatus" style="font-size:0.78rem;display:none;margin-top:2px;"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Course Private Group (WhatsApp) Link -->
+        <div style="width:100%;background:linear-gradient(135deg,rgba(37,211,102,0.12),rgba(18,140,126,0.06));border:1px solid rgba(37,211,102,0.35);border-radius:14px;padding:16px 18px;margin-bottom:20px;text-align:left;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <span style="font-size:1.3rem;">💬</span>
+            <div>
+              <h4 style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.92rem;color:#25d366;margin:0;">Course Private Group</h4>
+              <p style="font-size:0.75rem;color:var(--text-dim);margin:0;">Join our private WhatsApp student group for mentoring & announcements.</p>
+            </div>
+          </div>
+          <a id="joinPrivateGroupBtn" href="${escAttr(groupLink)}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:10px;background:#25d366;color:#050a18;text-decoration:none;font-family:'Syne',sans-serif;font-weight:800;font-size:0.88rem;box-shadow:0 4px 14px rgba(37,211,102,0.35);transition:all 0.2s ease;">
+            <span>Join Private WhatsApp Group &rarr;</span>
+          </a>
+        </div>
+
+        <!-- Footer Navigation Buttons -->
+        <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
+          <button onclick="window.location.href='my-courses.html'" style="width:100%;padding:13px;border:none;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);color:var(--text);font-family:'Syne',sans-serif;font-weight:700;font-size:0.88rem;cursor:pointer;">Go to My Courses</button>
+          <button onclick="closeCheckoutModal()" style="width:100%;padding:10px;border:none;background:transparent;color:var(--muted);font-size:0.82rem;cursor:pointer;">Back to Course Page</button>
+        </div>
+
+        <!-- Hidden Printable/PDF Container -->
+        <div id="receiptPdfDocument" style="display:none;font-family:'Plus Jakarta Sans',sans-serif;color:#111;background:#fff;padding:24px;width:750px;box-sizing:border-box;border:1px solid #e2e8f0;border-radius:12px;">
+          <!-- PDF Header -->
+          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #00e5ff;padding-bottom:16px;margin-bottom:20px;">
+            <div>
+              <h1 style="font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:#050a18;margin:0;letter-spacing:-0.5px;">DECENTRAFORCE</h1>
+              <p style="font-size:12px;color:#475569;margin:2px 0 0;">Web3, AI & Industrial Technology Academy</p>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:10px;text-transform:uppercase;color:#64748b;font-weight:700;letter-spacing:0.05em;">ADMISSION VOUCHER</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#050a18;">DF-REC-${escHTML(String(purchaseId))}</div>
+              <div style="font-size:11px;color:#64748b;margin-top:2px;">${escHTML(dateStr)}</div>
+            </div>
+          </div>
+
+          <!-- Course & Payment Summary -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:20px;">
+            <h3 style="font-size:14px;color:#0f172a;margin:0 0 12px;text-transform:uppercase;letter-spacing:0.04em;">Course & Payment Details</h3>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;color:#334155;">
+              <tr>
+                <td style="padding:6px 0;font-weight:600;width:35%;">Course Name:</td>
+                <td style="padding:6px 0;font-weight:700;color:#050a18;">${escHTML(courseTitle)}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:600;">Total Amount Paid:</td>
+                <td style="padding:6px 0;font-weight:700;color:#0284c7;">৳${escHTML(String(amount))} BDT</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:600;">Payment Method:</td>
+                <td style="padding:6px 0;">${escHTML(pMethod)}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:600;">Sender Mobile:</td>
+                <td style="padding:6px 0;">${escHTML(sNumber)}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:600;">Transaction ID (TrxID):</td>
+                <td style="padding:6px 0;font-family:'JetBrains Mono',monospace;font-weight:700;color:#050a18;">${escHTML(trxId)}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-weight:600;">Enrollment Status:</td>
+                <td style="padding:6px 0;color:#b45309;font-weight:700;">Pending Verification (Approved within 24 hours)</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Student Account Information -->
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px;margin-bottom:20px;">
+            <h3 style="font-size:14px;color:#1e3a8a;margin:0 0 12px;text-transform:uppercase;letter-spacing:0.04em;">Student Access Credentials</h3>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;color:#1e40af;">
+              <tr>
+                <td style="padding:6px 0;font-weight:600;width:35%;">Account ID / Username:</td>
+                <td style="padding:6px 0;font-family:'JetBrains Mono',monospace;font-weight:700;color:#0f172a;">${escHTML(username)}</td>
+              </tr>
+              ${email ? `
+              <tr>
+                <td style="padding:6px 0;font-weight:600;">Registered Email:</td>
+                <td style="padding:6px 0;font-weight:600;">${escHTML(email)}</td>
+              </tr>
+              ` : ''}
+              ${tempPass ? `
+              <tr>
+                <td style="padding:6px 0;font-weight:600;">Temporary Password:</td>
+                <td style="padding:6px 0;font-family:'JetBrains Mono',monospace;font-weight:700;color:#047857;">${escHTML(tempPass)}</td>
+              </tr>
+              ` : ''}
+              <tr>
+                <td style="padding:6px 0;font-weight:600;">Student Portal Login:</td>
+                <td style="padding:6px 0;font-weight:600;color:#0284c7;">https://decentraforce.vercel.app/login.html</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Private Community Link -->
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 16px;margin-bottom:20px;">
+            <div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:4px;">Private Student Community Link:</div>
+            <div style="font-size:11px;color:#15803d;word-break:break-all;">${escHTML(groupLink)}</div>
+            <div style="font-size:10px;color:#475569;margin-top:4px;">Join this private WhatsApp group for live session links and mentor discussions.</div>
+          </div>
+
+          <!-- Footer disclaimer -->
+          <div style="border-top:1px solid #e2e8f0;padding-top:14px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#64748b;">
+            <div>
+              <strong>DecentraForce Academy</strong> &bull; Support: decentraforce.bd@gmail.com &bull; +880 1302-201431
+            </div>
+            <div>Official Admission Voucher</div>
+          </div>
+        </div>
+
       </div>
     `;
-    // Fill in course name
-    var lbl = pg.querySelector('#pendingCourseLabel');
-    if (lbl && activeCourse) lbl.textContent = (activeCourse.title || '').replace(/<[^>]+>/g,'').trim().substring(0,60);
-    // Update purchase buttons on the page behind
+
     setPurchaseBtnState('pending');
   }
 

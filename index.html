@@ -177,6 +177,132 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
   .nav-links a:hover { color: var(--text); }
   .nav-links a.active { color: var(--accent); }
 
+  /* Nav Dropdown for Feedback / Contact */
+  .nav-dropdown-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .nav-dropdown-wrapper > a {
+    cursor: pointer;
+  }
+  .nav-custom-dropdown {
+    position: absolute;
+    top: calc(100% + 14px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px);
+    width: 250px;
+    background: rgba(13, 22, 48, 0.98);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.65), 0 0 20px rgba(0,229,255,0.1);
+    padding: 8px;
+    z-index: 120;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .nav-dropdown-wrapper:hover .nav-custom-dropdown,
+  .nav-custom-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+  .nav-dropdown-wrapper:hover .nav-dropdown-trigger svg,
+  .nav-dropdown-wrapper.open .nav-dropdown-trigger svg {
+    transform: rotate(180deg);
+  }
+  .nav-custom-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    box-sizing: border-box;
+  }
+  .nav-custom-dropdown-item:hover {
+    background: var(--surface2);
+  }
+  .nav-item-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .nav-item-icon.whatsapp-accent {
+    background: rgba(37,211,102,0.15);
+    color: #25d366;
+    border: 1px solid rgba(37,211,102,0.3);
+  }
+  .nav-item-icon.feedback-accent {
+    background: rgba(0,229,255,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(0,229,255,0.25);
+  }
+  .nav-custom-dropdown-item .item-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+  .nav-custom-dropdown-item:hover .item-title {
+    color: var(--accent);
+  }
+  .nav-custom-dropdown-item .item-desc {
+    font-size: 0.73rem;
+    color: var(--muted);
+    line-height: 1.25;
+  }
+
+  /* Choice Modal Cards */
+  .choice-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    background: rgba(17, 29, 58, 0.6);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .choice-card:hover {
+    transform: translateY(-2px);
+    background: rgba(17, 29, 58, 0.95);
+  }
+  .choice-card.choice-contact:hover {
+    border-color: rgba(37,211,102,0.5);
+    box-shadow: 0 8px 24px rgba(37,211,102,0.18);
+  }
+  .choice-card.choice-feedback:hover {
+    border-color: rgba(0,229,255,0.5);
+    box-shadow: 0 8px 24px rgba(0,229,255,0.18);
+  }
+  .choice-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
   .nav-right { display: flex; align-items: center; gap: 14px; }
 
   /* ── Mobile Hamburger Toggle Button ── */
@@ -1585,6 +1711,32 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
     <li><a href="my-courses.html?tab=nanodegree" style="display:flex;align-items:center;gap:4px">NanoDegree <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></a></li>
     <li><a href="my-courses.html?tab=premium">My Course</a></li>
     <li><a href="#testimonials-section" style="display:flex;align-items:center;gap:4px">Explore <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></a></li>
+    <li class="nav-dropdown-wrapper" id="navFeedbackDropdownWrapper">
+      <a href="javascript:void(0)" class="nav-dropdown-trigger" id="navFeedbackContactTrigger" onclick="toggleNavFeedbackMenu(event)">
+        Feedback / Contact
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style="transition:transform 0.2s ease;"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </a>
+      <div class="nav-custom-dropdown" id="navFeedbackMenu">
+        <a href="javascript:void(0)" class="nav-custom-dropdown-item" onclick="handleNavContactClick(event)">
+          <div class="nav-item-icon whatsapp-accent">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.52 3.48A11.93 11.93 0 0012.06 0C5.46 0 .09 5.37.09 11.97c0 2.11.55 4.16 1.6 5.97L0 24l6.23-1.63a11.9 11.9 0 005.83 1.51h.01c6.6 0 11.97-5.37 11.97-11.97 0-3.2-1.25-6.21-3.52-8.43zM12.06 21.87h-.01c-1.8 0-3.57-.48-5.11-1.4l-.37-.22-3.8 1 1.01-3.7-.24-.38a9.92 9.92 0 01-1.52-5.2c0-5.5 4.47-9.97 9.98-9.97 2.66 0 5.17 1.04 7.05 2.92a9.92 9.92 0 012.92 7.05c0 5.5-4.48 9.97-9.97 9.97zm5.47-7.48c-.3-.15-1.78-.88-2.06-.98-.28-.1-.48-.15-.68.15-.2.3-.78.98-.95 1.18-.18.2-.35.23-.65.08-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.18-.3-.02-.46.13-.61.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.52-.08-.15-.68-1.63-.93-2.24-.24-.59-.49-.51-.68-.52h-.58c-.2 0-.52.08-.8.38-.27.3-1.05 1.02-1.05 2.5 0 1.47 1.07 2.9 1.22 3.1.15.2 2.11 3.22 5.11 4.52.71.31 1.27.5 1.7.64.72.23 1.37.2 1.88.12.58-.09 1.78-.73 2.03-1.43.25-.7.25-1.3.18-1.43-.08-.13-.28-.2-.58-.35z"/></svg>
+          </div>
+          <div>
+            <div class="item-title">Contact Us</div>
+            <div class="item-desc">Direct WhatsApp support & chat</div>
+          </div>
+        </a>
+        <a href="javascript:void(0)" class="nav-custom-dropdown-item" onclick="handleNavFeedbackClick(event)">
+          <div class="nav-item-icon feedback-accent">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0034 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.9C9.87812 3.30493 11.1801 2.99656 12.5 3H13C15.0843 3.11499 17.053 3.99477 18.5291 5.47087C20.0052 6.94696 20.885 8.91565 21 11V11.5Z"/></svg>
+          </div>
+          <div>
+            <div class="item-title">Feedback</div>
+            <div class="item-desc">Suggestions & feedback form</div>
+          </div>
+        </a>
+      </div>
+    </li>
   </ul>
   
   <div class="nav-right">
@@ -1647,6 +1799,20 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
     <li><a href="my-courses.html?tab=nanodegree" onclick="closeMobileDrawer();">NanoDegree</a></li>
     <li><a href="my-courses.html?tab=premium" onclick="closeMobileDrawer();">My Course</a></li>
     <li><a href="#testimonials-section" onclick="closeMobileDrawer();">Explore</a></li>
+    <li class="mobile-drawer-dropdown" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 6px; margin-top: 4px;">
+      <div class="mobile-drawer-dropdown-title" onclick="toggleMobileFeedbackSubmenu(event)" style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; cursor:pointer; color:var(--text); font-weight:500;">
+        <span>Feedback / Contact</span>
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" id="mobileFeedbackArrow" style="transition:transform 0.2s;"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="mobile-drawer-submenu" id="mobileFeedbackSubmenu" style="display:none; padding-left:14px; margin-top:2px;">
+        <a href="javascript:void(0)" onclick="closeMobileDrawer();handleNavContactClick(event)" style="display:flex; align-items:center; gap:8px; padding:10px 12px; color:#25d366; font-size:0.9rem;">
+          💬 Contact (WhatsApp)
+        </a>
+        <a href="javascript:void(0)" onclick="closeMobileDrawer();handleNavFeedbackClick(event)" style="display:flex; align-items:center; gap:8px; padding:10px 12px; color:var(--accent); font-size:0.9rem;">
+          📝 Feedback Form
+        </a>
+      </div>
+    </li>
   </ul>
   <div class="mobile-drawer-divider"></div>
   <div class="mobile-drawer-auth">
@@ -1694,6 +1860,70 @@ src="https://www.facebook.com/tr?id=1394339712274662&ev=PageView&noscript=1"
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeMobileDrawer();
   });
+
+  // Nav Dropdown Handlers
+  function toggleNavFeedbackMenu(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('navFeedbackMenu');
+    const wrapper = document.getElementById('navFeedbackDropdownWrapper');
+    if (!menu) return;
+    const isShowing = menu.classList.contains('show');
+    if (isShowing) {
+      menu.classList.remove('show');
+      if (wrapper) wrapper.classList.remove('open');
+    } else {
+      menu.classList.add('show');
+      if (wrapper) wrapper.classList.add('open');
+    }
+  }
+
+  function handleNavContactClick(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('navFeedbackMenu');
+    if (menu) menu.classList.remove('show');
+    if (typeof openPersonalWhatsApp === 'function') {
+      openPersonalWhatsApp();
+    } else {
+      window.open('https://wa.me/8801302201431', '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  function handleNavFeedbackClick(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('navFeedbackMenu');
+    if (menu) menu.classList.remove('show');
+    if (typeof openFeedbackModal === 'function') {
+      openFeedbackModal();
+    }
+  }
+
+  function toggleMobileFeedbackSubmenu(e) {
+    if (e) e.stopPropagation();
+    const sub = document.getElementById('mobileFeedbackSubmenu');
+    const arrow = document.getElementById('mobileFeedbackArrow');
+    if (!sub) return;
+    if (sub.style.display === 'none' || !sub.style.display) {
+      sub.style.display = 'block';
+      if (arrow) arrow.style.transform = 'rotate(180deg)';
+    } else {
+      sub.style.display = 'none';
+      if (arrow) arrow.style.transform = 'rotate(0deg)';
+    }
+  }
+
+  document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('navFeedbackDropdownWrapper');
+    const menu = document.getElementById('navFeedbackMenu');
+    if (wrapper && !wrapper.contains(e.target) && menu) {
+      menu.classList.remove('show');
+      wrapper.classList.remove('open');
+    }
+  });
+
+  window.toggleNavFeedbackMenu = toggleNavFeedbackMenu;
+  window.handleNavContactClick = handleNavContactClick;
+  window.handleNavFeedbackClick = handleNavFeedbackClick;
+  window.toggleMobileFeedbackSubmenu = toggleMobileFeedbackSubmenu;
 </script>
 
 <section class="hero">
@@ -2905,15 +3135,15 @@ window.addEventListener('storage', (e) => {
   </div>
 </div>
 
-<div id="feedbackButton" class="feedback-button collapsed" aria-label="Contact and Feedback">
-  <!-- Collapsed Trigger: Original 3D look with "Contact & Feedback" -->
-  <div class="cf-trigger" id="cfTrigger" title="Click to open Contact & Feedback options">
+<div id="feedbackButton" class="feedback-button collapsed" aria-label="Feedback and Contact">
+  <!-- Collapsed Trigger: "Feedback / Contact" -->
+  <div class="cf-trigger" id="cfTrigger" title="Click to open Feedback / Contact options">
     <div class="feedback-icon">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0034 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.9C9.87812 3.30493 11.1801 2.99656 12.5 3H13C15.0843 3.11499 17.053 3.99477 18.5291 5.47087C20.0052 6.94696 20.885 8.91565 21 11V11.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <span class="feedback-label">Contact &amp; Feedback</span>
+    <span class="feedback-label">Feedback / Contact</span>
   </div>
 
   <!-- Auto-Expanded State: The capsule with WhatsApp Contact, Feedback and Close -->
@@ -2941,6 +3171,48 @@ window.addEventListener('storage', (e) => {
     <button type="button" id="cfCollapseBtn" class="cf-close-btn" title="Collapse">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
+  </div>
+</div>
+
+<!-- Dedicated Choice Modal for Feedback / Contact -->
+<div id="feedbackContactChoiceModal" class="feedback-modal-overlay">
+  <div class="feedback-modal" style="max-width: 460px;">
+    <div class="feedback-modal-header">
+      <div>
+        <h3>Feedback / Contact</h3>
+        <p style="font-size:0.8rem; color:var(--muted); margin-top:3px; margin-bottom:0;">Choose an option to continue</p>
+      </div>
+      <button class="feedback-modal-close" onclick="closeFeedbackContactChoiceModal()">&times;</button>
+    </div>
+    <div class="feedback-modal-body" style="display:flex; flex-direction:column; gap:12px; padding:20px;">
+      <!-- Option 1: Contact Us -->
+      <div class="choice-card choice-contact" onclick="closeFeedbackContactChoiceModal();if(typeof openPersonalWhatsApp==='function'){openPersonalWhatsApp();}else{window.open('https://wa.me/8801302201431','_blank');}">
+        <div class="choice-icon" style="background:rgba(37,211,102,0.15); color:#25d366; border:1px solid rgba(37,211,102,0.3);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.52 3.48A11.93 11.93 0 0012.06 0C5.46 0 .09 5.37.09 11.97c0 2.11.55 4.16 1.6 5.97L0 24l6.23-1.63a11.9 11.9 0 005.83 1.51h.01c6.6 0 11.97-5.37 11.97-11.97 0-3.2-1.25-6.21-3.52-8.43zM12.06 21.87h-.01c-1.8 0-3.57-.48-5.11-1.4l-.37-.22-3.8 1 1.01-3.7-.24-.38a9.92 9.92 0 01-1.52-5.2c0-5.5 4.47-9.97 9.98-9.97 2.66 0 5.17 1.04 7.05 2.92a9.92 9.92 0 012.92 7.05c0 5.5-4.48 9.97-9.97 9.97zm5.47-7.48c-.3-.15-1.78-.88-2.06-.98-.28-.1-.48-.15-.68.15-.2.3-.78.98-.95 1.18-.18.2-.35.23-.65.08-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.18-.3-.02-.46.13-.61.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.52-.08-.15-.68-1.63-.93-2.24-.24-.59-.49-.51-.68-.52h-.58c-.2 0-.52.08-.8.38-.27.3-1.05 1.02-1.05 2.5 0 1.47 1.07 2.9 1.22 3.1.15.2 2.11 3.22 5.11 4.52.71.31 1.27.5 1.7.64.72.23 1.37.2 1.88.12.58-.09 1.78-.73 2.03-1.43.25-.7.25-1.3.18-1.43-.08-.13-.28-.2-.58-.35z"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="font-family:'Syne',sans-serif; font-weight:700; font-size:0.95rem; color:#fff; display:flex; align-items:center; justify-content:space-between;">
+            <span>Contact (WhatsApp)</span>
+            <span style="font-size:0.72rem; color:#25d366; font-weight:700; background:rgba(37,211,102,0.15); padding:2px 8px; border-radius:12px;">Chat Now &rarr;</span>
+          </div>
+          <p style="font-size:0.78rem; color:var(--muted); margin-top:3px; margin-bottom:0; line-height:1.4;">Direct personal WhatsApp support & course inquiries.</p>
+        </div>
+      </div>
+
+      <!-- Option 2: Share Feedback -->
+      <div class="choice-card choice-feedback" onclick="closeFeedbackContactChoiceModal();if(typeof openFeedbackModal==='function')openFeedbackModal();">
+        <div class="choice-icon" style="background:rgba(0,229,255,0.12); color:var(--accent); border:1px solid rgba(0,229,255,0.25);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0034 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.9C9.87812 3.30493 11.1801 2.99656 12.5 3H13C15.0843 3.11499 17.053 3.99477 18.5291 5.47087C20.0052 6.94696 20.885 8.91565 21 11V11.5Z"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="font-family:'Syne',sans-serif; font-weight:700; font-size:0.95rem; color:#fff; display:flex; align-items:center; justify-content:space-between;">
+            <span>Feedback Form</span>
+            <span style="font-size:0.72rem; color:var(--accent); font-weight:700; background:rgba(0,229,255,0.12); padding:2px 8px; border-radius:12px;">Open Form &rarr;</span>
+          </div>
+          <p style="font-size:0.78rem; color:var(--muted); margin-top:3px; margin-bottom:0; line-height:1.4;">Send suggestions, report platform issues, or review.</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

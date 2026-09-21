@@ -60,10 +60,9 @@ function saveContactWhatsappLink(link) {
  */
 function openPersonalWhatsApp() {
     const raw = getContactWhatsappLink();
-    const url = formatWhatsAppLink(raw);
+    let url = formatWhatsAppLink(raw);
     if (!url || url === '#' || url === 'https://wa.me/' || url === 'https://wa.me') {
-        showToast('WhatsApp contact link is not configured yet. Please set it in Admin Panel -> Feedback & Contact.', 'error');
-        return;
+        url = 'https://wa.me/8801302201431';
     }
     window.open(url, '_blank', 'noopener,noreferrer');
 }
@@ -386,6 +385,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+function openFeedbackContactChoiceModal() {
+    const modal = document.getElementById('feedbackContactChoiceModal');
+    if (modal) {
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeFeedbackContactChoiceModal() {
+    const modal = document.getElementById('feedbackContactChoiceModal');
+    if (modal) {
+        modal.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
+
 // Export functions for use across pages and admin panel
 if (typeof window !== 'undefined') {
     window.FloatingFeedback = {
@@ -400,6 +415,8 @@ if (typeof window !== 'undefined') {
         openPersonalWhatsApp,
         openFeedbackModal,
         closeFeedbackModal,
+        openFeedbackContactChoiceModal,
+        closeFeedbackContactChoiceModal,
         initFloatingFeedback
     };
 
@@ -409,4 +426,6 @@ if (typeof window !== 'undefined') {
     window.openPersonalWhatsApp = openPersonalWhatsApp;
     window.openFeedbackModal = openFeedbackModal;
     window.closeFeedbackModal = closeFeedbackModal;
+    window.openFeedbackContactChoiceModal = openFeedbackContactChoiceModal;
+    window.closeFeedbackContactChoiceModal = closeFeedbackContactChoiceModal;
 }

@@ -272,26 +272,97 @@ async function adminReferrals(req, res) {
 async function createPurchase(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
   
-  // Get user from session
-  const token = req.cookies?.session_token;
-  if (!token) return res.status(401).json({ success: false, error: 'Not authenticated' });
-  
-  const userResult = await query(
-    `SELECT id FROM users WHERE session_token=$1 AND session_expires>NOW()`,
-    [token]
-  );
-  if (!userResult.rows.length) return res.status(401).json({ success: false, error: 'Invalid or expired session' });
-  
-  const user = userResult.rows[0];
-  const { course_id, sender_number, transaction_id, payment_method, coupon_code, coupon_price, referral_code } = req.body || {};
+  const {
+    course_id,
+    sender_number,
+    transaction_id,
+    payment_method,
+    coupon_code,
+    coupon_price,
+    referral_code,
+    email,
+    name
+  } = req.body || {};
   
   if (!course_id) return res.status(400).json({ success: false, error: 'Course ID required' });
   if (!sender_number) return res.status(400).json({ success: false, error: 'Sender number required' });
   if (!transaction_id) return res.status(400).json({ success: false, error: 'Transaction ID required' });
   
-  // Verify course exists
-  const courseResult = await query('SELECT id FROM courses WHERE id=$1', [course_id]);
+  // Verify course exists & get details (including whatsapp group)
+  const courseResult = await query(
+    'SELECT id, title, price, discount_price, whatsapp FROM courses WHERE id=$1',
+    [course_id]
+  );
   if (!courseResult.rows.length) return res.status(404).json({ success: false, error: 'Course not found' });
+  const activeCourse = courseResult.rows[0];
+
+  // Check if user is authenticated via session token
+  const token = req.cookies?.session_token || (req.headers.cookie || '').match(/session_token=([^;]+)/)?.[1];
+  let user = null;
+  let tempPassword = null;
+  let isNewAccount = false;
+
+  if (token) {
+    const userResult = await query(
+      `SELECT id, username, email FROM users WHERE session_token=$1 AND session_expires>NOW()`,
+      [token]
+    );
+    if (userResult.rows.length) {
+      user = userResult.rows[0];
+    }
+  }
+
+  // If not authenticated, handle guest user lookup or auto-creation
+  if (!user) {
+    const cleanEmail = (email || '').toLowerCase().trim();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return res.status(400).json({
+        success: false,
+        error: 'A valid email address is required to create your student account and access the course.'
+      });
+    }
+
+    // Generate a secure, readable temporary password (e.g. DF-7x2m9a)
+    const randomSuffix = crypto.randomBytes(3).toString('hex').toLowerCase();
+    tempPassword = `DF-${randomSuffix}`;
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+    const existingUserRes = await query('SELECT id, username, email FROM users WHERE email=$1', [cleanEmail]);
+
+    if (existingUserRes.rows.length > 0) {
+      user = existingUserRes.rows[0];
+      // Update password hash so student can log in or customize right away
+      await query('UPDATE users SET password_hash=$1 WHERE id=$2', [passwordHash, user.id]);
+    } else {
+      isNewAccount = true;
+      let baseName = (name || cleanEmail.split('@')[0])
+        .replace(/[^a-zA-Z0-9_]/g, '')
+        .substring(0, 12);
+      if (baseName.length < 3) baseName = 'student';
+
+      let chosenUsername = `${baseName}_${Math.floor(1000 + Math.random() * 9000)}`;
+      const checkUser = await query('SELECT id FROM users WHERE LOWER(username)=LOWER($1)', [chosenUsername]);
+      if (checkUser.rows.length > 0) {
+        chosenUsername = `df_${Math.floor(100000 + Math.random() * 900000)}`;
+      }
+
+      const insertRes = await query(
+        `INSERT INTO users (username, email, password_hash, verified)
+         VALUES ($1, $2, $3, TRUE)
+         RETURNING id, username, email, created_at`,
+        [chosenUsername, cleanEmail, passwordHash]
+      );
+      user = insertRes.rows[0];
+    }
+
+    // Automatically authenticate the user with a 30-day session token
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    const sessionExpires = new Date(Date.now() + 30*24*60*60*1000);
+    await query('UPDATE users SET session_token=$1, session_expires=$2 WHERE id=$3', [sessionToken, sessionExpires, user.id]);
+
+    const secureFlag = (req.headers['x-forwarded-proto'] === 'https') ? '; Secure' : '';
+    res.setHeader('Set-Cookie', `session_token=${sessionToken}; HttpOnly; Path=/; Max-Age=${30*24*60*60}; SameSite=Strict${secureFlag}`);
+  }
 
   // Already enrolled → nothing to buy
   if (await isEnrolled(user.id, course_id)) {
@@ -325,7 +396,24 @@ async function createPurchase(req, res) {
     }
   }
   
-  return res.status(201).json({ success: true, purchase: result.rows[0] });
+  return res.status(201).json({
+    success: true,
+    purchase: result.rows[0],
+    account: {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      tempPassword: tempPassword,
+      isNew: isNewAccount
+    },
+    course: {
+      id: activeCourse.id,
+      title: activeCourse.title,
+      price: activeCourse.price,
+      discount_price: activeCourse.discount_price,
+      whatsapp: activeCourse.whatsapp
+    }
+  });
 }
 
 // ── USER: GET /api/user/purchases ───────────────────────────────────
